@@ -19,18 +19,12 @@ abstract final class AppColors {
   static const Color navigationButtonShadow = Color(0x05000000);
 
   static const Color authGlow = Color(0x14EC5D01);
-
   static const Color authSurface = Color(0xB3FFFDFC);
 
   static const Color cardShadow = Color(0x0D000005);
-  static const Color nearbyMatchCardSurface = Color.fromRGBO(
-    255,
-    253,
-    252,
-    0.70,
-  );
+  static const Color nearbyMatchCardSurface = Color(0xFFFFFDFC);
   static const Color filterSliderInactive = Color(0x61EC5D01);
-  static const Color subtleSurface = Color.fromRGBO(255, 253, 252, 0.70);
+  static const Color subtleSurface = Color(0xFFFFFDFC);
   static const Color subtleBorder = Color(0x33F1D5C1);
   static const Color subtleShadow = Color(0x0D000005);
 }

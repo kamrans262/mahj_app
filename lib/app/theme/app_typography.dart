@@ -60,6 +60,15 @@ abstract final class AppTypography {
     color: Colors.white,
   );
 
+  static const TextStyle compactPrimaryButton = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1,
+    letterSpacing: -0.3,
+    color: Colors.white,
+  );
+
   static const TextStyle field = TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
@@ -123,6 +132,7 @@ abstract final class AppTypography {
     height: 1.35,
     color: AppColors.primary,
   );
+
   static const TextStyle homeGreeting = TextStyle(
     fontFamily: fontFamily,
     fontSize: 22,
@@ -130,6 +140,7 @@ abstract final class AppTypography {
     height: 1,
     color: AppColors.heading,
   );
+
   static const TextStyle homeSubtitle = TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
@@ -137,6 +148,7 @@ abstract final class AppTypography {
     height: 1,
     color: AppColors.textSecondary,
   );
+
   static const TextStyle homeSectionHeading = TextStyle(
     fontFamily: fontFamily,
     fontSize: 20,
@@ -144,6 +156,7 @@ abstract final class AppTypography {
     height: 1,
     color: AppColors.heading,
   );
+
   static const TextStyle homeAction12 = TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
@@ -151,6 +164,7 @@ abstract final class AppTypography {
     height: 1,
     color: AppColors.primary,
   );
+
   static const TextStyle homeMatchTitle18 = TextStyle(
     fontFamily: fontFamily,
     fontSize: 18,
@@ -159,6 +173,7 @@ abstract final class AppTypography {
     letterSpacing: -0.3,
     color: AppColors.heading,
   );
+
   static const TextStyle homeMatchTitle16 = TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,
@@ -167,6 +182,7 @@ abstract final class AppTypography {
     letterSpacing: -0.3,
     color: AppColors.heading,
   );
+
   static const TextStyle homeMeta14 = TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
@@ -175,6 +191,7 @@ abstract final class AppTypography {
     letterSpacing: -0.3,
     color: AppColors.textSecondary,
   );
+
   static const TextStyle homeMeta12 = TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,

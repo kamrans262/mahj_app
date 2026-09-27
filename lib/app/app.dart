@@ -14,6 +14,7 @@ class MahjApp extends StatelessWidget {
       theme: AppTheme.light,
       initialRoute: AppRoutes.splash,
       routes: AppRouter.routes,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }

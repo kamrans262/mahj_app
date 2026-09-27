@@ -9,9 +9,21 @@ abstract final class AppAssets {
   static const String resetSendIcon = 'assets/icons/send.svg';
   static const String premiumCrownIcon = 'assets/icons/crown.svg';
   static const bool premiumCrownIncludesBadge = true;
+
   static const String homeBellIcon = 'assets/icons/bell.svg';
   static const String homeMessageIcon = 'assets/icons/message.svg';
   static const String homeFootballIcon = 'assets/icons/football.svg';
+  static const String basketballIcon = 'assets/icons/basketball.svg';
   static const String homeBannerImage = 'assets/banner1.png';
   static const String homeFootballImage = 'assets/football.png';
+
+  static const String bottomHomeIcon = 'assets/icons/home.svg';
+  static const String bottomMapIcon = 'assets/icons/map.svg';
+  static const String bottomMatchesIcon = 'assets/icons/match.svg';
+  static const String bottomProfileIcon = 'assets/icons/profile.svg';
+
+  static const String mapDemoBackground = 'assets/map_demo.svg';
+  static const String demoAvatarOne = 'assets/avatar_demo_1.svg';
+  static const String demoAvatarTwo = 'assets/avatar_demo_2.svg';
+  static const String demoAvatarThree = 'assets/avatar_demo_3.svg';
 }
