@@ -302,8 +302,7 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           Scaffold(
             body: _buildHomeBody(),
-            floatingActionButton:
-                _isFilterMounted || !widget.showCreateFab
+            floatingActionButton: _isFilterMounted || !widget.showCreateFab
                 ? null
                 : FloatingActionButton(
                     heroTag: 'create-match-fab',

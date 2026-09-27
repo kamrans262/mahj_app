@@ -21,8 +21,7 @@ class MainNavigationShell extends StatefulWidget {
   final ValueChanged<HomeMatch>? onMatchTap;
 
   @override
-  State<MainNavigationShell> createState() =>
-      _MainNavigationShellState();
+  State<MainNavigationShell> createState() => _MainNavigationShellState();
 }
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
@@ -49,8 +48,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
-    final showHomeActions =
-        _currentIndex == 0 && !_homeOverlayOpen;
+    final showHomeActions = _currentIndex == 0 && !_homeOverlayOpen;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -83,10 +81,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           : null,
       bottomNavigationBar: _homeOverlayOpen
           ? null
-          : AppBottomNavigation(
-              currentIndex: _currentIndex,
-              onTap: _selectTab,
-            ),
+          : AppBottomNavigation(currentIndex: _currentIndex, onTap: _selectTab),
     );
   }
 }

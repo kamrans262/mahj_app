@@ -5,12 +5,7 @@ import '../domain/map_match_marker.dart';
 abstract final class MapPreviewData {
   static List<MapMatchMarker> create() {
     final now = DateTime.now();
-    final tomorrow = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-      18,
-    );
+    final tomorrow = DateTime(now.year, now.month, now.day + 1, 18);
 
     const avatars = <String>[
       AppAssets.demoAvatarOne,

@@ -8,10 +8,7 @@ class AppSurfaceContainer extends StatelessWidget {
     required this.child,
     super.key,
     this.onTap,
-    this.padding = const EdgeInsets.symmetric(
-      horizontal: 20,
-      vertical: 12,
-    ),
+    this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     this.minHeight = 48,
     this.semanticsLabel,
   });
@@ -60,10 +57,6 @@ class AppSurfaceContainer extends StatelessWidget {
 
     if (onTap == null) return surface;
 
-    return Semantics(
-      button: true,
-      label: semanticsLabel,
-      child: surface,
-    );
+    return Semantics(button: true, label: semanticsLabel, child: surface);
   }
 }

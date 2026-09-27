@@ -21,10 +21,7 @@ void main() {
     );
 
     final route = AppRouter.onGenerateRoute(
-      RouteSettings(
-        name: AppRoutes.matchDetails,
-        arguments: match,
-      ),
+      RouteSettings(name: AppRoutes.matchDetails, arguments: match),
     );
 
     expect(route, isNotNull);

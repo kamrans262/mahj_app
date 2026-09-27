@@ -73,10 +73,7 @@ abstract final class AppRouter {
       },
     ),
     AppRoutes.home: (context) => _mainShell(context),
-    AppRoutes.map: (context) => _mainShell(
-      context,
-      initialIndex: 1,
-    ),
+    AppRoutes.map: (context) => _mainShell(context, initialIndex: 1),
     AppRoutes.nearbyMatches: (context) => AllNearbyMatchesScreen(
       onBack: () {
         Navigator.of(context).maybePop();
@@ -135,13 +132,7 @@ abstract final class AppRouter {
     );
   }
 
-  static void _openMatchDetails(
-    BuildContext context,
-    HomeMatch match,
-  ) {
-    Navigator.of(context).pushNamed(
-      AppRoutes.matchDetails,
-      arguments: match,
-    );
+  static void _openMatchDetails(BuildContext context, HomeMatch match) {
+    Navigator.of(context).pushNamed(AppRoutes.matchDetails, arguments: match);
   }
 }

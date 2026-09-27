@@ -44,10 +44,7 @@ class PlayerAvatarStack extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 1,
-                    ),
+                    border: Border.all(color: Colors.white, width: 1),
                   ),
                   child: ClipOval(
                     child: AppAssetIcon(

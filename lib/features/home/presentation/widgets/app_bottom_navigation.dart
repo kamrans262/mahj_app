@@ -85,20 +85,13 @@ class AppBottomNavigation extends StatelessWidget {
 }
 
 class _NavigationAssetIcon extends StatelessWidget {
-  const _NavigationAssetIcon({
-    required this.assetPath,
-    required this.color,
-  });
+  const _NavigationAssetIcon({required this.assetPath, required this.color});
 
   final String assetPath;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return AppAssetIcon(
-      assetPath: assetPath,
-      size: 24,
-      color: color,
-    );
+    return AppAssetIcon(assetPath: assetPath, size: 24, color: color);
   }
 }

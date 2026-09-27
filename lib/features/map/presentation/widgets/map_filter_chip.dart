@@ -26,17 +26,11 @@ class MapFilterChip extends StatelessWidget {
       label: semanticLabel,
       value: label,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minWidth: 80,
-          minHeight: 32,
-        ),
+        constraints: const BoxConstraints(minWidth: 80, minHeight: 32),
         child: AppSurfaceContainer(
           onTap: onTap,
           minHeight: 32,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Text(
             label,
             textAlign: TextAlign.center,

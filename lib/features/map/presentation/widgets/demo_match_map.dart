@@ -29,17 +29,12 @@ class DemoMatchMap extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.subtleSurface,
-        ),
+        decoration: const BoxDecoration(color: AppColors.subtleSurface),
         child: Stack(
           fit: StackFit.expand,
           clipBehavior: Clip.hardEdge,
           children: [
-            SvgPicture.asset(
-              AppAssets.mapDemoBackground,
-              fit: BoxFit.cover,
-            ),
+            SvgPicture.asset(AppAssets.mapDemoBackground, fit: BoxFit.cover),
             const Align(
               alignment: Alignment(0.05, 0.14),
               child: _CurrentLocationMarker(),
@@ -60,11 +55,7 @@ class DemoMatchMap extends StatelessWidget {
             if (isLoading)
               ColoredBox(
                 color: Colors.white.withValues(alpha: 0.70),
-                child: const Center(
-                  child: AppLoader(
-                    color: AppColors.primary,
-                  ),
-                ),
+                child: const Center(child: AppLoader(color: AppColors.primary)),
               ),
           ],
         ),

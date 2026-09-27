@@ -47,8 +47,7 @@ class _MapScreenState extends State<MapScreen> {
   String? _selectedMatchId;
   late final List<MapMatchMarker> _previewMarkers;
 
-  List<MapMatchMarker> get _sourceMarkers =>
-      widget.markers ?? _previewMarkers;
+  List<MapMatchMarker> get _sourceMarkers => widget.markers ?? _previewMarkers;
 
   List<MapMatchMarker> get _visibleMarkers {
     return _sourceMarkers
@@ -151,16 +150,12 @@ class _MapScreenState extends State<MapScreen> {
               ),
               child: AppCenteredPageHeader(
                 title: 'Map',
-                onBack:
-                    widget.onBack ??
-                    () => Navigator.of(context).maybePop(),
+                onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(
-                  AppSpacing.pageHorizontal,
-                ),
+                padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -192,9 +187,7 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     if (widget.isLoading && selected == null)
-                      const _MapStateCard(
-                        message: 'Loading nearby matches...',
-                      )
+                      const _MapStateCard(message: 'Loading nearby matches...')
                     else if (selected == null)
                       const _MapStateCard(
                         message: 'No matches found in this area',
@@ -233,23 +226,18 @@ class _SelectedMatchCard extends StatelessWidget {
     return MatchCard(
       match: match,
       showStatus: false,
-      subtitle: HomeDateTimeFormatter.featuredSchedule(
-        match.startsAt,
-      ),
+      subtitle: HomeDateTimeFormatter.featuredSchedule(match.startsAt),
       titleStyle: AppTypography.homeMatchTitle18,
       sportIconSize: 40,
       footer: LayoutBuilder(
         builder: (context, constraints) {
           final textScale = MediaQuery.textScalerOf(context).scale(1);
-          final shouldStack =
-              constraints.maxWidth < 300 || textScale > 1.35;
+          final shouldStack = constraints.maxWidth < 300 || textScale > 1.35;
 
           final players = Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PlayerAvatarStack(
-                assetPaths: marker.playerAvatarAssets,
-              ),
+              PlayerAvatarStack(assetPaths: marker.playerAvatarAssets),
               const SizedBox(width: AppSpacing.sm),
               Flexible(
                 child: Text(
@@ -275,10 +263,7 @@ class _SelectedMatchCard extends StatelessWidget {
               children: [
                 players,
                 const SizedBox(height: AppSpacing.sm),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: details,
-                ),
+                Align(alignment: Alignment.centerRight, child: details),
               ],
             );
           }

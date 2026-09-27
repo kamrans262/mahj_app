@@ -34,8 +34,7 @@ class MatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedSubtitle = subtitle ?? match.location;
-    final resolvedSurface =
-        surfaceColor ?? AppColors.nearbyMatchCardSurface;
+    final resolvedSurface = surfaceColor ?? AppColors.nearbyMatchCardSurface;
 
     return Semantics(
       button: onTap != null,
@@ -75,10 +74,7 @@ class MatchCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SportIcon(
-                          match: match,
-                          size: sportIconSize,
-                        ),
+                        SportIcon(match: match, size: sportIconSize),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -135,10 +131,7 @@ class MatchCard extends StatelessWidget {
 }
 
 class _MetadataRow extends StatelessWidget {
-  const _MetadataRow({
-    required this.match,
-    required this.showPlayerCount,
-  });
+  const _MetadataRow({required this.match, required this.showPlayerCount});
 
   final HomeMatch match;
   final bool showPlayerCount;
@@ -158,8 +151,7 @@ class _MetadataRow extends StatelessWidget {
           ),
           if (showPlayerCount)
             MatchMetadataItem(
-              text:
-                  '${match.currentPlayers}/${match.maxPlayers} Players',
+              text: '${match.currentPlayers}/${match.maxPlayers} Players',
             ),
         ];
 
@@ -175,11 +167,7 @@ class _MetadataRow extends StatelessWidget {
         }
 
         if (constraints.maxWidth < 315) {
-          return Wrap(
-            spacing: 16,
-            runSpacing: 10,
-            children: children,
-          );
+          return Wrap(spacing: 16, runSpacing: 10, children: children);
         }
 
         return Row(
@@ -198,11 +186,7 @@ class _MetadataRow extends StatelessWidget {
 }
 
 class MatchMetadataItem extends StatelessWidget {
-  const MatchMetadataItem({
-    required this.text,
-    super.key,
-    this.icon,
-  });
+  const MatchMetadataItem({required this.text, super.key, this.icon});
 
   final String text;
   final IconData? icon;
@@ -213,11 +197,7 @@ class MatchMetadataItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icon != null) ...[
-          Icon(
-            icon,
-            size: 18,
-            color: const Color(0xFF6E8668),
-          ),
+          Icon(icon, size: 18, color: const Color(0xFF6E8668)),
           const SizedBox(width: 7),
         ],
         Flexible(

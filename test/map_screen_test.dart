@@ -14,12 +14,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     final now = DateTime.now();
-    final tomorrow = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-      18,
-    );
+    final tomorrow = DateTime(now.year, now.month, now.day + 1, 18);
 
     final basketball = HomeMatch(
       id: 'basketball',
@@ -75,9 +70,7 @@ void main() {
     expect(find.byKey(const ValueKey('map-demo-canvas')), findsOneWidget);
     expect(find.text('Basket Ball'), findsWidgets);
 
-    await tester.tap(
-      find.byKey(const ValueKey('map-marker-football')),
-    );
+    await tester.tap(find.byKey(const ValueKey('map-marker-football')));
     await tester.pumpAndSettle();
 
     expect(find.text('3/6 Players'), findsWidgets);
@@ -88,9 +81,7 @@ void main() {
     expect(viewedMatch?.id, 'football');
   });
 
-  testWidgets('Map radius filter can show an empty state', (
-    tester,
-  ) async {
+  testWidgets('Map radius filter can show an empty state', (tester) async {
     tester.view.physicalSize = const Size(820, 1500);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

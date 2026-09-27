@@ -7,11 +7,7 @@ import '../../home/domain/home_match.dart';
 import '../../home/presentation/widgets/match_card.dart';
 
 class MatchDetailsScreen extends StatelessWidget {
-  const MatchDetailsScreen({
-    required this.match,
-    super.key,
-    this.onBack,
-  });
+  const MatchDetailsScreen({required this.match, super.key, this.onBack});
 
   final HomeMatch match;
   final VoidCallback? onBack;
@@ -32,16 +28,12 @@ class MatchDetailsScreen extends StatelessWidget {
               ),
               child: AppCenteredPageHeader(
                 title: 'Match Details',
-                onBack:
-                    onBack ??
-                    () => Navigator.of(context).maybePop(),
+                onBack: onBack ?? () => Navigator.of(context).maybePop(),
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(
-                  AppSpacing.pageHorizontal,
-                ),
+                padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
                 child: MatchCard(match: match),
               ),
             ),

@@ -26,11 +26,7 @@ abstract final class SportIconResolver {
 }
 
 class SportIcon extends StatelessWidget {
-  const SportIcon({
-    required this.match,
-    super.key,
-    this.size = 24,
-  });
+  const SportIcon({required this.match, super.key, this.size = 24});
 
   final HomeMatch match;
   final double size;
@@ -40,16 +36,9 @@ class SportIcon extends StatelessWidget {
     final assetPath = SportIconResolver.assetFor(match);
 
     if (assetPath != null) {
-      return AppAssetIcon(
-        assetPath: assetPath,
-        size: size,
-      );
+      return AppAssetIcon(assetPath: assetPath, size: size);
     }
 
-    return Icon(
-      Icons.sports,
-      size: size,
-      color: AppColors.heading,
-    );
+    return Icon(Icons.sports, size: size, color: AppColors.heading);
   }
 }
