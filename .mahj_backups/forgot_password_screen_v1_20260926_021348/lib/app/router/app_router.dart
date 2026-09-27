@@ -1,0 +1,35 @@
+import 'package:flutter/material.dart';
+
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/splash/presentation/splash_screen.dart';
+
+abstract final class AppRoutes {
+  static const String splash = '/';
+  static const String login = '/login';
+  static const String signUp = '/sign-up';
+}
+
+abstract final class AppRouter {
+  static Map<String, WidgetBuilder> get routes => {
+    AppRoutes.splash: (_) => const SplashScreen(),
+    AppRoutes.login: (context) => LoginScreen(
+      onSignUp: () {
+        Navigator.of(context).pushNamed(AppRoutes.signUp);
+      },
+    ),
+    AppRoutes.signUp: (context) => SignUpScreen(
+      onBack: () {
+        Navigator.of(context).maybePop();
+      },
+      onLogin: () {
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop();
+        } else {
+          navigator.pushReplacementNamed(AppRoutes.login);
+        }
+      },
+    ),
+  };
+}

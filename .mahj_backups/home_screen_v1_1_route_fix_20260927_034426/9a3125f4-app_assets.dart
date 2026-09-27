@@ -1,0 +1,22 @@
+﻿abstract final class AppAssets {
+  static const String splashLogo = 'assets/splash_logo.png';
+  static const String loginImage = 'assets/login_image.png';
+  static const String googleLoginIcon = 'assets/icons/google.svg';
+  static const String appleLoginIcon = 'assets/icons/apple.svg';
+
+  static const String forgotPasswordLock = 'assets/lock.png';
+  static const String approveIcon = 'assets/icons/approve.svg';
+  static const String resetSendIcon = 'assets/icons/send.svg';
+  static const String premiumCrownIcon = 'assets/icons/crown.svg';
+  static const bool premiumCrownIncludesBadge = true;
+  static const String homeBellIcon = 'assets/icons/bell.svg';
+  static const String homeMessageIcon = 'assets/icons/message.svg';
+  static const String homeFootballIcon = 'assets/icons/football.svg';
+  static const String homeBannerImage = 'assets/banner1.png';
+  static const String homeFootballImage = 'assets/football.png';
+}
+
+
+
+
+

@@ -1,0 +1,20 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="80" cy="80" r="70" fill="white" stroke="#1A1A1A" stroke-width="5"></circle>
+
+  <!-- Center pentagon -->
+  <path d="M80 51L99 65L92 87H68L61 65L80 51Z" fill="#1A1A1A"></path>
+
+  <!-- Outer black sections -->
+  <path d="M33 38L52 28L65 48L53 65L32 58L33 38Z" fill="#1A1A1A"></path>
+  <path d="M127 38L108 28L95 48L107 65L128 58L127 38Z" fill="#1A1A1A"></path>
+  <path d="M28 101L30 80L53 76L65 95L50 112L28 101Z" fill="#1A1A1A"></path>
+  <path d="M132 101L130 80L107 76L95 95L110 112L132 101Z" fill="#1A1A1A"></path>
+  <path d="M63 143L51 125L68 109H92L109 125L97 143H63Z" fill="#1A1A1A"></path>
+
+  <!-- Connecting lines -->
+  <path d="M65 48L80 51M95 48L80 51" stroke="#1A1A1A" stroke-width="4"></path>
+  <path d="M53 65L61 65M99 65L107 65" stroke="#1A1A1A" stroke-width="4"></path>
+  <path d="M53 76L68 87M107 76L92 87" stroke="#1A1A1A" stroke-width="4"></path>
+  <path d="M65 95L68 87M95 95L92 87" stroke="#1A1A1A" stroke-width="4"></path>
+  <path d="M68 109L68 87M92 109L92 87" stroke="#1A1A1A" stroke-width="4"></path>
+</svg>
