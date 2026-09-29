@@ -1,6 +1,18 @@
 import '../../../core/network/api_client.dart';
 import '../domain/subscription_state.dart';
 
+class SubscriptionStartResult {
+  const SubscriptionStartResult({
+    required this.state,
+    this.checkoutUrl,
+  });
+
+  final SubscriptionState state;
+  final String? checkoutUrl;
+
+  bool get requiresCheckout => checkoutUrl != null && checkoutUrl!.isNotEmpty;
+}
+
 class SubscriptionRepository {
   const SubscriptionRepository({required ApiClient apiClient})
     : this._(apiClient);
@@ -14,12 +26,16 @@ class SubscriptionRepository {
     return SubscriptionState.fromJson(payload);
   }
 
-  Future<SubscriptionState> startTrial(String planId) async {
+  Future<SubscriptionStartResult> startTrial(String planId) async {
     final payload = await _apiClient.post(
       '/subscription/start-trial',
       body: {'plan_id': _normalizePlanId(planId)},
     );
-    return SubscriptionState.fromJson(payload);
+
+    return SubscriptionStartResult(
+      state: SubscriptionState.fromJson(payload),
+      checkoutUrl: payload['checkout_url']?.toString(),
+    );
   }
 
   Future<SubscriptionState> changePlan(String planId) async {
