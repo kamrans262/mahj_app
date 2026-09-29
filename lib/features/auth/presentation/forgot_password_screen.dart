@@ -272,7 +272,10 @@ class _ResetLinkSentCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Verification Code Sent', style: AppTypography.successTitle),
+                Text(
+                  'Verification Code Sent',
+                  style: AppTypography.successTitle,
+                ),
                 SizedBox(height: AppSpacing.micro),
                 Text(
                   'We’ve sent a 6-digit verification code to your email',

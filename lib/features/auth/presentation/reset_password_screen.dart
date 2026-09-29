@@ -10,11 +10,7 @@ import '../domain/auth_validators.dart';
 import 'widgets/auth_background.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({
-    super.key,
-    this.onBack,
-    this.onResetPassword,
-  });
+  const ResetPasswordScreen({super.key, this.onBack, this.onResetPassword});
 
   final VoidCallback? onBack;
   final Future<bool> Function(String password)? onResetPassword;
@@ -79,9 +75,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       maxWidth: 480,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(
-                        AppSpacing.pageHorizontal,
-                      ),
+                      padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
                       child: Form(
                         key: _formKey,
                         child: Column(
@@ -91,8 +85,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               alignment: Alignment.centerLeft,
                               child: AppBackButton(
                                 key: const ValueKey('reset-password-back'),
-                                onPressed:
-                                    _isSubmitting ? null : widget.onBack,
+                                onPressed: _isSubmitting ? null : widget.onBack,
                               ),
                             ),
                             const SizedBox(height: 54),
@@ -120,9 +113,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               obscureText: true,
                               enabled: !_isSubmitting,
                               textInputAction: TextInputAction.next,
-                              autofillHints: const [
-                                AutofillHints.newPassword,
-                              ],
+                              autofillHints: const [AutofillHints.newPassword],
                               validator: AuthValidators.newPassword,
                               onFieldSubmitted: (_) {
                                 _confirmationFocus.requestFocus();
@@ -130,9 +121,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             ),
                             const SizedBox(height: AppSpacing.lg),
                             AppTextField(
-                              key: const ValueKey(
-                                'reset-confirm-password',
-                              ),
+                              key: const ValueKey('reset-confirm-password'),
                               controller: _confirmationController,
                               focusNode: _confirmationFocus,
                               hintText: 'Confirm Password',
@@ -140,9 +129,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               obscureText: true,
                               enabled: !_isSubmitting,
                               textInputAction: TextInputAction.done,
-                              autofillHints: const [
-                                AutofillHints.newPassword,
-                              ],
+                              autofillHints: const [AutofillHints.newPassword],
                               validator: (value) =>
                                   AuthValidators.confirmPassword(
                                     value,
@@ -152,9 +139,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             ),
                             const SizedBox(height: 44),
                             AppButton.primary(
-                              key: const ValueKey(
-                                'reset-password-submit',
-                              ),
+                              key: const ValueKey('reset-password-submit'),
                               label: 'Reset Password',
                               onPressed: _submit,
                               isLoading: _isSubmitting,

@@ -77,10 +77,7 @@ void main() {
       },
     );
 
-    await tester.enterText(
-      find.byKey(const ValueKey('otp-input')),
-      '123456',
-    );
+    await tester.enterText(find.byKey(const ValueKey('otp-input')), '123456');
     await tester.tap(find.byKey(const ValueKey('otp-verify-button')));
     await tester.pumpAndSettle();
 
@@ -103,16 +100,16 @@ void main() {
       },
     );
 
-    await tester.enterText(
-      find.byKey(const ValueKey('otp-input')),
-      '123456',
-    );
+    await tester.enterText(find.byKey(const ValueKey('otp-input')), '123456');
     await tester.tap(find.byKey(const ValueKey('otp-resend-button')));
     await tester.pumpAndSettle();
 
     expect(resendCount, 1);
     expect(
-      tester.widget<TextField>(find.byKey(const ValueKey('otp-input'))).controller?.text,
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('otp-input')))
+          .controller
+          ?.text,
       isEmpty,
     );
     expect(tester.takeException(), isNull);

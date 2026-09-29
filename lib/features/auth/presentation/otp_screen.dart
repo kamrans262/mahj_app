@@ -112,9 +112,10 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     final isRegistration = widget.purpose == OtpPurpose.registration;
-    final title = isRegistration ? 'Verify Your Email' : 'Enter Verification Code';
-    final subtitle =
-        'We sent a 6-digit verification code to\n${widget.email}';
+    final title = isRegistration
+        ? 'Verify Your Email'
+        : 'Enter Verification Code';
+    final subtitle = 'We sent a 6-digit verification code to\n${widget.email}';
 
     return Scaffold(
       key: const ValueKey('otp-screen'),
@@ -149,8 +150,9 @@ class _OtpScreenState extends State<OtpScreen> {
                             alignment: Alignment.centerLeft,
                             child: AppBackButton(
                               key: const ValueKey('otp-back-button'),
-                              onPressed:
-                                  _isVerifying || _isResending ? null : widget.onBack,
+                              onPressed: _isVerifying || _isResending
+                                  ? null
+                                  : widget.onBack,
                             ),
                           ),
                           SizedBox(height: centerGap),
@@ -186,8 +188,9 @@ class _OtpScreenState extends State<OtpScreen> {
                           Center(
                             child: TextButton(
                               key: const ValueKey('otp-resend-button'),
-                              onPressed:
-                                  _isVerifying || _isResending ? null : _resend,
+                              onPressed: _isVerifying || _isResending
+                                  ? null
+                                  : _resend,
                               child: Text(
                                 _isResending
                                     ? 'Sending...'
@@ -213,10 +216,7 @@ class _OtpScreenState extends State<OtpScreen> {
 }
 
 class _OtpInput extends StatelessWidget {
-  const _OtpInput({
-    required this.controller,
-    required this.focusNode,
-  });
+  const _OtpInput({required this.controller, required this.focusNode});
 
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -266,8 +266,7 @@ class _OtpInput extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   const gap = AppSpacing.xs;
-                  final availableForBoxes =
-                      constraints.maxWidth - (gap * 5);
+                  final availableForBoxes = constraints.maxWidth - (gap * 5);
                   final boxSize = (availableForBoxes / 6)
                       .clamp(36.0, 48.0)
                       .toDouble();
@@ -282,9 +281,7 @@ class _OtpInput extends StatelessWidget {
                       final active = focusNode.hasFocus && index == activeIndex;
 
                       return Padding(
-                        padding: EdgeInsets.only(
-                          right: index == 5 ? 0 : gap,
-                        ),
+                        padding: EdgeInsets.only(right: index == 5 ? 0 : gap),
                         child: AnimatedContainer(
                           key: ValueKey('otp-box-$index'),
                           duration: const Duration(milliseconds: 120),

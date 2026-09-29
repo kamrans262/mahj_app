@@ -6,11 +6,9 @@ import '../domain/auth_flow_args.dart';
 import '../domain/auth_user.dart';
 
 class AuthRepository {
-  AuthRepository({
-    required ApiClient apiClient,
-    required TokenStore tokenStore,
-  }) : _apiClient = apiClient,
-       _tokenStore = tokenStore;
+  AuthRepository({required ApiClient apiClient, required TokenStore tokenStore})
+    : _apiClient = apiClient,
+      _tokenStore = tokenStore;
 
   final ApiClient _apiClient;
   final TokenStore _tokenStore;
@@ -179,10 +177,7 @@ class AuthRepository {
   Future<void> changePassword(String password) async {
     await _apiClient.put(
       '/account/password',
-      body: {
-        'password': password,
-        'password_confirmation': password,
-      },
+      body: {'password': password, 'password_confirmation': password},
     );
   }
 
@@ -207,10 +202,7 @@ class AuthRepository {
     return user;
   }
 
-  Map<String, dynamic> _readMap(
-    Map<String, dynamic> payload,
-    String key,
-  ) {
+  Map<String, dynamic> _readMap(Map<String, dynamic> payload, String key) {
     final value = payload[key];
     if (value is Map<String, dynamic>) return value;
     if (value is Map) {

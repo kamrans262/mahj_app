@@ -94,10 +94,8 @@ abstract final class AppRouter {
         try {
           await _authRepository.login(email: email, password: password);
           if (!context.mounted) return;
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            AppRoutes.home,
-            (route) => false,
-          );
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
         } catch (error) {
           if (context.mounted) _showApiError(context, error);
         }
@@ -216,10 +214,8 @@ abstract final class AppRouter {
         try {
           await _authRepository.logout();
           if (!context.mounted) return true;
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            AppRoutes.login,
-            (route) => false,
-          );
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
           return true;
         } catch (error) {
           if (context.mounted) _showApiError(context, error);
@@ -230,10 +226,8 @@ abstract final class AppRouter {
         try {
           await _authRepository.deleteAccount();
           if (!context.mounted) return true;
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            AppRoutes.login,
-            (route) => false,
-          );
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
           return true;
         } catch (error) {
           if (context.mounted) _showApiError(context, error);
@@ -245,10 +239,8 @@ abstract final class AppRouter {
       initialEmail:
           _authRepository.currentUser?.email ??
           ProfilePreviewData.currentUser.email,
-      isGoogleConnected:
-          _authRepository.currentUser?.googleConnected ?? false,
-      isAppleConnected:
-          _authRepository.currentUser?.appleConnected ?? false,
+      isGoogleConnected: _authRepository.currentUser?.googleConnected ?? false,
+      isAppleConnected: _authRepository.currentUser?.appleConnected ?? false,
       onBack: () => Navigator.of(context).maybePop(),
       onChangeEmail: (email) async {
         try {
@@ -282,10 +274,8 @@ abstract final class AppRouter {
         try {
           await _authRepository.deleteAccount();
           if (!context.mounted) return true;
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            AppRoutes.login,
-            (route) => false,
-          );
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
           return true;
         } catch (error) {
           if (context.mounted) _showApiError(context, error);
@@ -394,8 +384,7 @@ abstract final class AppRouter {
                   (route) => false,
                 );
               } else {
-                final resetToken =
-                    await _authRepository.verifyPasswordResetOtp(
+                final resetToken = await _authRepository.verifyPasswordResetOtp(
                   email: args.email,
                   otp: otp,
                 );
@@ -435,10 +424,8 @@ abstract final class AppRouter {
               );
               if (!context.mounted) return true;
               _showSuccess(context, 'Password reset successfully.');
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.login,
-                (route) => false,
-              );
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
               return true;
             } catch (error) {
               if (context.mounted) _showApiError(context, error);

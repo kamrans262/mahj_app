@@ -13,20 +13,14 @@ enum OtpPurpose {
 }
 
 class OtpRouteArgs {
-  const OtpRouteArgs({
-    required this.email,
-    required this.purpose,
-  });
+  const OtpRouteArgs({required this.email, required this.purpose});
 
   final String email;
   final OtpPurpose purpose;
 }
 
 class ResetPasswordRouteArgs {
-  const ResetPasswordRouteArgs({
-    required this.email,
-    required this.resetToken,
-  });
+  const ResetPasswordRouteArgs({required this.email, required this.resetToken});
 
   final String email;
   final String resetToken;

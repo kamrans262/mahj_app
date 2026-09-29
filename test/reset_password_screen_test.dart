@@ -33,9 +33,7 @@ void main() {
       find.byKey(const ValueKey('reset-confirm-password')),
       'new-password123',
     );
-    await tester.tap(
-      find.byKey(const ValueKey('reset-password-submit')),
-    );
+    await tester.tap(find.byKey(const ValueKey('reset-password-submit')));
     await tester.pumpAndSettle();
 
     expect(submitted, 'new-password123');

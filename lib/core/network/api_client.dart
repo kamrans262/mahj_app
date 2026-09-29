@@ -18,10 +18,7 @@ class ApiClient {
   final TokenStore _tokenStore;
   final http.Client _httpClient;
 
-  Future<Map<String, dynamic>> get(
-    String path, {
-    bool authenticated = true,
-  }) {
+  Future<Map<String, dynamic>> get(String path, {bool authenticated = true}) {
     return _send('GET', path, authenticated: authenticated);
   }
 
@@ -30,12 +27,7 @@ class ApiClient {
     Map<String, dynamic>? body,
     bool authenticated = true,
   }) {
-    return _send(
-      'POST',
-      path,
-      body: body,
-      authenticated: authenticated,
-    );
+    return _send('POST', path, body: body, authenticated: authenticated);
   }
 
   Future<Map<String, dynamic>> put(
@@ -43,12 +35,7 @@ class ApiClient {
     Map<String, dynamic>? body,
     bool authenticated = true,
   }) {
-    return _send(
-      'PUT',
-      path,
-      body: body,
-      authenticated: authenticated,
-    );
+    return _send('PUT', path, body: body, authenticated: authenticated);
   }
 
   Future<Map<String, dynamic>> delete(
@@ -104,10 +91,7 @@ class ApiClient {
     return <String, dynamic>{'data': decoded};
   }
 
-  ApiException _exceptionFor(
-    int statusCode,
-    Map<String, dynamic> payload,
-  ) {
+  ApiException _exceptionFor(int statusCode, Map<String, dynamic> payload) {
     final parsedErrors = <String, List<String>>{};
     final rawErrors = payload['errors'];
 
