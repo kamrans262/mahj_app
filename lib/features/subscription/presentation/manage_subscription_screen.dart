@@ -66,10 +66,9 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
     }
   }
 
-  List<SubscriptionPlan> get _alternativePlans =>
-      widget.availablePlans
-          .where((plan) => plan.id != _currentPlan.id && plan.isSelectable)
-          .toList(growable: false);
+  List<SubscriptionPlan> get _alternativePlans => widget.availablePlans
+      .where((plan) => plan.id != _currentPlan.id && plan.isSelectable)
+      .toList(growable: false);
 
   SubscriptionPlan? get _selectedPlan {
     for (final plan in _alternativePlans) {
@@ -258,8 +257,7 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
                       ),
                       child: AppConfirmationDialog(
                         title: 'Cancel Subscription?',
-                        message:
-                            'Your current access will remain available until the end of the current period.',
+                        message: 'Your current access will remain available until the end of the current period.',
                         cancelLabel: 'Keep Plan',
                         confirmLabel: 'Cancel Plan',
                         isLoading: dialogLoading,
