@@ -66,8 +66,12 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
     }
   }
 
+  List<SubscriptionPlan> get _alternativePlans => widget.availablePlans
+      .where((plan) => plan.id != _currentPlan.id && plan.isSelectable)
+      .toList(growable: false);
+
   SubscriptionPlan? get _selectedPlan {
-    for (final plan in widget.availablePlans) {
+    for (final plan in _alternativePlans) {
       if (plan.id == _selectedPlanId) return plan;
     }
     return null;
@@ -308,11 +312,10 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
             Expanded(child: _buildScrollableContent()),
             if (!widget.isLoading && widget.errorMessage == null)
               _SubscriptionBottomArea(
-                infoText:
-                    _selectedPlan?.infoText ??
-                    _currentPlan.infoText ??
-                    'You won’t be charged until the trial ends',
-                onConfirm: _openConfirmation,
+                infoText: _selectedPlan?.infoText,
+                onConfirm: _alternativePlans.isEmpty
+                    ? null
+                    : _openConfirmation,
                 onCancel: widget.onCancelSubscription == null
                     ? null
                     : _openCancellation,
@@ -358,6 +361,8 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
       );
     }
 
+    final alternativePlans = _alternativePlans;
+
     return ListView(
       key: const ValueKey('manage-subscription-scroll-view'),
       padding: const EdgeInsets.fromLTRB(
@@ -370,37 +375,25 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
         Text('Current Plan', style: AppTypography.homeMeta14),
         const SizedBox(height: AppSpacing.xs),
         SubscriptionPlanCard(plan: _currentPlan),
-        const SizedBox(height: AppSpacing.lg),
-        Text('Choose Your Plan', style: AppTypography.homeMeta14),
-        const SizedBox(height: AppSpacing.xs),
-        if (widget.availablePlans.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            child: Text(
-              'No alternative plans are available right now.',
-              textAlign: TextAlign.center,
-              style: AppTypography.body14,
-            ),
-          )
-        else
-          for (
-            var index = 0;
-            index < widget.availablePlans.length;
-            index++
-          ) ...[
+        if (alternativePlans.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text('Choose Your Plan', style: AppTypography.homeMeta14),
+          const SizedBox(height: AppSpacing.xs),
+          for (var index = 0; index < alternativePlans.length; index++) ...[
             Builder(
               builder: (context) {
-                final plan = widget.availablePlans[index];
+                final plan = alternativePlans[index];
                 return SubscriptionPlanCard(
                   plan: plan,
                   isSelected: _selectedPlanId == plan.id,
-                  onTap: plan.isSelectable ? () => _selectPlan(plan) : null,
+                  onTap: () => _selectPlan(plan),
                 );
               },
             ),
-            if (index < widget.availablePlans.length - 1)
+            if (index < alternativePlans.length - 1)
               const SizedBox(height: AppSpacing.lg),
           ],
+        ],
       ],
     );
   }
@@ -408,15 +401,15 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
 
 class _SubscriptionBottomArea extends StatelessWidget {
   const _SubscriptionBottomArea({
-    required this.infoText,
-    required this.onConfirm,
+    this.infoText,
+    this.onConfirm,
     this.onCancel,
     required this.onTermsTap,
     required this.onPrivacyPolicyTap,
   });
 
-  final String infoText;
-  final VoidCallback onConfirm;
+  final String? infoText;
+  final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
   final VoidCallback onTermsTap;
   final VoidCallback onPrivacyPolicyTap;
@@ -434,17 +427,21 @@ class _SubscriptionBottomArea extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppButton.primary(
-            key: const ValueKey('manage-subscription-confirm'),
-            label: 'Confirm Changes',
-            onPressed: onConfirm,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            infoText,
-            textAlign: TextAlign.center,
-            style: AppTypography.action14,
-          ),
+          if (onConfirm != null) ...[
+            AppButton.primary(
+              key: const ValueKey('manage-subscription-confirm'),
+              label: 'Confirm Changes',
+              onPressed: onConfirm,
+            ),
+            if (infoText != null && infoText!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                infoText!,
+                textAlign: TextAlign.center,
+                style: AppTypography.action14,
+              ),
+            ],
+          ],
           if (onCancel != null) ...[
             const SizedBox(height: AppSpacing.sm),
             TextButton(
