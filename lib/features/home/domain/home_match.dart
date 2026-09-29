@@ -129,10 +129,8 @@ class HomeMatch {
       notes: notes ?? this.notes,
       isPublic: isPublic ?? this.isPublic,
       isInviteOnly: isInviteOnly ?? this.isInviteOnly,
-      isCurrentUserJoined:
-          isCurrentUserJoined ?? this.isCurrentUserJoined,
-      isOwnedByCurrentUser:
-          isOwnedByCurrentUser ?? this.isOwnedByCurrentUser,
+      isCurrentUserJoined: isCurrentUserJoined ?? this.isCurrentUserJoined,
+      isOwnedByCurrentUser: isOwnedByCurrentUser ?? this.isOwnedByCurrentUser,
       canLeave: canLeave ?? this.canLeave,
       canCancel: canCancel ?? this.canCancel,
       latitude: latitude ?? this.latitude,
