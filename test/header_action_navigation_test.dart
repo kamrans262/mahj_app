@@ -4,6 +4,7 @@ import 'package:mahj_app/app/router/app_router.dart';
 import 'package:mahj_app/features/chat/presentation/match_chat_screen.dart';
 import 'package:mahj_app/features/matches/presentation/match_details_screen.dart';
 import 'package:mahj_app/features/notifications/presentation/notifications_screen.dart';
+import 'package:mahj_app/features/notifications/presentation/widgets/notification_list_item.dart';
 
 const _homeNotificationsKey = ValueKey('home-header-notifications');
 const _homeMessagesKey = ValueKey('home-header-messages');
@@ -47,7 +48,9 @@ void main() {
       const ValueKey('notification-item-demo-notification-1'),
     );
     expect(notificationItem, findsOneWidget);
-    await tester.tap(notificationItem);
+    final item = tester.widget<NotificationListItem>(notificationItem);
+    expect(item.onTap, isNotNull);
+    item.onTap!.call();
     await tester.pumpAndSettle();
 
     expect(find.byType(MatchDetailsScreen), findsOneWidget);

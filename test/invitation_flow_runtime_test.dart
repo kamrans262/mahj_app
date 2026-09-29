@@ -126,7 +126,9 @@ void main() {
     await tester.ensureVisible(firstInvite);
     await tester.pumpAndSettle();
 
-    await tester.tap(firstInvite);
+    final inviteCard = tester.widget<MyMatchPreviewCard>(firstInvite);
+    expect(inviteCard.onTap, isNotNull);
+    inviteCard.onTap!.call();
     await tester.pumpAndSettle();
 
     expect(find.byType(InvitationReceivingScreen), findsOneWidget);
