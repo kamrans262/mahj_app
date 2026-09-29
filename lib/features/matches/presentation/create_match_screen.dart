@@ -39,6 +39,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   final _locationController = TextEditingController();
   final _venueController = TextEditingController();
+  final _notesController = TextEditingController();
 
   CreateMatchFormState _formState = const CreateMatchFormState();
   bool _isSubmitting = false;
@@ -48,6 +49,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   void dispose() {
     _locationController.dispose();
     _venueController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -247,6 +249,23 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     );
   }
 
+  Widget _buildNotesField() {
+    return AppTextField(
+      controller: _notesController,
+      hintText: 'Notes for players (Optional)',
+      leadingIcon: Icons.notes_outlined,
+      enabled: !_isSubmitting,
+      keyboardType: TextInputType.multiline,
+      textInputAction: TextInputAction.newline,
+      minLines: 2,
+      maxLines: 4,
+      textCapitalization: TextCapitalization.sentences,
+      onChanged: (value) {
+        _formState = _formState.copyWith(notes: value);
+      },
+    );
+  }
+
   Widget _buildDateTimeFields() {
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final shouldStack =
@@ -385,6 +404,8 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                                   const SizedBox(height: AppSpacing.lg),
                                   _buildDateTimeFields(),
                                   const SizedBox(height: AppSpacing.lg),
+                                  _buildNotesField(),
+                                  const SizedBox(height: AppSpacing.lg),
                                   _ToggleFormRow(
                                     title: 'Public Match',
                                     subtitle: 'Anyone can find and join',
@@ -394,6 +415,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                                       setState(() {
                                         _formState = _formState.copyWith(
                                           isPublicMatch: value,
+                                          isInviteOnly: value
+                                              ? false
+                                              : _formState.isInviteOnly,
                                         );
                                       });
                                     },
@@ -408,6 +432,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                                       setState(() {
                                         _formState = _formState.copyWith(
                                           isInviteOnly: value,
+                                          isPublicMatch: value
+                                              ? false
+                                              : _formState.isPublicMatch,
                                         );
                                       });
                                     },
