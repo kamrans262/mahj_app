@@ -2,6 +2,7 @@ class CreateMatchFormState {
   const CreateMatchFormState({
     this.locationAddress,
     this.venueName = '',
+    this.notes = '',
     this.selectedDate,
     this.selectedTimeMinutes,
     this.isPublicMatch = true,
@@ -10,6 +11,7 @@ class CreateMatchFormState {
 
   final String? locationAddress;
   final String venueName;
+  final String notes;
   final DateTime? selectedDate;
   final int? selectedTimeMinutes;
   final bool isPublicMatch;
@@ -25,6 +27,7 @@ class CreateMatchFormState {
     String? locationAddress,
     bool clearLocation = false,
     String? venueName,
+    String? notes,
     DateTime? selectedDate,
     bool clearDate = false,
     int? selectedTimeMinutes,
@@ -37,6 +40,7 @@ class CreateMatchFormState {
           ? null
           : locationAddress ?? this.locationAddress,
       venueName: venueName ?? this.venueName,
+      notes: notes ?? this.notes,
       selectedDate: clearDate ? null : selectedDate ?? this.selectedDate,
       selectedTimeMinutes: clearTime
           ? null
@@ -64,6 +68,7 @@ class CreateMatchFormState {
     return CreateMatchRequest(
       locationAddress: location,
       venueName: venueName.trim().isEmpty ? null : venueName.trim(),
+      notes: notes.trim().isEmpty ? null : notes.trim(),
       startsAt: DateTime(date.year, date.month, date.day, hour, minute),
       isPublicMatch: isPublicMatch,
       isInviteOnly: isInviteOnly,
@@ -78,6 +83,7 @@ class CreateMatchRequest {
     required this.isPublicMatch,
     required this.isInviteOnly,
     this.venueName,
+    this.notes,
     this.locationId,
     this.latitude,
     this.longitude,
@@ -85,6 +91,7 @@ class CreateMatchRequest {
 
   final String locationAddress;
   final String? venueName;
+  final String? notes;
   final DateTime startsAt;
   final bool isPublicMatch;
   final bool isInviteOnly;
