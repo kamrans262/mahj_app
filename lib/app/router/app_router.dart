@@ -18,6 +18,7 @@ import '../../features/matches/data/invite_players_preview_data.dart';
 import '../../features/matches/data/match_completed_preview_data.dart';
 import '../../features/matches/data/my_matches_preview_data.dart';
 import '../../features/matches/domain/my_matches_data.dart';
+import '../../features/matches/presentation/connected_match_details_screen.dart';
 import '../../features/matches/presentation/create_match_screen.dart';
 import '../../features/matches/presentation/invite_players_screen.dart';
 import '../../features/matches/presentation/invitation_receiving_screen.dart';
@@ -80,6 +81,7 @@ abstract final class AppRoutes {
 
 abstract final class AppRouter {
   static final _authRepository = AppServices.authRepository;
+  static final _matchRepository = AppServices.matchRepository;
 
   static Map<String, WidgetBuilder> get routes => {
     AppRoutes.splash: (_) => SplashScreen(
@@ -341,8 +343,19 @@ abstract final class AppRouter {
       onCancel: () {
         Navigator.of(context).maybePop();
       },
+      onSubmit: _matchRepository.create,
       onInvitePlayers: (match) {
         _openInvitePlayers(context, match);
+      },
+      onBackHome: (_) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+      },
+      onViewMatch: (match) {
+        Navigator.of(context).pushNamed(
+          AppRoutes.matchDetails,
+          arguments: match,
+        );
       },
     ),
   };
@@ -527,17 +540,30 @@ abstract final class AppRouter {
 
       return MaterialPageRoute<void>(
         settings: settings,
-        builder: (context) => MatchDetailsScreen(
-          match: match,
-          onBack: () => Navigator.of(context).maybePop(),
-          onInvitePlayers: () {
-            _openInvitePlayers(context, match);
-          },
-          onChat: (_) {
-            Navigator.of(context)
-                .pushNamed(AppRoutes.matchChat, arguments: match);
-          },
-        ),
+        builder: (context) {
+          if (match.isBackendMatch) {
+            return ConnectedMatchDetailsScreen(
+              initialMatch: match,
+              repository: _matchRepository,
+              onBack: () => Navigator.of(context).maybePop(),
+              onInvitePlayers: () {
+                _openInvitePlayers(context, match);
+              },
+            );
+          }
+
+          return MatchDetailsScreen(
+            match: match,
+            onBack: () => Navigator.of(context).maybePop(),
+            onInvitePlayers: () {
+              _openInvitePlayers(context, match);
+            },
+            onChat: (_) {
+              Navigator.of(context)
+                  .pushNamed(AppRoutes.matchChat, arguments: match);
+            },
+          );
+        },
       );
     }
 
