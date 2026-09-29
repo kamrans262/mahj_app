@@ -176,8 +176,7 @@ abstract final class AppRouter {
             .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
       },
       onTermsTap: () => _openLegal(context, LegalDocumentType.terms),
-      onPrivacyPolicyTap: () =>
-          _openLegal(context, LegalDocumentType.privacy),
+      onPrivacyPolicyTap: () => _openLegal(context, LegalDocumentType.privacy),
     ),
     AppRoutes.home: (context) => _mainShell(context),
     AppRoutes.map: (context) => _mainShell(context, initialIndex: 1),

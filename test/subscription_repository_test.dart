@@ -49,10 +49,7 @@ void main() {
               'trial_days': 14,
             },
           ],
-          'subscription': {
-            'status': 'trialing',
-            'cancel_at_period_end': false,
-          },
+          'subscription': {'status': 'trialing', 'cancel_at_period_end': false},
         }),
         200,
         headers: {'content-type': 'application/json'},
