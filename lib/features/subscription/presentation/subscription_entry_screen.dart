@@ -41,6 +41,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
   bool _submitting = false;
   bool _waitingForCheckout = false;
   bool _refreshingCheckout = false;
+  String? _pendingCheckoutSessionId;
 
   @override
   void initState() {
@@ -106,6 +107,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
         setState(() {
           _state = result.state;
           _waitingForCheckout = true;
+          _pendingCheckoutSessionId = result.checkoutSessionId;
         });
         _showMessage(
           'Complete the secure Stripe checkout, then return to Mahj.',
@@ -128,27 +130,28 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
     _refreshingCheckout = true;
 
     try {
-      for (var attempt = 0; attempt < 4; attempt++) {
-        if (attempt > 0) {
-          await Future<void>.delayed(const Duration(seconds: 1));
-        }
+      final sessionId = _pendingCheckoutSessionId;
+      SubscriptionState state;
 
-        final state = await widget.repository.fetch();
-        if (!mounted) return;
-
-        setState(() => _state = state);
-
-        if (state.status == 'trialing' || state.status == 'active') {
-          _waitingForCheckout = false;
-          widget.onActivated?.call();
-          return;
-        }
+      if (sessionId != null && sessionId.isNotEmpty) {
+        state = await widget.repository.confirmCheckout(sessionId);
+      } else {
+        state = await widget.repository.fetch();
       }
 
       if (!mounted) return;
+      setState(() => _state = state);
+
+      if (state.status == 'trialing' || state.status == 'active') {
+        _waitingForCheckout = false;
+        _pendingCheckoutSessionId = null;
+        widget.onActivated?.call();
+        return;
+      }
+
       _waitingForCheckout = false;
       _showMessage(
-        'Stripe is still confirming your subscription. Please try again in a moment.',
+        'Stripe checkout is not complete yet. Finish checkout and return to Mahj.',
       );
     } catch (error) {
       if (!mounted) return;
