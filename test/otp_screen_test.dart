@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mahj_app/app/theme/app_theme.dart';
 import 'package:mahj_app/features/auth/domain/auth_flow_args.dart';
@@ -61,6 +62,36 @@ void main() {
       expect(size.width, lessThanOrEqualTo(48));
     }
 
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tapping OTP boxes reopens keyboard when input stays focused', (
+    tester,
+  ) async {
+    await pumpOtp(tester);
+
+    final calls = <MethodCall>[];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+    messenger.setMockMethodCallHandler(SystemChannels.textInput, (call) async {
+      calls.add(call);
+      return null;
+    });
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(SystemChannels.textInput, null),
+    );
+
+    final input = tester.widget<TextField>(
+      find.byKey(const ValueKey('otp-input')),
+    );
+    expect(input.focusNode?.hasFocus, isTrue);
+
+    calls.clear();
+    await tester.tap(find.byKey(const ValueKey('otp-box-0')));
+    await tester.pump();
+
+    expect(calls.any((call) => call.method == 'TextInput.show'), isTrue);
     expect(tester.takeException(), isNull);
   });
 
