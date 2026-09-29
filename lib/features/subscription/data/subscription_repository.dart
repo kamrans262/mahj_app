@@ -2,10 +2,7 @@ import '../../../core/network/api_client.dart';
 import '../domain/subscription_state.dart';
 
 class SubscriptionStartResult {
-  const SubscriptionStartResult({
-    required this.state,
-    this.checkoutUrl,
-  });
+  const SubscriptionStartResult({required this.state, this.checkoutUrl});
 
   final SubscriptionState state;
   final String? checkoutUrl;
