@@ -9,6 +9,7 @@ class SubscriptionPlan {
     this.infoText,
     this.isCurrent = false,
     this.isSelectable = true,
+    this.trialDays = 14,
   });
 
   final String id;
@@ -20,6 +21,22 @@ class SubscriptionPlan {
   final String? infoText;
   final bool isCurrent;
   final bool isSelectable;
+  final int trialDays;
+
+  factory SubscriptionPlan.fromJson(Map<String, dynamic> json) {
+    return SubscriptionPlan(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      priceLabel: json['price_label']?.toString() ?? r'$0.00',
+      renewalText: json['renewal_text']?.toString(),
+      statusText: json['status_text']?.toString(),
+      infoText: json['info_text']?.toString(),
+      isCurrent: json['is_current'] == true,
+      isSelectable: json['is_selectable'] != false,
+      trialDays: (json['trial_days'] as num?)?.toInt() ?? 14,
+    );
+  }
 
   SubscriptionPlan copyWith({
     String? id,
@@ -31,6 +48,7 @@ class SubscriptionPlan {
     String? infoText,
     bool? isCurrent,
     bool? isSelectable,
+    int? trialDays,
   }) {
     return SubscriptionPlan(
       id: id ?? this.id,
@@ -42,6 +60,7 @@ class SubscriptionPlan {
       infoText: infoText ?? this.infoText,
       isCurrent: isCurrent ?? this.isCurrent,
       isSelectable: isSelectable ?? this.isSelectable,
+      trialDays: trialDays ?? this.trialDays,
     );
   }
 }
