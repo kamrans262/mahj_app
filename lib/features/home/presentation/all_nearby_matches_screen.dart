@@ -177,7 +177,7 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
         AppSpacing.lg,
       ),
       child: AppCenteredPageHeader(
-        title: 'Create Match',
+        title: 'Nearby Matches',
         onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
       ),
     );
