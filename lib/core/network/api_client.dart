@@ -6,13 +6,19 @@ import '../storage/token_store.dart';
 import 'api_exception.dart';
 
 class ApiClient {
-  ApiClient({
+  factory ApiClient({
     required String baseUrl,
     required TokenStore tokenStore,
     http.Client? httpClient,
-  }) : _baseUrl = baseUrl.replaceFirst(RegExp(r'/+$'), ''),
-       _tokenStore = tokenStore,
-       _httpClient = httpClient ?? http.Client();
+  }) {
+    return ApiClient._(
+      baseUrl.replaceFirst(RegExp(r'/+$'), ''),
+      tokenStore,
+      httpClient ?? http.Client(),
+    );
+  }
+
+  const ApiClient._(this._baseUrl, this._tokenStore, this._httpClient);
 
   final String _baseUrl;
   final TokenStore _tokenStore;

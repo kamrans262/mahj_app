@@ -6,9 +6,14 @@ import '../domain/auth_flow_args.dart';
 import '../domain/auth_user.dart';
 
 class AuthRepository {
-  AuthRepository({required ApiClient apiClient, required TokenStore tokenStore})
-    : _apiClient = apiClient,
-      _tokenStore = tokenStore;
+  factory AuthRepository({
+    required ApiClient apiClient,
+    required TokenStore tokenStore,
+  }) {
+    return AuthRepository._(apiClient, tokenStore);
+  }
+
+  AuthRepository._(this._apiClient, this._tokenStore);
 
   final ApiClient _apiClient;
   final TokenStore _tokenStore;
