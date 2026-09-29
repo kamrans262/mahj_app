@@ -199,7 +199,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   autofillHints: const [
                                     AutofillHints.newPassword,
                                   ],
-                                  validator: AuthValidators.password,
+                                  validator: AuthValidators.newPassword,
                                   onFieldSubmitted: (_) {
                                     _confirmPasswordFocusNode.requestFocus();
                                   },

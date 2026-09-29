@@ -144,7 +144,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                     maxWidth: _subtitleMaxWidth,
                                   ),
                                   child: Text(
-                                    'Enter your email and weâ€™ll send you a reset link',
+                                    'Enter your email and we’ll send you a verification code',
                                     key: ValueKey('forgot-password-subtitle'),
                                     textAlign: TextAlign.center,
                                     style: AppTypography.loginSubtitle,
@@ -205,7 +205,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               const Spacer(),
                               AppButton.primary(
                                 key: const ValueKey('send-reset-link-button'),
-                                label: 'Send Reset Link',
+                                label: 'Send Verification Code',
                                 onPressed: _submit,
                                 isLoading: _isSubmitting,
                                 isEnabled: !_isSubmitting,
@@ -272,10 +272,13 @@ class _ResetLinkSentCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Reset Link Sent', style: AppTypography.successTitle),
+                Text(
+                  'Verification Code Sent',
+                  style: AppTypography.successTitle,
+                ),
                 SizedBox(height: AppSpacing.micro),
                 Text(
-                  'weâ€™ve sent a password reset link to your email',
+                  'We’ve sent a 6-digit verification code to your email',
                   style: AppTypography.body14,
                 ),
               ],

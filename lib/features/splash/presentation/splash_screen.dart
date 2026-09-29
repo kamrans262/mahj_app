@@ -11,10 +11,12 @@ class SplashScreen extends StatefulWidget {
     super.key,
     this.navigateToLogin = true,
     this.duration = const Duration(milliseconds: 1500),
+    this.onResolveRoute,
   });
 
   final bool navigateToLogin;
   final Duration duration;
+  final Future<String> Function()? onResolveRoute;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -32,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     if (widget.navigateToLogin) {
-      _timer = Timer(widget.duration, _openLogin);
+      _timer = Timer(widget.duration, _openNextRoute);
     }
   }
 
@@ -42,9 +44,13 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
-  void _openLogin() {
+  Future<void> _openNextRoute() async {
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+
+    final route = await widget.onResolveRoute?.call() ?? AppRoutes.login;
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacementNamed(route);
   }
 
   @override
