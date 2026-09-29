@@ -29,6 +29,17 @@ abstract final class AuthValidators {
     return null;
   }
 
+  static String? newPassword(String? value) {
+    final password = value ?? '';
+    if (password.isEmpty) {
+      return 'Enter your password';
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    return null;
+  }
+
   static String? confirmPassword(String? value, String password) {
     final confirmation = value ?? '';
     if (confirmation.isEmpty) {

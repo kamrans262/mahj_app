@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../core/network/api_exception.dart';
+import '../app_services.dart';
+import '../../features/auth/domain/auth_flow_args.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/otp_screen.dart';
+import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/chat/data/match_chat_preview_data.dart';
 import '../../features/chat/domain/chat_models.dart';
@@ -48,6 +53,8 @@ abstract final class AppRoutes {
   static const String login = '/login';
   static const String signUp = '/sign-up';
   static const String forgotPassword = '/forgot-password';
+  static const String otp = '/otp';
+  static const String resetPassword = '/reset-password';
   static const String premiumPlan = '/premium-plan';
   static const String home = '/home';
   static const String map = '/map';
@@ -73,11 +80,27 @@ abstract final class AppRoutes {
 }
 
 abstract final class AppRouter {
+  static final _authRepository = AppServices.authRepository;
+
   static Map<String, WidgetBuilder> get routes => {
-    AppRoutes.splash: (_) => const SplashScreen(),
+    AppRoutes.splash: (_) => SplashScreen(
+      onResolveRoute: () async {
+        final restored = await _authRepository.restoreSession();
+        return restored ? AppRoutes.home : AppRoutes.login;
+      },
+    ),
     AppRoutes.login: (context) => LoginScreen(
       onLogin: (email, password) async {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        try {
+          await _authRepository.login(email: email, password: password);
+          if (!context.mounted) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.home,
+            (route) => false,
+          );
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+        }
       },
       onForgotPassword: () {
         Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
@@ -88,7 +111,23 @@ abstract final class AppRouter {
     ),
     AppRoutes.signUp: (context) => SignUpScreen(
       onSignUp: (fullName, email, password) async {
-        Navigator.of(context).pushNamed(AppRoutes.premiumPlan);
+        try {
+          await _authRepository.requestRegistrationOtp(
+            name: fullName,
+            email: email,
+            password: password,
+          );
+          if (!context.mounted) return;
+          Navigator.of(context).pushNamed(
+            AppRoutes.otp,
+            arguments: OtpRouteArgs(
+              email: email,
+              purpose: OtpPurpose.registration,
+            ),
+          );
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+        }
       },
       onBack: () {
         Navigator.of(context).maybePop();
@@ -112,6 +151,23 @@ abstract final class AppRouter {
           navigator.pop();
         } else {
           navigator.pushReplacementNamed(AppRoutes.login);
+        }
+      },
+      onSendResetLink: (email) async {
+        try {
+          await _authRepository.requestPasswordResetOtp(email);
+          if (!context.mounted) return false;
+          Navigator.of(context).pushNamed(
+            AppRoutes.otp,
+            arguments: OtpRouteArgs(
+              email: email,
+              purpose: OtpPurpose.passwordReset,
+            ),
+          );
+          return true;
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+          return false;
         }
       },
     ),
@@ -156,10 +212,86 @@ abstract final class AppRouter {
       onPrivacyPolicyTap: () {
         _openLegal(context, LegalDocumentType.privacy);
       },
+      onLogOut: () async {
+        try {
+          await _authRepository.logout();
+          if (!context.mounted) return true;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.login,
+            (route) => false,
+          );
+          return true;
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+          return false;
+        }
+      },
+      onDeleteAccount: () async {
+        try {
+          await _authRepository.deleteAccount();
+          if (!context.mounted) return true;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.login,
+            (route) => false,
+          );
+          return true;
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+          return false;
+        }
+      },
     ),
     AppRoutes.accountSettings: (context) => AccountSettingsScreen(
-      initialEmail: ProfilePreviewData.currentUser.email,
+      initialEmail:
+          _authRepository.currentUser?.email ??
+          ProfilePreviewData.currentUser.email,
+      isGoogleConnected:
+          _authRepository.currentUser?.googleConnected ?? false,
+      isAppleConnected:
+          _authRepository.currentUser?.appleConnected ?? false,
       onBack: () => Navigator.of(context).maybePop(),
+      onChangeEmail: (email) async {
+        try {
+          await _authRepository.changeEmail(email);
+          if (context.mounted) {
+            _showSuccess(context, 'Email updated.');
+          }
+          return true;
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+          return false;
+        }
+      },
+      onChangePassword: (password, confirmation) async {
+        if (password != confirmation) {
+          _showApiError(context, 'Passwords do not match.');
+          return false;
+        }
+        try {
+          await _authRepository.changePassword(password);
+          if (context.mounted) {
+            _showSuccess(context, 'Password updated.');
+          }
+          return true;
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+          return false;
+        }
+      },
+      onDeleteAccount: () async {
+        try {
+          await _authRepository.deleteAccount();
+          if (!context.mounted) return true;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.login,
+            (route) => false,
+          );
+          return true;
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+          return false;
+        }
+      },
     ),
     AppRoutes.notificationSettings: (context) => NotificationSettingsScreen(
       onBack: () => Navigator.of(context).maybePop(),
@@ -227,6 +359,96 @@ abstract final class AppRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     final match = settings.arguments;
 
+    if (settings.name == AppRoutes.otp) {
+      final args = settings.arguments;
+      if (args is! OtpRouteArgs) return null;
+
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (context) => OtpScreen(
+          email: args.email,
+          purpose: args.purpose,
+          onBack: () => Navigator.of(context).maybePop(),
+          onResend: () async {
+            try {
+              await _authRepository.resendOtp(
+                email: args.email,
+                purpose: args.purpose,
+              );
+              return true;
+            } catch (error) {
+              if (context.mounted) _showApiError(context, error);
+              return false;
+            }
+          },
+          onVerify: (otp) async {
+            try {
+              if (args.purpose == OtpPurpose.registration) {
+                await _authRepository.verifyRegistrationOtp(
+                  email: args.email,
+                  otp: otp,
+                );
+                if (!context.mounted) return true;
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  AppRoutes.premiumPlan,
+                  (route) => false,
+                );
+              } else {
+                final resetToken =
+                    await _authRepository.verifyPasswordResetOtp(
+                  email: args.email,
+                  otp: otp,
+                );
+                if (!context.mounted) return true;
+                Navigator.of(context).pushReplacementNamed(
+                  AppRoutes.resetPassword,
+                  arguments: ResetPasswordRouteArgs(
+                    email: args.email,
+                    resetToken: resetToken,
+                  ),
+                );
+              }
+              return true;
+            } catch (error) {
+              if (context.mounted) _showApiError(context, error);
+              return false;
+            }
+          },
+        ),
+      );
+    }
+
+    if (settings.name == AppRoutes.resetPassword) {
+      final args = settings.arguments;
+      if (args is! ResetPasswordRouteArgs) return null;
+
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (context) => ResetPasswordScreen(
+          onBack: () => Navigator.of(context).maybePop(),
+          onResetPassword: (password) async {
+            try {
+              await _authRepository.resetPassword(
+                email: args.email,
+                resetToken: args.resetToken,
+                password: password,
+              );
+              if (!context.mounted) return true;
+              _showSuccess(context, 'Password reset successfully.');
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                AppRoutes.login,
+                (route) => false,
+              );
+              return true;
+            } catch (error) {
+              if (context.mounted) _showApiError(context, error);
+              return false;
+            }
+          },
+        ),
+      );
+    }
+
     if (settings.name == AppRoutes.legal) {
       final initialDocument = match is LegalDocumentType
           ? match
@@ -258,7 +480,9 @@ abstract final class AppRouter {
         return null;
       }
 
-      final currentProfile = ProfilePreviewData.currentUser;
+      final currentProfile =
+          _authRepository.currentUser?.toProfileData() ??
+          ProfilePreviewData.currentUser;
       return MaterialPageRoute<void>(
         settings: settings,
         builder: (context) => PlayerProfileScreen(
@@ -298,6 +522,14 @@ abstract final class AppRouter {
           profile: profile,
           onBack: () => Navigator.of(context).maybePop(),
           onCancel: () => Navigator.of(context).maybePop(),
+          onSave: (draft) async {
+            try {
+              return await _authRepository.updateProfile(draft);
+            } catch (error) {
+              if (context.mounted) _showApiError(context, error);
+              return null;
+            }
+          },
         ),
       );
     }
@@ -387,12 +619,34 @@ abstract final class AppRouter {
     Navigator.of(context).pushNamed(AppRoutes.legal, arguments: document);
   }
 
+  static void _showApiError(BuildContext context, Object error) {
+    final message = error is ApiException
+        ? error.message
+        : error is String
+        ? error
+        : 'Something went wrong. Please try again.';
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  static void _showSuccess(BuildContext context, String message) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   static MainNavigationShell _mainShell(
     BuildContext context, {
     int initialIndex = 0,
   }) {
     return MainNavigationShell(
       initialIndex: initialIndex,
+      initialProfileData:
+          _authRepository.currentUser?.toProfileData() ??
+          ProfilePreviewData.currentUser,
       onNearbyViewAll: () {
         Navigator.of(context).pushNamed(AppRoutes.nearbyMatches);
       },
