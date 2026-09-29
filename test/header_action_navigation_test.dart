@@ -47,12 +47,7 @@ void main() {
       const ValueKey('notification-item-demo-notification-1'),
     );
     expect(notificationItem, findsOneWidget);
-    final notificationTapTarget = find.descendant(
-      of: notificationItem,
-      matching: find.byType(InkWell),
-    );
-    expect(notificationTapTarget, findsOneWidget);
-    await tester.tap(notificationTapTarget);
+    await tester.tap(notificationItem);
     await tester.pumpAndSettle();
 
     expect(find.byType(MatchDetailsScreen), findsOneWidget);
