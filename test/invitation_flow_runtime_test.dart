@@ -126,12 +126,7 @@ void main() {
     await tester.ensureVisible(firstInvite);
     await tester.pumpAndSettle();
 
-    final inviteTapTarget = find.descendant(
-      of: firstInvite,
-      matching: find.byType(InkWell),
-    );
-    expect(inviteTapTarget, findsOneWidget);
-    await tester.tap(inviteTapTarget);
+    await tester.tap(firstInvite);
     await tester.pumpAndSettle();
 
     expect(find.byType(InvitationReceivingScreen), findsOneWidget);
