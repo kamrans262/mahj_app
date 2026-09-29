@@ -111,14 +111,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     final upcoming = _liveMatches
         .where(
-          (match) =>
-              match.isCurrentUserJoined || match.isOwnedByCurrentUser,
+          (match) => match.isCurrentUserJoined || match.isOwnedByCurrentUser,
         )
         .toList(growable: false);
     final nearby = _liveMatches
         .where(
-          (match) =>
-              !match.isCurrentUserJoined && !match.isOwnedByCurrentUser,
+          (match) => !match.isCurrentUserJoined && !match.isOwnedByCurrentUser,
         )
         .toList(growable: false);
 
