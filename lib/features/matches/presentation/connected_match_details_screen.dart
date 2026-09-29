@@ -147,7 +147,7 @@ class _ConnectedMatchDetailsScreenState
       timeLabel: localizations.formatTimeOfDay(
         TimeOfDay.fromDateTime(localStart),
       ),
-      distanceLabel: _match.isInviteOnly ? 'Invite only' : 'Public match',
+      distanceLabel: '—',
       createdBy: _match.hostName ?? 'Host',
       playersLabel: '${_match.currentPlayers}/${_match.maxPlayers}',
       playersSupportingText: _playersSupportingText(_match),
