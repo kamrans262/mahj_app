@@ -66,9 +66,10 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
     }
   }
 
-  List<SubscriptionPlan> get _alternativePlans => widget.availablePlans
-      .where((plan) => plan.id != _currentPlan.id && plan.isSelectable)
-      .toList(growable: false);
+  List<SubscriptionPlan> get _alternativePlans =>
+      widget.availablePlans
+          .where((plan) => plan.id != _currentPlan.id && plan.isSelectable)
+          .toList(growable: false);
 
   SubscriptionPlan? get _selectedPlan {
     for (final plan in _alternativePlans) {
@@ -313,9 +314,7 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
             if (!widget.isLoading && widget.errorMessage == null)
               _SubscriptionBottomArea(
                 infoText: _selectedPlan?.infoText,
-                onConfirm: _alternativePlans.isEmpty
-                    ? null
-                    : _openConfirmation,
+                onConfirm: _alternativePlans.isEmpty ? null : _openConfirmation,
                 onCancel: widget.onCancelSubscription == null
                     ? null
                     : _openCancellation,
