@@ -3,7 +3,9 @@ import '../domain/subscription_state.dart';
 
 class SubscriptionRepository {
   const SubscriptionRepository({required ApiClient apiClient})
-    : _apiClient = apiClient;
+    : this._(apiClient);
+
+  const SubscriptionRepository._(this._apiClient);
 
   final ApiClient _apiClient;
 
