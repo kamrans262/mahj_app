@@ -353,10 +353,8 @@ abstract final class AppRouter {
             .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
       },
       onViewMatch: (match) {
-        Navigator.of(context).pushNamed(
-          AppRoutes.matchDetails,
-          arguments: match,
-        );
+        Navigator.of(context)
+            .pushNamed(AppRoutes.matchDetails, arguments: match);
       },
     ),
   };
