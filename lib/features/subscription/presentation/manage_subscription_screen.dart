@@ -258,7 +258,8 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
                       ),
                       child: AppConfirmationDialog(
                         title: 'Cancel Subscription?',
-                        message: 'Your current access will remain available until the end of the current period.',
+                        message:
+                            'Your current access will remain available until the end of the current period.',
                         cancelLabel: 'Keep Plan',
                         confirmLabel: 'Cancel Plan',
                         isLoading: dialogLoading,
