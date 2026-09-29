@@ -15,14 +15,21 @@ class LocationSelector extends StatelessWidget {
       button: true,
       label: 'Selected location: $location',
       child: Material(
-        color: AppColors.background,
+        color: AppColors.subtleSurface,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
-          side: BorderSide(color: AppColors.border.withValues(alpha: 0.65)),
+          side: const BorderSide(color: AppColors.controlBorder),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return AppColors.controlPressedOverlay;
+            }
+            return Colors.transparent;
+          }),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
             child: Padding(

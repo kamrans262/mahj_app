@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_radius.dart';
@@ -8,7 +9,7 @@ class AppTextField extends StatefulWidget {
   const AppTextField({
     required this.controller,
     required this.hintText,
-    required this.leadingIcon,
+    this.leadingIcon,
     super.key,
     this.focusNode,
     this.keyboardType,
@@ -17,20 +18,34 @@ class AppTextField extends StatefulWidget {
     this.enabled = true,
     this.autofillHints,
     this.validator,
+    this.onChanged,
     this.onFieldSubmitted,
+    this.inputFormatters,
+    this.textAlign = TextAlign.start,
+    this.contentPadding,
+    this.minLines,
+    this.maxLines = 1,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   final TextEditingController controller;
   final FocusNode? focusNode;
   final String hintText;
-  final IconData leadingIcon;
+  final IconData? leadingIcon;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
   final bool enabled;
   final Iterable<String>? autofillHints;
   final String? Function(String?)? validator;
+  final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextAlign textAlign;
+  final EdgeInsetsGeometry? contentPadding;
+  final int? minLines;
+  final int? maxLines;
+  final TextCapitalization textCapitalization;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -64,22 +79,29 @@ class _AppTextFieldState extends State<AppTextField> {
       enabled: widget.enabled,
       autofillHints: widget.autofillHints,
       validator: widget.validator,
+      onChanged: widget.onChanged,
       onFieldSubmitted: widget.onFieldSubmitted,
+      inputFormatters: widget.inputFormatters,
+      textAlign: widget.textAlign,
+      minLines: widget.obscureText ? 1 : widget.minLines,
+      maxLines: widget.obscureText ? 1 : widget.maxLines,
+      textCapitalization: widget.textCapitalization,
       onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       style: AppTypography.field,
       cursorColor: AppColors.primary,
       decoration: InputDecoration(
         hintText: widget.hintText,
         hintStyle: AppTypography.fieldHint,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 13,
-        ),
-        prefixIcon: Icon(
-          widget.leadingIcon,
-          size: 22,
-          color: AppColors.textSecondary,
-        ),
+        contentPadding:
+            widget.contentPadding ??
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+        prefixIcon: widget.leadingIcon == null
+            ? null
+            : Icon(
+                widget.leadingIcon,
+                size: 22,
+                color: AppColors.textSecondary,
+              ),
         suffixIcon: widget.obscureText
             ? IconButton(
                 tooltip: _obscured ? 'Show password' : 'Hide password',
@@ -96,13 +118,13 @@ class _AppTextFieldState extends State<AppTextField> {
               )
             : null,
         filled: true,
-        fillColor: AppColors.background,
-        enabledBorder: _border(AppColors.border),
-        disabledBorder: _border(AppColors.border),
-        focusedBorder: _border(AppColors.primary, width: 1.3),
+        fillColor: AppColors.subtleSurface,
+        enabledBorder: _border(AppColors.controlBorder),
+        disabledBorder: _border(AppColors.controlBorder),
+        focusedBorder: _border(AppColors.primary, width: 1.2),
         errorBorder: _border(AppColors.error),
-        focusedErrorBorder: _border(AppColors.error, width: 1.3),
-        border: _border(AppColors.border),
+        focusedErrorBorder: _border(AppColors.error, width: 1.2),
+        border: _border(AppColors.controlBorder),
       ),
     );
   }

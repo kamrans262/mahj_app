@@ -35,4 +35,8 @@ abstract final class AppSpacing {
   static const double premiumFlexibleGapMax = 260;
 
   static const double createMatchHeaderToBody = 35;
+
+  static const double confirmationDialogVertical = 30;
+  static const double confirmationDialogHorizontal = 36;
+  static const double confirmationDialogActionGap = 25;
 }

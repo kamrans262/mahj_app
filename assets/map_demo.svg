@@ -1,0 +1,44 @@
+<svg width="800" height="920" viewBox="0 0 800 920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="920" fill="#FFFDFC"/>
+  <path d="M-40 180C130 120 220 125 340 65C480 -5 590 10 850 120" stroke="#F4E7DF" stroke-width="26"/>
+  <path d="M-70 420C95 360 205 350 350 300C535 236 650 230 875 280" stroke="#F5EAE4" stroke-width="18"/>
+  <path d="M-90 720C80 665 225 635 355 580C515 512 670 500 870 545" stroke="#F4E7DF" stroke-width="24"/>
+  <path d="M112 -50C152 120 140 250 205 365C260 465 282 580 258 980" stroke="#F7EEE9" stroke-width="14"/>
+  <path d="M375 -40C410 100 430 230 402 365C372 510 405 690 500 980" stroke="#F3E4DB" stroke-width="18"/>
+  <path d="M650 -55C612 115 625 240 670 370C715 500 742 650 720 980" stroke="#F4E8E1" stroke-width="16"/>
+  <path d="M-40 80L840 690" stroke="#F7EFEA" stroke-width="12"/>
+  <path d="M-55 605L820 80" stroke="#F7EEE9" stroke-width="12"/>
+  <path d="M40 900L785 350" stroke="#F5E8E0" stroke-width="14"/>
+  <path d="M300 960C330 760 410 650 470 535C540 398 560 250 615 -30" stroke="#F9DCCA" stroke-width="58"/>
+  <path d="M-10 315C105 280 135 210 165 120L18 70L-20 118L-10 315Z" fill="#F2F5E6"/>
+  <path d="M530 330C610 285 670 250 800 248V410C710 405 625 430 550 472L530 330Z" fill="#F1F5E5"/>
+  <path d="M72 585C160 548 210 535 272 553L248 690C180 670 122 690 58 725L72 585Z" fill="#F0F5E4"/>
+  <path d="M520 682C620 634 700 640 808 690V868C710 812 625 815 540 860L520 682Z" fill="#F1F5E5"/>
+  <g fill="#ECE4DE" opacity="0.70">
+    <rect x="225" y="120" width="48" height="34" rx="4"/>
+    <rect x="295" y="148" width="54" height="42" rx="4"/>
+    <rect x="488" y="100" width="52" height="38" rx="4"/>
+    <rect x="558" y="132" width="46" height="32" rx="4"/>
+    <rect x="92" y="402" width="56" height="38" rx="4"/>
+    <rect x="168" y="438" width="44" height="30" rx="4"/>
+    <rect x="250" y="378" width="62" height="46" rx="4"/>
+    <rect x="575" y="492" width="55" height="40" rx="4"/>
+    <rect x="656" y="468" width="52" height="36" rx="4"/>
+    <rect x="118" y="770" width="48" height="34" rx="4"/>
+    <rect x="205" y="735" width="58" height="42" rx="4"/>
+    <rect x="380" y="742" width="55" height="38" rx="4"/>
+    <rect x="640" y="755" width="50" height="36" rx="4"/>
+  </g>
+  <g fill="#DDE6C9">
+    <circle cx="42" cy="195" r="18"/>
+    <circle cx="610" cy="370" r="16"/>
+    <circle cx="204" cy="640" r="15"/>
+    <circle cx="710" cy="820" r="17"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="24" fill="#5F5B59" opacity="0.78">
+    <text x="28" y="38">Park</text>
+    <text x="8" y="520" transform="rotate(-28 8 520)">Riverside Ave</text>
+    <text x="380" y="70" transform="rotate(-18 380 70)">Maple St</text>
+    <text x="95" y="830" transform="rotate(-20 95 830)">Sunset Rd</text>
+  </g>
+</svg>

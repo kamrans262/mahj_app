@@ -6,10 +6,11 @@ import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_surface_container.dart';
-import '../../home/data/filter_location_options.dart';
+import '../../../core/widgets/app_text_field.dart';
+import '../../home/domain/home_match.dart';
 import '../../home/presentation/widgets/compact_switch.dart';
-import '../../home/presentation/widgets/location_selection_dialog.dart';
 import '../domain/create_match_form_state.dart';
+import 'widgets/match_created_overlay.dart';
 
 class CreateMatchScreen extends StatefulWidget {
   const CreateMatchScreen({
@@ -17,11 +18,17 @@ class CreateMatchScreen extends StatefulWidget {
     this.onBack,
     this.onCancel,
     this.onSubmit,
+    this.onInvitePlayers,
+    this.onBackHome,
+    this.onViewMatch,
   });
 
   final VoidCallback? onBack;
   final VoidCallback? onCancel;
-  final Future<void> Function(CreateMatchRequest request)? onSubmit;
+  final Future<HomeMatch> Function(CreateMatchRequest request)? onSubmit;
+  final ValueChanged<HomeMatch>? onInvitePlayers;
+  final ValueChanged<HomeMatch>? onBackHome;
+  final ValueChanged<HomeMatch>? onViewMatch;
 
   @override
   State<CreateMatchScreen> createState() => _CreateMatchScreenState();
@@ -30,12 +37,16 @@ class CreateMatchScreen extends StatefulWidget {
 class _CreateMatchScreenState extends State<CreateMatchScreen> {
   static const double _headerToBodyGap = 35;
 
+  final _locationController = TextEditingController();
   final _venueController = TextEditingController();
+
   CreateMatchFormState _formState = const CreateMatchFormState();
   bool _isSubmitting = false;
+  HomeMatch? _createdMatch;
 
   @override
   void dispose() {
+    _locationController.dispose();
     _venueController.dispose();
     super.dispose();
   }
@@ -59,22 +70,6 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     }
 
     Navigator.of(context).maybePop();
-  }
-
-  Future<void> _selectLocation() async {
-    FocusManager.instance.primaryFocus?.unfocus();
-
-    final selected = await showLocationSelectionDialog(
-      context: context,
-      selectedLocation:
-          _formState.locationAddress ?? FilterLocationOptions.values.first,
-    );
-
-    if (!mounted || selected == null) return;
-
-    setState(() {
-      _formState = _formState.copyWith(locationAddress: selected);
-    });
   }
 
   Future<void> _selectDate() async {
@@ -144,7 +139,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     final location = _formState.locationAddress;
 
     if (location == null || location.trim().isEmpty) {
-      return 'Please select a location or address.';
+      return 'Please enter a location or address.';
     }
     if (_formState.selectedDate == null) {
       return 'Please select a match date.';
@@ -157,7 +152,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   }
 
   Future<void> _submit() async {
-    if (_isSubmitting) return;
+    if (_isSubmitting || _createdMatch != null) return;
 
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -182,17 +177,37 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      await callback(request);
+      final createdMatch = await callback(request);
       if (!mounted) return;
-      Navigator.of(context).maybePop(true);
+
+      setState(() {
+        _isSubmitting = false;
+        _createdMatch = createdMatch;
+      });
     } catch (_) {
       if (!mounted) return;
+
+      setState(() => _isSubmitting = false);
       _showMessage('Could not create the match. Please try again.');
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
     }
+  }
+
+  void _handleBackHome(HomeMatch match) {
+    final callback = widget.onBackHome;
+    if (callback != null) {
+      callback(match);
+      return;
+    }
+
+    Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+  }
+
+  void _handleInvitePlayers(HomeMatch match) {
+    widget.onInvitePlayers?.call(match);
+  }
+
+  void _handleViewMatch(HomeMatch match) {
+    widget.onViewMatch?.call(match);
   }
 
   void _showMessage(String message) {
@@ -201,45 +216,34 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Widget _buildLocationField() {
+    return AppTextField(
+      controller: _locationController,
+      hintText: 'Location/Address',
+      leadingIcon: Icons.location_on_outlined,
+      enabled: !_isSubmitting,
+      keyboardType: TextInputType.streetAddress,
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.fullStreetAddress],
+      onChanged: (value) {
+        _formState = _formState.copyWith(locationAddress: value);
+      },
+    );
+  }
+
   Widget _buildVenueField() {
-    return AppSurfaceContainer(
-      minHeight: 50,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pageHorizontal,
-        vertical: AppSpacing.md,
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.apartment_outlined,
-            size: 20,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: AppSpacing.micro),
-          Expanded(
-            child: TextField(
-              controller: _venueController,
-              enabled: !_isSubmitting,
-              maxLines: 1,
-              textInputAction: TextInputAction.done,
-              onChanged: (value) {
-                _formState = _formState.copyWith(venueName: value);
-              },
-              onSubmitted: (_) {
-                FocusManager.instance.primaryFocus?.unfocus();
-              },
-              onTapOutside: (_) {
-                FocusManager.instance.primaryFocus?.unfocus();
-              },
-              style: AppTypography.homeMeta14,
-              decoration: InputDecoration.collapsed(
-                hintText: 'Venue Name (Optional)',
-                hintStyle: AppTypography.homeMeta14,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AppTextField(
+      controller: _venueController,
+      hintText: 'Venue Name (Optional)',
+      leadingIcon: Icons.apartment_outlined,
+      enabled: !_isSubmitting,
+      textInputAction: TextInputAction.done,
+      onChanged: (value) {
+        _formState = _formState.copyWith(venueName: value);
+      },
+      onFieldSubmitted: (_) {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
     );
   }
 
@@ -319,101 +323,120 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pageHorizontal,
-                AppSpacing.lg,
-                AppSpacing.pageHorizontal,
-                0,
-              ),
-              child: AppCenteredPageHeader(
-                title: 'Create Match',
-                onBack: _isSubmitting ? null : _goBack,
-              ),
-            ),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  const verticalBodyPadding = _headerToBodyGap + AppSpacing.lg;
-                  final minContentHeight =
-                      constraints.maxHeight > verticalBodyPadding
-                      ? constraints.maxHeight - verticalBodyPadding
-                      : 0.0;
+    final createdMatch = _createdMatch;
 
-                  return SingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
+    return PopScope(
+      canPop: createdMatch == null,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && createdMatch != null) {
+          _handleBackHome(createdMatch);
+        }
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Scaffold(
+            resizeToAvoidBottomInset: true,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.pageHorizontal,
-                      _headerToBodyGap,
-                      AppSpacing.pageHorizontal,
                       AppSpacing.lg,
+                      AppSpacing.pageHorizontal,
+                      0,
                     ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: minContentHeight),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _PickerSurfaceField(
-                              label:
-                                  _formState.locationAddress ??
-                                  'Location/Address',
-                              semanticLabel: 'Select location or address',
-                              leadingIcon: Icons.location_on_outlined,
-                              showDropdown: false,
-                              onTap: _isSubmitting ? null : _selectLocation,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildVenueField(),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildDateTimeFields(),
-                            const SizedBox(height: AppSpacing.lg),
-                            _ToggleFormRow(
-                              title: 'Public Match',
-                              subtitle: 'Anyone can find and join',
-                              value: _formState.isPublicMatch,
-                              enabled: !_isSubmitting,
-                              onChanged: (value) {
-                                setState(() {
-                                  _formState = _formState.copyWith(
-                                    isPublicMatch: value,
-                                  );
-                                });
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _ToggleFormRow(
-                              title: 'Invite Only (optional)',
-                              subtitle: 'Only those you invite can join',
-                              value: _formState.isInviteOnly,
-                              enabled: !_isSubmitting,
-                              onChanged: (value) {
-                                setState(() {
-                                  _formState = _formState.copyWith(
-                                    isInviteOnly: value,
-                                  );
-                                });
-                              },
-                            ),
-                            const Spacer(),
-                            const SizedBox(height: AppSpacing.xl),
-                            _buildActionButtons(),
-                          ],
-                        ),
-                      ),
+                    child: AppCenteredPageHeader(
+                      title: 'Create Match',
+                      onBack: _isSubmitting ? null : _goBack,
                     ),
-                  );
-                },
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        const verticalBodyPadding =
+                            _headerToBodyGap + AppSpacing.lg;
+                        final minContentHeight =
+                            constraints.maxHeight > verticalBodyPadding
+                            ? constraints.maxHeight - verticalBodyPadding
+                            : 0.0;
+
+                        return SingleChildScrollView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.pageHorizontal,
+                            _headerToBodyGap,
+                            AppSpacing.pageHorizontal,
+                            AppSpacing.lg,
+                          ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: minContentHeight,
+                            ),
+                            child: IntrinsicHeight(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildLocationField(),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _buildVenueField(),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _buildDateTimeFields(),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _ToggleFormRow(
+                                    title: 'Public Match',
+                                    subtitle: 'Anyone can find and join',
+                                    value: _formState.isPublicMatch,
+                                    enabled: !_isSubmitting,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _formState = _formState.copyWith(
+                                          isPublicMatch: value,
+                                        );
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _ToggleFormRow(
+                                    title: 'Invite Only (optional)',
+                                    subtitle: 'Only those you invite can join',
+                                    value: _formState.isInviteOnly,
+                                    enabled: !_isSubmitting,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _formState = _formState.copyWith(
+                                          isInviteOnly: value,
+                                        );
+                                      });
+                                    },
+                                  ),
+                                  const Spacer(),
+                                  const SizedBox(height: AppSpacing.xl),
+                                  _buildActionButtons(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          if (createdMatch != null)
+            MatchCreatedOverlay(
+              match: createdMatch,
+              onInvitePlayers: widget.onInvitePlayers == null
+                  ? null
+                  : _handleInvitePlayers,
+              onBackHome: _handleBackHome,
+              onViewMatch: widget.onViewMatch == null ? null : _handleViewMatch,
+            ),
+        ],
       ),
     );
   }
@@ -425,14 +448,12 @@ class _PickerSurfaceField extends StatelessWidget {
     required this.semanticLabel,
     required this.leadingIcon,
     required this.onTap,
-    this.showDropdown = true,
   });
 
   final String label;
   final String semanticLabel;
   final IconData leadingIcon;
   final VoidCallback? onTap;
-  final bool showDropdown;
 
   @override
   Widget build(BuildContext context) {
@@ -456,14 +477,12 @@ class _PickerSurfaceField extends StatelessWidget {
               style: AppTypography.homeMeta14,
             ),
           ),
-          if (showDropdown) ...[
-            const SizedBox(width: AppSpacing.micro),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 20,
-              color: AppColors.textSecondary,
-            ),
-          ],
+          const SizedBox(width: AppSpacing.micro),
+          const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 20,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
     );
@@ -495,6 +514,7 @@ class _ToggleFormRow extends StatelessWidget {
       value: value ? 'On' : 'Off',
       child: Material(
         color: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         child: InkWell(
           onTap: enabled ? () => onChanged(!value) : null,
           borderRadius: BorderRadius.circular(10),

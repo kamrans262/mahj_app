@@ -11,6 +11,9 @@ class AppSurfaceContainer extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     this.minHeight = 48,
     this.semanticsLabel,
+    this.backgroundColor,
+    this.borderColor,
+    this.borderRadius = AppRadius.card,
   });
 
   final Widget child;
@@ -18,29 +21,40 @@ class AppSurfaceContainer extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final double minHeight;
   final String? semanticsLabel;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final double borderRadius;
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(borderRadius);
     final surface = DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: radius,
         boxShadow: const [
           BoxShadow(
-            color: AppColors.subtleShadow,
+            color: AppColors.controlShadow,
             offset: Offset(0, 2),
             blurRadius: 4,
           ),
         ],
       ),
       child: Material(
-        color: AppColors.subtleSurface,
+        color: backgroundColor ?? AppColors.subtleSurface,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          side: const BorderSide(color: AppColors.subtleBorder),
+          borderRadius: radius,
+          side: BorderSide(color: borderColor ?? AppColors.controlBorder),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return AppColors.controlPressedOverlay;
+            }
+            return Colors.transparent;
+          }),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: minHeight),
             child: Padding(padding: padding, child: child),

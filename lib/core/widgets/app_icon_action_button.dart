@@ -35,19 +35,20 @@ class AppIconActionButton extends StatelessWidget {
       child: SizedBox.square(
         dimension: size,
         child: Material(
-          color: AppColors.background,
+          color: AppColors.subtleSurface,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.control),
-            side: const BorderSide(color: AppColors.border),
+            side: const BorderSide(color: AppColors.controlBorder),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: enabled ? onPressed : null,
             overlayColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.pressed)) {
-                return AppColors.primary.withValues(alpha: 0.05);
+                return AppColors.controlPressedOverlay;
               }
-              return null;
+              return Colors.transparent;
             }),
             child: Center(
               child: isLoading

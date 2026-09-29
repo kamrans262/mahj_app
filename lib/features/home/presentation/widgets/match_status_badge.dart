@@ -30,6 +30,11 @@ class MatchStatusBadge extends StatelessWidget {
         foreground: Color(0xFFD88700),
         background: Color(0xFFFFEBC7),
       ),
+      MatchStatus.completed => const _StatusVisual(
+        label: 'Completed',
+        foreground: Color(0xFF2E9B4F),
+        background: Color(0xFFDDF3E3),
+      ),
     };
 
     return Container(

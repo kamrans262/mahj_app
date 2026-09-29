@@ -29,6 +29,9 @@ class HomeScreen extends StatefulWidget {
     this.onBottomNavTap,
     this.onRefresh,
     this.onFiltersApplied,
+    this.showBottomNavigation = true,
+    this.showCreateFab = true,
+    this.onFilterVisibilityChanged,
   });
 
   final HomeData? data;
@@ -43,6 +46,9 @@ class HomeScreen extends StatefulWidget {
   final ValueChanged<int>? onBottomNavTap;
   final Future<void> Function()? onRefresh;
   final Future<void> Function(MatchFilters)? onFiltersApplied;
+  final bool showBottomNavigation;
+  final bool showCreateFab;
+  final ValueChanged<bool>? onFilterVisibilityChanged;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -117,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen>
     widget.onLocationTap?.call();
 
     setState(() => _isFilterMounted = true);
+    widget.onFilterVisibilityChanged?.call(true);
     await _filterAnimationController.forward(from: 0);
   }
 
@@ -127,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
 
     setState(() => _isFilterMounted = false);
+    widget.onFilterVisibilityChanged?.call(false);
   }
 
   Future<void> _applyFilters(MatchFilters filters) async {
@@ -294,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           Scaffold(
             body: _buildHomeBody(),
-            floatingActionButton: _isFilterMounted
+            floatingActionButton: _isFilterMounted || !widget.showCreateFab
                 ? null
                 : FloatingActionButton(
                     heroTag: 'create-match-fab',
@@ -304,10 +312,12 @@ class _HomeScreenState extends State<HomeScreen>
                     tooltip: 'Create match',
                     child: const Icon(Icons.add, size: 30),
                   ),
-            bottomNavigationBar: AppBottomNavigation(
-              currentIndex: 0,
-              onTap: _isFilterMounted ? null : widget.onBottomNavTap,
-            ),
+            bottomNavigationBar: widget.showBottomNavigation
+                ? AppBottomNavigation(
+                    currentIndex: 0,
+                    onTap: _isFilterMounted ? null : widget.onBottomNavTap,
+                  )
+                : null,
           ),
           if (_isFilterMounted) _buildFilterOverlay(),
         ],

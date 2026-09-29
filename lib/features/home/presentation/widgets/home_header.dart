@@ -68,6 +68,7 @@ class HomeHeader extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         HeaderActionButton(
+          key: const ValueKey('home-header-notifications'),
           semanticsLabel: 'Notifications',
           assetPath: AppAssets.homeBellIcon,
           fallbackIcon: Icons.notifications_none,
@@ -76,6 +77,7 @@ class HomeHeader extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         HeaderActionButton(
+          key: const ValueKey('home-header-messages'),
           semanticsLabel: 'Messages',
           assetPath: AppAssets.homeMessageIcon,
           fallbackIcon: Icons.chat_bubble_outline,

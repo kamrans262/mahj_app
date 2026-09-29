@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/app_asset_icon.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   const AppBottomNavigation({
@@ -34,26 +36,62 @@ class AppBottomNavigation extends StatelessWidget {
       ),
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
+          icon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomHomeIcon,
+            tint: AppColors.textSecondary,
+          ),
+          activeIcon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomHomeIcon,
+            tint: AppColors.primary,
+          ),
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.location_on_outlined),
-          activeIcon: Icon(Icons.location_on),
+          icon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomMapIcon,
+            tint: AppColors.textSecondary,
+          ),
+          activeIcon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomMapIcon,
+            tint: AppColors.primary,
+          ),
           label: 'Map',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.sports_tennis_outlined),
-          activeIcon: Icon(Icons.sports_tennis),
+          icon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomMatchesIcon,
+            tint: AppColors.textSecondary,
+          ),
+          activeIcon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomMatchesIcon,
+            tint: AppColors.primary,
+          ),
           label: 'My Matches',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
+          icon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomProfileIcon,
+            tint: AppColors.textSecondary,
+          ),
+          activeIcon: _NavigationAssetIcon(
+            assetPath: AppAssets.bottomProfileIcon,
+            tint: AppColors.primary,
+          ),
           label: 'Profile',
         ),
       ],
     );
+  }
+}
+
+class _NavigationAssetIcon extends StatelessWidget {
+  const _NavigationAssetIcon({required this.assetPath, this.tint});
+
+  final String assetPath;
+  final Color? tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppAssetIcon(assetPath: assetPath, size: 24, color: tint);
   }
 }

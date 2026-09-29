@@ -1,4 +1,4 @@
-enum MatchStatus { open, confirmed, cancelled, full }
+enum MatchStatus { open, confirmed, cancelled, full, completed }
 
 class HomeMatch {
   const HomeMatch({
