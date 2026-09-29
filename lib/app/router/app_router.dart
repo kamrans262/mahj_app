@@ -657,6 +657,7 @@ abstract final class AppRouter {
   }) {
     return MainNavigationShell(
       initialIndex: initialIndex,
+      matchRepository: _matchRepository,
       initialProfileData:
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,
