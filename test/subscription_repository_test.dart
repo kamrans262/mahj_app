@@ -118,10 +118,7 @@ void main() {
     final result = await repository.startTrial('1');
 
     expect(result.requiresCheckout, isTrue);
-    expect(
-      result.checkoutUrl,
-      'https://checkout.stripe.com/c/pay/cs_test_123',
-    );
+    expect(result.checkoutUrl, 'https://checkout.stripe.com/c/pay/cs_test_123');
     expect(result.state.availablePlans.single.id, '1');
   });
 }
