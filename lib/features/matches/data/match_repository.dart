@@ -35,6 +35,7 @@ class MatchRepository {
       body: {
         'location_address': request.locationAddress,
         'venue_name': request.venueName,
+        'notes': request.notes,
         'starts_at': request.startsAt.toUtc().toIso8601String(),
         'is_public': request.isPublicMatch,
         'is_invite_only': request.isInviteOnly,
