@@ -30,6 +30,7 @@ void main() {
 
       final body = jsonDecode(request.body) as Map<String, dynamic>;
       expect(body['location_address'], 'Central Park');
+      expect(body['notes'], 'Bring water.');
       expect(body['is_public'], isTrue);
       expect(body['is_invite_only'], isFalse);
 
@@ -71,6 +72,7 @@ void main() {
       CreateMatchRequest(
         locationAddress: 'Central Park',
         venueName: 'Court 1',
+        notes: 'Bring water.',
         startsAt: DateTime.utc(2026, 10, 1, 18),
         isPublicMatch: true,
         isInviteOnly: false,
