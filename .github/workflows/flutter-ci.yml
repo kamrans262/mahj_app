@@ -3,10 +3,11 @@ name: Flutter CI
 on:
   push:
     branches:
-      - milestone/01-auth-account
+      - main
+  pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -30,17 +31,7 @@ jobs:
         run: flutter pub get
 
       - name: Format
-        run: dart format lib test
-
-      - name: Commit formatter output
-        run: |
-          if ! git diff --quiet -- lib test pubspec.lock; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add lib test pubspec.lock
-            git commit -m "style: format auth milestone"
-            git push
-          fi
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze
         run: flutter analyze
