@@ -2,10 +2,15 @@ import '../../../core/network/api_client.dart';
 import '../domain/subscription_state.dart';
 
 class SubscriptionStartResult {
-  const SubscriptionStartResult({required this.state, this.checkoutUrl});
+  const SubscriptionStartResult({
+    required this.state,
+    this.checkoutUrl,
+    this.checkoutSessionId,
+  });
 
   final SubscriptionState state;
   final String? checkoutUrl;
+  final String? checkoutSessionId;
 
   bool get requiresCheckout => checkoutUrl != null && checkoutUrl!.isNotEmpty;
 }
@@ -32,7 +37,16 @@ class SubscriptionRepository {
     return SubscriptionStartResult(
       state: SubscriptionState.fromJson(payload),
       checkoutUrl: payload['checkout_url']?.toString(),
+      checkoutSessionId: payload['checkout_session_id']?.toString(),
     );
+  }
+
+  Future<SubscriptionState> confirmCheckout(String sessionId) async {
+    final payload = await _apiClient.post(
+      '/subscription/confirm-checkout',
+      body: {'session_id': sessionId},
+    );
+    return SubscriptionState.fromJson(payload);
   }
 
   Future<SubscriptionState> changePlan(String planId) async {
