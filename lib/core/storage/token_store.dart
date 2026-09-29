@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,24 +10,28 @@ abstract interface class TokenStore {
 }
 
 class SecureTokenStore implements TokenStore {
-  SecureTokenStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+  SecureTokenStore({
+    FlutterSecureStorage? storage,
+    bool? useMemoryOnly,
+  }) : _storage = storage ?? const FlutterSecureStorage(),
+       _useMemoryOnly =
+           useMemoryOnly ?? Platform.environment['FLUTTER_TEST'] == 'true';
 
   static const _tokenKey = 'mahj_auth_token';
-  static const _operationTimeout = Duration(seconds: 2);
 
   final FlutterSecureStorage _storage;
+  final bool _useMemoryOnly;
   String? _testFallbackToken;
 
   @override
   Future<String?> read() async {
+    if (_useMemoryOnly) return _testFallbackToken;
+
     try {
-      return await _storage.read(key: _tokenKey).timeout(_operationTimeout);
+      return await _storage.read(key: _tokenKey);
     } on MissingPluginException {
       return _testFallbackToken;
     } on PlatformException {
-      return _testFallbackToken;
-    } on TimeoutException {
       return _testFallbackToken;
     }
   }
@@ -35,29 +39,27 @@ class SecureTokenStore implements TokenStore {
   @override
   Future<void> write(String token) async {
     _testFallbackToken = token;
+    if (_useMemoryOnly) return;
+
     try {
-      await _storage
-          .write(key: _tokenKey, value: token)
-          .timeout(_operationTimeout);
+      await _storage.write(key: _tokenKey, value: token);
     } on MissingPluginException {
-      // Widget tests do not register the platform plugin.
+      // Widget tests and unsupported platforms use the in-memory fallback.
     } on PlatformException {
       // Preserve the in-memory fallback when secure storage is unavailable.
-    } on TimeoutException {
-      // Preserve the in-memory fallback when secure storage is slow.
     }
   }
 
   @override
   Future<void> clear() async {
     _testFallbackToken = null;
+    if (_useMemoryOnly) return;
+
     try {
-      await _storage.delete(key: _tokenKey).timeout(_operationTimeout);
+      await _storage.delete(key: _tokenKey);
     } on MissingPluginException {
-      // Widget tests do not register the platform plugin.
-    } on PlatformException {
       // The in-memory token has already been cleared.
-    } on TimeoutException {
+    } on PlatformException {
       // The in-memory token has already been cleared.
     }
   }
