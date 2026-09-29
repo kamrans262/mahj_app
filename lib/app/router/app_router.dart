@@ -26,7 +26,6 @@ import '../../features/matches/presentation/match_details_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
 import '../../features/notifications/domain/mahj_notification.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
-import '../../features/premium/presentation/premium_plan_screen.dart';
 import '../../features/profile/data/player_profile_preview_data.dart';
 import '../../features/profile/data/profile_preview_data.dart';
 import '../../features/profile/domain/player_profile_data.dart';
@@ -44,8 +43,8 @@ import '../../features/settings/presentation/notification_settings_screen.dart';
 import '../../features/settings/presentation/privacy_safety_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/settings/presentation/support_screen.dart';
-import '../../features/subscription/data/subscription_preview_data.dart';
-import '../../features/subscription/presentation/manage_subscription_screen.dart';
+import '../../features/subscription/presentation/connected_manage_subscription_screen.dart';
+import '../../features/subscription/presentation/subscription_entry_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 
 abstract final class AppRoutes {
@@ -169,10 +168,15 @@ abstract final class AppRouter {
         }
       },
     ),
-    AppRoutes.premiumPlan: (context) => PremiumPlanScreen(
-      onBack: () {
-        Navigator.of(context).maybePop();
+    AppRoutes.premiumPlan: (context) => SubscriptionEntryScreen(
+      repository: AppServices.subscriptionRepository,
+      onBack: () => Navigator.of(context).maybePop(),
+      onActivated: () {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
       },
+      onTermsTap: () => _openLegal(context, LegalDocumentType.terms),
+      onPrivacyPolicyTap: () => _openLegal(context, LegalDocumentType.privacy),
     ),
     AppRoutes.home: (context) => _mainShell(context),
     AppRoutes.map: (context) => _mainShell(context, initialIndex: 1),
@@ -311,17 +315,14 @@ abstract final class AppRouter {
         );
       },
     ),
-    AppRoutes.manageSubscription: (context) => ManageSubscriptionScreen(
-      currentPlan: SubscriptionPreviewData.currentPlan,
-      availablePlans: SubscriptionPreviewData.availablePlans,
-      onBack: () => Navigator.of(context).maybePop(),
-      onTermsTap: () {
-        _openLegal(context, LegalDocumentType.terms);
-      },
-      onPrivacyPolicyTap: () {
-        _openLegal(context, LegalDocumentType.privacy);
-      },
-    ),
+    AppRoutes.manageSubscription: (context) =>
+        ConnectedManageSubscriptionScreen(
+          repository: AppServices.subscriptionRepository,
+          onBack: () => Navigator.of(context).maybePop(),
+          onTermsTap: () => _openLegal(context, LegalDocumentType.terms),
+          onPrivacyPolicyTap: () =>
+              _openLegal(context, LegalDocumentType.privacy),
+        ),
     AppRoutes.nearbyMatches: (context) => AllNearbyMatchesScreen(
       onBack: () {
         Navigator.of(context).maybePop();

@@ -20,6 +20,7 @@ class ManageSubscriptionScreen extends StatefulWidget {
     this.onBack,
     this.onRetry,
     this.onConfirmChange,
+    this.onCancelSubscription,
     this.onTermsTap,
     this.onPrivacyPolicyTap,
   });
@@ -31,6 +32,7 @@ class ManageSubscriptionScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback? onRetry;
   final Future<bool> Function(SubscriptionPlan plan)? onConfirmChange;
+  final Future<bool> Function()? onCancelSubscription;
   final VoidCallback? onTermsTap;
   final VoidCallback? onPrivacyPolicyTap;
 
@@ -64,8 +66,13 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
     }
   }
 
+  List<SubscriptionPlan> get _alternativePlans =>
+      widget.availablePlans
+          .where((plan) => plan.id != _currentPlan.id && plan.isSelectable)
+          .toList(growable: false);
+
   SubscriptionPlan? get _selectedPlan {
-    for (final plan in widget.availablePlans) {
+    for (final plan in _alternativePlans) {
       if (plan.id == _selectedPlanId) return plan;
     }
     return null;
@@ -201,6 +208,84 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
     }
   }
 
+  Future<void> _openCancellation() async {
+    final callback = widget.onCancelSubscription;
+    if (callback == null || _dialogOpen || _submitting) return;
+
+    _dialogOpen = true;
+    try {
+      final canceled = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        barrierLabel: 'Cancel subscription',
+        barrierColor: AppColors.confirmationBackdrop,
+        transitionDuration: const Duration(milliseconds: 160),
+        pageBuilder: (dialogContext, animation, secondaryAnimation) {
+          var dialogLoading = false;
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              final navigator = Navigator.of(dialogContext);
+
+              Future<void> confirm() async {
+                if (dialogLoading || _submitting) return;
+                setDialogState(() => dialogLoading = true);
+                _submitting = true;
+                bool success;
+                try {
+                  success = await callback();
+                } catch (_) {
+                  success = false;
+                } finally {
+                  _submitting = false;
+                }
+
+                if (!navigator.mounted) return;
+                if (success) {
+                  navigator.pop(true);
+                } else {
+                  setDialogState(() => dialogLoading = false);
+                }
+              }
+
+              return PopScope(
+                canPop: !dialogLoading,
+                child: SafeArea(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pageHorizontal,
+                        vertical: AppSpacing.lg,
+                      ),
+                      child: AppConfirmationDialog(
+                        title: 'Cancel Subscription?',
+                        message: 'Your current access will remain available until the end of the current period.',
+                        cancelLabel: 'Keep Plan',
+                        confirmLabel: 'Cancel Plan',
+                        isLoading: dialogLoading,
+                        confirmVariant: AppConfirmationVariant.destructive,
+                        onCancel: dialogLoading
+                            ? null
+                            : () => navigator.pop(false),
+                        onConfirm: dialogLoading ? null : confirm,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+
+      if (!mounted) return;
+      if (canceled == true) {
+        _showMessage('Subscription cancellation saved.');
+      }
+    } finally {
+      _dialogOpen = false;
+    }
+  }
+
   VoidCallback _linkAction(VoidCallback? callback, String label) {
     return callback ?? () => _showMessage('$label is not connected yet.');
   }
@@ -228,11 +313,11 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
             Expanded(child: _buildScrollableContent()),
             if (!widget.isLoading && widget.errorMessage == null)
               _SubscriptionBottomArea(
-                infoText:
-                    _selectedPlan?.infoText ??
-                    _currentPlan.infoText ??
-                    'You won’t be charged until the trial ends',
-                onConfirm: _openConfirmation,
+                infoText: _selectedPlan?.infoText,
+                onConfirm: _alternativePlans.isEmpty ? null : _openConfirmation,
+                onCancel: widget.onCancelSubscription == null
+                    ? null
+                    : _openCancellation,
                 onTermsTap: _linkAction(widget.onTermsTap, 'Terms of Service'),
                 onPrivacyPolicyTap: _linkAction(
                   widget.onPrivacyPolicyTap,
@@ -275,6 +360,8 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
       );
     }
 
+    final alternativePlans = _alternativePlans;
+
     return ListView(
       key: const ValueKey('manage-subscription-scroll-view'),
       padding: const EdgeInsets.fromLTRB(
@@ -287,37 +374,25 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
         Text('Current Plan', style: AppTypography.homeMeta14),
         const SizedBox(height: AppSpacing.xs),
         SubscriptionPlanCard(plan: _currentPlan),
-        const SizedBox(height: AppSpacing.lg),
-        Text('Choose Your Plan', style: AppTypography.homeMeta14),
-        const SizedBox(height: AppSpacing.xs),
-        if (widget.availablePlans.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            child: Text(
-              'No alternative plans are available right now.',
-              textAlign: TextAlign.center,
-              style: AppTypography.body14,
-            ),
-          )
-        else
-          for (
-            var index = 0;
-            index < widget.availablePlans.length;
-            index++
-          ) ...[
+        if (alternativePlans.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text('Choose Your Plan', style: AppTypography.homeMeta14),
+          const SizedBox(height: AppSpacing.xs),
+          for (var index = 0; index < alternativePlans.length; index++) ...[
             Builder(
               builder: (context) {
-                final plan = widget.availablePlans[index];
+                final plan = alternativePlans[index];
                 return SubscriptionPlanCard(
                   plan: plan,
                   isSelected: _selectedPlanId == plan.id,
-                  onTap: plan.isSelectable ? () => _selectPlan(plan) : null,
+                  onTap: () => _selectPlan(plan),
                 );
               },
             ),
-            if (index < widget.availablePlans.length - 1)
+            if (index < alternativePlans.length - 1)
               const SizedBox(height: AppSpacing.lg),
           ],
+        ],
       ],
     );
   }
@@ -325,14 +400,16 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
 
 class _SubscriptionBottomArea extends StatelessWidget {
   const _SubscriptionBottomArea({
-    required this.infoText,
-    required this.onConfirm,
+    this.infoText,
+    this.onConfirm,
+    this.onCancel,
     required this.onTermsTap,
     required this.onPrivacyPolicyTap,
   });
 
-  final String infoText;
-  final VoidCallback onConfirm;
+  final String? infoText;
+  final VoidCallback? onConfirm;
+  final VoidCallback? onCancel;
   final VoidCallback onTermsTap;
   final VoidCallback onPrivacyPolicyTap;
 
@@ -349,17 +426,34 @@ class _SubscriptionBottomArea extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppButton.primary(
-            key: const ValueKey('manage-subscription-confirm'),
-            label: 'Confirm Changes',
-            onPressed: onConfirm,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            infoText,
-            textAlign: TextAlign.center,
-            style: AppTypography.action14,
-          ),
+          if (onConfirm != null) ...[
+            AppButton.primary(
+              key: const ValueKey('manage-subscription-confirm'),
+              label: 'Confirm Changes',
+              onPressed: onConfirm,
+            ),
+            if (infoText != null && infoText!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                infoText!,
+                textAlign: TextAlign.center,
+                style: AppTypography.action14,
+              ),
+            ],
+          ],
+          if (onCancel != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            TextButton(
+              key: const ValueKey('manage-subscription-cancel'),
+              onPressed: onCancel,
+              child: Text(
+                'Cancel Subscription',
+                style: AppTypography.action14.copyWith(
+                  color: AppColors.destructive,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 36),
           _SubscriptionLegalText(
             onTermsTap: onTermsTap,

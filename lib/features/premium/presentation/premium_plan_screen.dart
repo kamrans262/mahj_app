@@ -17,6 +17,10 @@ class PremiumPlanScreen extends StatefulWidget {
   const PremiumPlanScreen({
     super.key,
     this.isLoading = false,
+    this.trialDays = 14,
+    this.planName = 'Monthly Plan',
+    this.planDescription = 'No charges for 14 days',
+    this.priceLabel = r'$0.00',
     this.onBack,
     this.onStartFreeTrial,
     this.onTermsOfService,
@@ -24,6 +28,10 @@ class PremiumPlanScreen extends StatefulWidget {
   });
 
   final bool isLoading;
+  final int trialDays;
+  final String planName;
+  final String planDescription;
+  final String priceLabel;
   final VoidCallback? onBack;
   final Future<void> Function()? onStartFreeTrial;
   final VoidCallback? onTermsOfService;
@@ -99,9 +107,9 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                             const SizedBox(height: AppSpacing.lg),
                             const Center(child: _PremiumCrownBadge()),
                             const SizedBox(height: AppSpacing.lg),
-                            const Text(
-                              'Start your 14 day free trial',
-                              key: ValueKey('premium-heading'),
+                            Text(
+                              'Start your ${widget.trialDays} day free trial',
+                              key: const ValueKey('premium-heading'),
                               textAlign: TextAlign.center,
                               style: AppTypography.authHeading,
                             ),
@@ -128,7 +136,11 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                             const SizedBox(
                               height: AppSpacing.premiumSectionGap,
                             ),
-                            const _MonthlyPlanCard(),
+                            _MonthlyPlanCard(
+                              name: widget.planName,
+                              description: widget.planDescription,
+                              priceLabel: widget.priceLabel,
+                            ),
                             SizedBox(height: flexibleActionGap),
                             AppButton.primary(
                               key: const ValueKey('start-free-trial-button'),
@@ -222,7 +234,15 @@ class _PremiumFeatureRow extends StatelessWidget {
 }
 
 class _MonthlyPlanCard extends StatelessWidget {
-  const _MonthlyPlanCard();
+  const _MonthlyPlanCard({
+    required this.name,
+    required this.description,
+    required this.priceLabel,
+  });
+
+  final String name;
+  final String description;
+  final String priceLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -245,21 +265,21 @@ class _MonthlyPlanCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Monthly Plan', style: AppTypography.title18),
-                SizedBox(height: AppSpacing.micro),
-                Text('No charges for 14 days', style: AppTypography.body14),
+                Text(name, style: AppTypography.title18),
+                const SizedBox(height: AppSpacing.micro),
+                Text(description, style: AppTypography.body14),
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          const Text(
-            r'$0.00',
-            key: ValueKey('premium-price'),
+          Text(
+            priceLabel,
+            key: const ValueKey('premium-price'),
             maxLines: 1,
             softWrap: false,
             style: AppTypography.title18,

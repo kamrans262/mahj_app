@@ -228,7 +228,13 @@ class _OtpInput extends StatelessWidget {
       label: '6-digit verification code',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: focusNode.requestFocus,
+        onTap: () {
+          if (focusNode.hasFocus) {
+            SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+          } else {
+            focusNode.requestFocus();
+          }
+        },
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
