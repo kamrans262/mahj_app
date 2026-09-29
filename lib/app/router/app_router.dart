@@ -14,6 +14,7 @@ import '../../features/chat/presentation/match_chat_screen.dart';
 import '../../features/home/data/home_preview_data.dart';
 import '../../features/home/domain/home_match.dart';
 import '../../features/home/presentation/all_nearby_matches_screen.dart';
+import '../../features/home/presentation/connected_nearby_matches_screen.dart';
 import '../../features/matches/data/invite_players_preview_data.dart';
 import '../../features/matches/data/match_completed_preview_data.dart';
 import '../../features/matches/data/my_matches_preview_data.dart';
@@ -325,7 +326,8 @@ abstract final class AppRouter {
           onPrivacyPolicyTap: () =>
               _openLegal(context, LegalDocumentType.privacy),
         ),
-    AppRoutes.nearbyMatches: (context) => AllNearbyMatchesScreen(
+    AppRoutes.nearbyMatches: (context) => ConnectedNearbyMatchesScreen(
+      repository: _matchRepository,
       onBack: () {
         Navigator.of(context).maybePop();
       },
