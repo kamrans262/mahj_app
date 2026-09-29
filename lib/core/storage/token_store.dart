@@ -10,12 +10,10 @@ abstract interface class TokenStore {
 }
 
 class SecureTokenStore implements TokenStore {
-  SecureTokenStore({
-    FlutterSecureStorage? storage,
-    bool? useMemoryOnly,
-  }) : _storage = storage ?? const FlutterSecureStorage(),
-       _useMemoryOnly =
-           useMemoryOnly ?? Platform.environment['FLUTTER_TEST'] == 'true';
+  SecureTokenStore({FlutterSecureStorage? storage, bool? useMemoryOnly})
+    : _storage = storage ?? const FlutterSecureStorage(),
+      _useMemoryOnly =
+          useMemoryOnly ?? Platform.environment['FLUTTER_TEST'] == 'true';
 
   static const _tokenKey = 'mahj_auth_token';
 
