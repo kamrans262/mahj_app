@@ -1,6 +1,9 @@
+import 'sport_option.dart';
+
 class CreateMatchFormState {
   const CreateMatchFormState({
-    this.matchName = '',
+    this.selectedSport,
+    this.customSportName = '',
     this.locationAddress,
     this.venueName = '',
     this.notes = '',
@@ -10,7 +13,8 @@ class CreateMatchFormState {
     this.isInviteOnly = false,
   });
 
-  final String matchName;
+  final SportOption? selectedSport;
+  final String customSportName;
   final String? locationAddress;
   final String venueName;
   final String notes;
@@ -19,15 +23,25 @@ class CreateMatchFormState {
   final bool isPublicMatch;
   final bool isInviteOnly;
 
+  String get effectiveSportName {
+    final sport = selectedSport;
+    if (sport == null) return '';
+    if (sport.isOther) return customSportName.trim();
+    return sport.name;
+  }
+
   bool get hasRequiredFields =>
-      matchName.trim().isNotEmpty &&
+      selectedSport != null &&
+      effectiveSportName.isNotEmpty &&
       locationAddress != null &&
       locationAddress!.trim().isNotEmpty &&
       selectedDate != null &&
       selectedTimeMinutes != null;
 
   CreateMatchFormState copyWith({
-    String? matchName,
+    SportOption? selectedSport,
+    bool clearSport = false,
+    String? customSportName,
     String? locationAddress,
     bool clearLocation = false,
     String? venueName,
@@ -40,7 +54,10 @@ class CreateMatchFormState {
     bool? isInviteOnly,
   }) {
     return CreateMatchFormState(
-      matchName: matchName ?? this.matchName,
+      selectedSport: clearSport
+          ? null
+          : selectedSport ?? this.selectedSport,
+      customSportName: customSportName ?? this.customSportName,
       locationAddress: clearLocation
           ? null
           : locationAddress ?? this.locationAddress,
@@ -56,12 +73,14 @@ class CreateMatchFormState {
   }
 
   CreateMatchRequest? toRequest() {
+    final sport = selectedSport;
     final date = selectedDate;
     final minutes = selectedTimeMinutes;
-    final name = matchName.trim();
+    final sportName = effectiveSportName;
     final location = locationAddress?.trim();
 
-    if (name.isEmpty ||
+    if (sport == null ||
+        sportName.isEmpty ||
         date == null ||
         minutes == null ||
         location == null ||
@@ -73,7 +92,11 @@ class CreateMatchFormState {
     final minute = minutes % 60;
 
     return CreateMatchRequest(
-      matchName: name,
+      sportId: sport.isOther ? null : sport.id,
+      customSportName: sport.isOther ? sportName : null,
+      sportName: sportName,
+      sportSlug: sport.isOther ? null : sport.slug,
+      sportIconKey: sport.isOther ? 'generic' : sport.iconKey,
       locationAddress: location,
       venueName: venueName.trim().isEmpty ? null : venueName.trim(),
       notes: notes.trim().isEmpty ? null : notes.trim(),
@@ -86,11 +109,15 @@ class CreateMatchFormState {
 
 class CreateMatchRequest {
   const CreateMatchRequest({
-    required this.matchName,
+    required this.sportName,
+    required this.sportIconKey,
     required this.locationAddress,
     required this.startsAt,
     required this.isPublicMatch,
     required this.isInviteOnly,
+    this.sportId,
+    this.sportSlug,
+    this.customSportName,
     this.venueName,
     this.notes,
     this.locationId,
@@ -98,7 +125,11 @@ class CreateMatchRequest {
     this.longitude,
   });
 
-  final String matchName;
+  final int? sportId;
+  final String? sportSlug;
+  final String? customSportName;
+  final String sportName;
+  final String sportIconKey;
   final String locationAddress;
   final String? venueName;
   final String? notes;
