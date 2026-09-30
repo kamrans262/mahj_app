@@ -12,10 +12,7 @@ void main() {
       SportIconResolver.assetForKey('basketball'),
       AppAssets.basketballIcon,
     );
-    expect(
-      SportIconResolver.assetForKey('soccer'),
-      AppAssets.homeFootballIcon,
-    );
+    expect(SportIconResolver.assetForKey('soccer'), AppAssets.homeFootballIcon);
     expect(SportIconResolver.assetForKey('baseball'), AppAssets.baseballIcon);
     expect(SportIconResolver.assetForKey('tennis'), AppAssets.tennisIcon);
     expect(
