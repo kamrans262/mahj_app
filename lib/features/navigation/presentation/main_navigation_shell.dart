@@ -51,7 +51,7 @@ class MainNavigationShell extends StatefulWidget {
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
   final ValueChanged<HomeMatch>? onMatchTap;
-  final void Function(MyMatchesItem item, MyMatchesTab tab)?
+  final Future<void> Function(MyMatchesItem item, MyMatchesTab tab)?
   onMyMatchesMatchTap;
   final Future<void> Function(MyMatchesItem item)? onMyMatchesInvitationTap;
   final VoidCallback? onNotificationTap;
@@ -332,7 +332,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     tab: myMatchesError,
                 },
           onTabChanged: _rememberMyMatchesTab,
-          onMatchTap: widget.onMyMatchesMatchTap,
+          onMatchTap: widget.onMyMatchesMatchTap == null
+              ? null
+              : (item, tab) async {
+                  await widget.onMyMatchesMatchTap!(item, tab);
+                  await _refreshMyMatches();
+                },
           onInvitationTap: widget.onMyMatchesInvitationTap == null
               ? null
               : (item) async {
