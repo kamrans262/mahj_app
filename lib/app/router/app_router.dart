@@ -18,8 +18,8 @@ import '../../features/matches/data/invite_players_preview_data.dart';
 import '../../features/matches/data/match_completed_preview_data.dart';
 import '../../features/matches/data/my_matches_preview_data.dart';
 import '../../features/matches/domain/my_matches_data.dart';
+import '../../features/matches/presentation/connected_create_match_screen.dart';
 import '../../features/matches/presentation/connected_match_details_screen.dart';
-import '../../features/matches/presentation/create_match_screen.dart';
 import '../../features/matches/presentation/invite_players_screen.dart';
 import '../../features/matches/presentation/invitation_receiving_screen.dart';
 import '../../features/matches/presentation/match_completed_screen.dart';
@@ -337,14 +337,14 @@ abstract final class AppRouter {
         Navigator.of(context).pushNamed(AppRoutes.createMatch);
       },
     ),
-    AppRoutes.createMatch: (context) => CreateMatchScreen(
+    AppRoutes.createMatch: (context) => ConnectedCreateMatchScreen(
+      repository: _matchRepository,
       onBack: () {
         Navigator.of(context).maybePop();
       },
       onCancel: () {
         Navigator.of(context).maybePop();
       },
-      onSubmit: _matchRepository.create,
       onInvitePlayers: (match) {
         _openInvitePlayers(context, match);
       },
