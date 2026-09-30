@@ -32,6 +32,7 @@ class HomeFilterSheet extends StatefulWidget {
 class _HomeFilterSheetState extends State<HomeFilterSheet> {
   late MatchFilters _draft;
   bool _isApplying = false;
+  String? _applyError;
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
     if (!mounted || selected == null) return;
 
     setState(() {
+      _applyError = null;
       _draft = _draft.copyWith(
         selectedLocation: selected.label,
         latitude: selected.latitude,
@@ -60,6 +62,7 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
 
   void _reset() {
     setState(() {
+      _applyError = null;
       _draft = MatchFilters.defaults();
     });
   }
@@ -67,7 +70,10 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
   Future<void> _apply() async {
     if (_isApplying) return;
 
-    setState(() => _isApplying = true);
+    setState(() {
+      _isApplying = true;
+      _applyError = null;
+    });
     try {
       var filters = _draft;
       if (filters.usesCurrentLocation && !filters.hasCoordinates) {
@@ -82,6 +88,10 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
       if (!mounted) return;
       _draft = filters;
       await widget.onApply(filters);
+    } catch (error) {
+      if (mounted) {
+        setState(() => _applyError = error.toString());
+      }
     } finally {
       if (mounted) {
         setState(() => _isApplying = false);
@@ -191,6 +201,16 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
                   });
                 },
               ),
+              if (_applyError != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  _applyError!,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.homeMeta12.copyWith(
+                    color: AppColors.destructive,
+                  ),
+                ),
+              ],
               const SizedBox(height: 30),
               _FilterActions(
                 textScale: textScale,
