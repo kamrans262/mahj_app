@@ -783,22 +783,27 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       );
     }
 
+    final reportButton = AppButton.secondary(
+      label: 'Report',
+      textStyle: AppTypography.matchSuccessSecondaryButton,
+      onPressed: _showReportDialog,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppResponsiveActionPair(
-          first: AppButton.secondary(
-            key: const ValueKey('match-details-invite-players'),
-            label: 'Invite Players',
-            textStyle: AppTypography.matchSuccessSecondaryButton,
-            onPressed: _handleInvitePlayers,
-          ),
-          second: AppButton.secondary(
-            label: 'Report',
-            textStyle: AppTypography.matchSuccessSecondaryButton,
-            onPressed: _showReportDialog,
-          ),
-        ),
+        if (widget.onInvitePlayers != null)
+          AppResponsiveActionPair(
+            first: AppButton.secondary(
+              key: const ValueKey('match-details-invite-players'),
+              label: 'Invite Players',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: _handleInvitePlayers,
+            ),
+            second: reportButton,
+          )
+        else
+          reportButton,
         const SizedBox(height: AppSpacing.lg),
         AppButton.primary(
           label: 'Join Match',
