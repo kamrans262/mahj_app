@@ -49,10 +49,7 @@ class LiveMatchMap extends StatelessWidget {
     if (currentLocationLatitude != null && currentLocationLongitude != null) {
       mapMarkers.add(
         Marker(
-          point: LatLng(
-            currentLocationLatitude!,
-            currentLocationLongitude!,
-          ),
+          point: LatLng(currentLocationLatitude!, currentLocationLongitude!),
           width: 28,
           height: 28,
           child: const _CurrentLocationMarker(),
@@ -99,9 +96,7 @@ class LiveMatchMap extends StatelessWidget {
           ),
           MarkerLayer(markers: mapMarkers),
           const RichAttributionWidget(
-            attributions: [
-              TextSourceAttribution('OpenStreetMap contributors'),
-            ],
+            attributions: [TextSourceAttribution('OpenStreetMap contributors')],
           ),
         ],
       ),

@@ -45,7 +45,8 @@ class AllNearbyMatchesScreen extends StatefulWidget {
   final Future<void> Function(String query)? onSearch;
   final ValueChanged<NearbyMatchesSortOption>? onSortChanged;
   final Future<void> Function(MatchFilters filters)? onFiltersChanged;
-  final Future<List<DiscoveryLocation>> Function(String query)? onLocationSearch;
+  final Future<List<DiscoveryLocation>> Function(String query)?
+  onLocationSearch;
   final Future<DiscoveryLocation> Function()? onCurrentLocation;
   final ValueChanged<HomeMatch>? onMatchTap;
   final VoidCallback? onCreateMatch;
@@ -103,7 +104,8 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
     }
 
     final incomingFilters = widget.initialFilters;
-    if (incomingFilters != null && incomingFilters != oldWidget.initialFilters) {
+    if (incomingFilters != null &&
+        incomingFilters != oldWidget.initialFilters) {
       _filters = incomingFilters;
     }
   }

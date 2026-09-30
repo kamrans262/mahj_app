@@ -51,7 +51,8 @@ class HomeScreen extends StatefulWidget {
   final Future<void> Function()? onRefresh;
   final Future<void> Function(MatchFilters)? onFiltersApplied;
   final MatchFilters? initialFilters;
-  final Future<List<DiscoveryLocation>> Function(String query)? onLocationSearch;
+  final Future<List<DiscoveryLocation>> Function(String query)?
+  onLocationSearch;
   final Future<DiscoveryLocation> Function()? onCurrentLocation;
   final bool showBottomNavigation;
   final bool showCreateFab;

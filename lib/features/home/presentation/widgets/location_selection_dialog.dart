@@ -197,10 +197,7 @@ class _LocationSelectionDialogState extends State<_LocationSelectionDialog> {
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
                   width: double.infinity,
-                  child: AppButton.primary(
-                    label: 'Search',
-                    onPressed: _search,
-                  ),
+                  child: AppButton.primary(label: 'Search', onPressed: _search),
                 ),
               ],
             ],
