@@ -575,7 +575,7 @@ abstract final class AppRouter {
               initialMatch: match,
               repository: _matchRepository,
               onBack: () => Navigator.of(context).maybePop(),
-              onInvitePlayers: match.isOwnedByCurrentUser
+              onInvitePlayers: match.canInviteOthers
                   ? () => _openInvitePlayers(context, match)
                   : null,
             );
@@ -778,7 +778,7 @@ abstract final class AppRouter {
             initialMatch: match,
             repository: _matchRepository,
             onBack: () => Navigator.of(detailsContext).maybePop(),
-            onInvitePlayers: tab == MyMatchesTab.createdByMe
+            onInvitePlayers: match.canInviteOthers
                 ? () => _openInvitePlayers(detailsContext, match)
                 : null,
             onChat: (_) {
@@ -905,7 +905,7 @@ abstract final class AppRouter {
           initialMatch: match,
           repository: _matchRepository,
           onBack: () => Navigator.of(joinedContext).maybePop(),
-          onInvitePlayers: match.isOwnedByCurrentUser
+          onInvitePlayers: match.canInviteOthers
               ? () => _openInvitePlayers(joinedContext, match)
               : null,
           onChat: (_) {
