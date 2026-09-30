@@ -9,7 +9,6 @@ import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../home/domain/home_match.dart';
 import '../data/match_repository.dart';
-import '../domain/create_match_form_state.dart';
 import '../domain/sport_option.dart';
 import 'create_match_screen.dart';
 
