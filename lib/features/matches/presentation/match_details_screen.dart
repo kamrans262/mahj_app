@@ -766,14 +766,27 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
     }
 
     if (_isCurrentUserJoined) {
+      final chatButton = AppButton.secondary(
+        label: 'Chat',
+        textStyle: AppTypography.matchSuccessSecondaryButton,
+        onPressed: _openChat,
+      );
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppButton.secondary(
-            label: 'Chat',
-            textStyle: AppTypography.matchSuccessSecondaryButton,
-            onPressed: _openChat,
-          ),
+          if (widget.onInvitePlayers != null)
+            AppResponsiveActionPair(
+              first: AppButton.secondary(
+                key: const ValueKey('match-details-invite-players'),
+                label: 'Invite Players',
+                textStyle: AppTypography.matchSuccessSecondaryButton,
+                onPressed: _handleInvitePlayers,
+              ),
+              second: chatButton,
+            )
+          else
+            chatButton,
           const SizedBox(height: AppSpacing.lg),
           AppButton.primary(
             label: 'Leave Match',
