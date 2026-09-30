@@ -173,17 +173,28 @@ class _Background extends StatelessWidget {
       ),
     );
 
-    if (match.bannerAsset.isEmpty) return fallback;
+    Widget image = fallback;
+
+    if (match.bannerImageUrl.isNotEmpty) {
+      image = Image.network(
+        match.bannerImageUrl,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, _, _) => fallback,
+      );
+    } else if (match.bannerAsset.isNotEmpty) {
+      image = Image.asset(
+        match.bannerAsset,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, _, _) => fallback,
+      );
+    }
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          match.bannerAsset,
-          fit: BoxFit.cover,
-          filterQuality: FilterQuality.high,
-          errorBuilder: (_, _, _) => fallback,
-        ),
+        image,
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
