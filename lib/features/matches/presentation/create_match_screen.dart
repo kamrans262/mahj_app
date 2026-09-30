@@ -234,10 +234,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   }
 
   Widget _buildSportField() {
-    final options = <SportOption>[
-      ...widget.sports,
-      SportOption.other,
-    ];
+    final options = <SportOption>[...widget.sports, SportOption.other];
     final selectedSport = _formState.selectedSport;
 
     return DropdownButtonFormField<String>(
@@ -267,10 +264,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
         ),
       ),
       style: AppTypography.field,
@@ -302,9 +296,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           ? null
           : (slug) {
               if (slug == null) return;
-              final sport = options.firstWhere(
-                (option) => option.slug == slug,
-              );
+              final sport = options.firstWhere((option) => option.slug == slug);
               setState(() {
                 _formState = _formState.copyWith(
                   selectedSport: sport,
@@ -515,7 +507,8 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   _buildSportField(),
-                                  if (_formState.selectedSport?.isOther == true) ...[
+                                  if (_formState.selectedSport?.isOther ==
+                                      true) ...[
                                     const SizedBox(height: AppSpacing.lg),
                                     _buildCustomSportField(),
                                   ],
