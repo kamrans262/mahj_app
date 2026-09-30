@@ -248,6 +248,12 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       decoration: InputDecoration(
         hintText: 'Select Sport',
         hintStyle: AppTypography.fieldHint,
+        prefixIcon: AppAssetIcon(
+          assetPath: SportIconResolver.assetForKey(
+            selectedSport?.iconKey ?? 'generic',
+          ),
+          size: 22,
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 13,
@@ -268,6 +274,19 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
         ),
       ),
       style: AppTypography.field,
+      selectedItemBuilder: (context) => options
+          .map(
+            (sport) => Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                sport.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.field,
+              ),
+            ),
+          )
+          .toList(growable: false),
       items: options
           .map(
             (sport) => DropdownMenuItem<String>(
@@ -362,6 +381,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       controller: _notesController,
       hintText: 'Notes for players (Optional)',
       leadingIcon: Icons.notes_outlined,
+      alignLeadingIconTop: true,
       enabled: !_isSubmitting,
       keyboardType: TextInputType.multiline,
       textInputAction: TextInputAction.newline,
@@ -506,16 +526,16 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
+                                  _buildLocationField(),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _buildVenueField(),
+                                  const SizedBox(height: AppSpacing.lg),
                                   _buildSportField(),
                                   if (_formState.selectedSport?.isOther ==
                                       true) ...[
                                     const SizedBox(height: AppSpacing.lg),
                                     _buildCustomSportField(),
                                   ],
-                                  const SizedBox(height: AppSpacing.lg),
-                                  _buildLocationField(),
-                                  const SizedBox(height: AppSpacing.lg),
-                                  _buildVenueField(),
                                   const SizedBox(height: AppSpacing.lg),
                                   _buildDateTimeFields(),
                                   const SizedBox(height: AppSpacing.lg),
