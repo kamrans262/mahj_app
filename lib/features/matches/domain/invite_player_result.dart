@@ -7,6 +7,7 @@ class InvitePlayerResult {
     required this.currentPlayers,
     required this.maxPlayers,
     required this.sportImageAsset,
+    this.avatarUrl,
     this.latitude,
     this.longitude,
     this.markerNormalizedX,
@@ -23,6 +24,7 @@ class InvitePlayerResult {
   final int currentPlayers;
   final int maxPlayers;
   final String sportImageAsset;
+  final String? avatarUrl;
   final double? latitude;
   final double? longitude;
   final double? markerNormalizedX;
