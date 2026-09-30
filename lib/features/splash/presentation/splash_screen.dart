@@ -38,8 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final routeFuture =
-        widget.onResolveRoute?.call() ??
-        Future<String>.value(AppRoutes.login);
+        widget.onResolveRoute?.call() ?? Future<String>.value(AppRoutes.login);
 
     await Future<void>.delayed(widget.duration);
     final route = await routeFuture;

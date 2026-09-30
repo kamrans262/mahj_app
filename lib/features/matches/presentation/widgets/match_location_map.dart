@@ -9,10 +9,7 @@ import '../../../../app/theme/app_radius.dart';
 import '../../../home/domain/home_match.dart';
 
 class MatchLocationMap extends StatelessWidget {
-  const MatchLocationMap({
-    required this.match,
-    super.key,
-  });
+  const MatchLocationMap({required this.match, super.key});
 
   static const String _mapProvider = String.fromEnvironment(
     'MAP_PROVIDER',
@@ -138,10 +135,7 @@ class MatchLocationMap extends StatelessWidget {
 
     return gm.GoogleMap(
       key: ValueKey('match-details-google-map-${match.id}'),
-      initialCameraPosition: gm.CameraPosition(
-        target: position,
-        zoom: 15,
-      ),
+      initialCameraPosition: gm.CameraPosition(target: position, zoom: 15),
       markers: {
         gm.Marker(
           markerId: gm.MarkerId('match-details-${match.id}'),
@@ -174,10 +168,7 @@ class _MissingMatchLocation extends StatelessWidget {
     return const ColoredBox(
       color: AppColors.subtleSurface,
       child: Center(
-        child: Text(
-          'Location map unavailable',
-          textAlign: TextAlign.center,
-        ),
+        child: Text('Location map unavailable', textAlign: TextAlign.center),
       ),
     );
   }

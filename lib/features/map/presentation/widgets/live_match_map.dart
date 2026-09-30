@@ -65,10 +65,7 @@ class LiveMatchMap extends StatelessWidget {
     if (currentLocationLatitude != null && currentLocationLongitude != null) {
       mapMarkers.add(
         fm.Marker(
-          point: ll.LatLng(
-            currentLocationLatitude!,
-            currentLocationLongitude!,
-          ),
+          point: ll.LatLng(currentLocationLatitude!, currentLocationLongitude!),
           width: 58,
           height: 58,
           child: const _CurrentLocationMarker(),
@@ -235,10 +232,7 @@ class LiveMatchMap extends StatelessWidget {
 }
 
 class _MatchMapPin extends StatelessWidget {
-  const _MatchMapPin({
-    required this.marker,
-    required this.selected,
-  });
+  const _MatchMapPin({required this.marker, required this.selected});
 
   final MapMatchMarker marker;
   final bool selected;
