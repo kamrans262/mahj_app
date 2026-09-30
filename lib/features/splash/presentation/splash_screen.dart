@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/app_assets.dart';
@@ -26,24 +28,48 @@ class _SplashScreenState extends State<SplashScreen> {
   static const _minimumLogoWidth = 180.0;
   static const _maximumLogoWidth = 280.0;
 
+  Timer? _minimumDurationTimer;
+  String? _resolvedRoute;
+  bool _minimumDurationElapsed = false;
+  bool _navigationStarted = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.navigateToLogin) {
-      _openNextRoute();
+      _resolveRoute();
+      _minimumDurationTimer = Timer(widget.duration, () {
+        _minimumDurationElapsed = true;
+        _openResolvedRoute();
+      });
     }
   }
 
-  Future<void> _openNextRoute() async {
+  @override
+  void dispose() {
+    _minimumDurationTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _resolveRoute() async {
+    final route =
+        await widget.onResolveRoute?.call() ?? AppRoutes.login;
     if (!mounted) return;
 
-    final routeFuture =
-        widget.onResolveRoute?.call() ?? Future<String>.value(AppRoutes.login);
+    _resolvedRoute = route;
+    _openResolvedRoute();
+  }
 
-    await Future<void>.delayed(widget.duration);
-    final route = await routeFuture;
-    if (!mounted) return;
+  void _openResolvedRoute() {
+    final route = _resolvedRoute;
+    if (!mounted ||
+        !_minimumDurationElapsed ||
+        _navigationStarted ||
+        route == null) {
+      return;
+    }
 
+    _navigationStarted = true;
     Navigator.of(context).pushReplacementNamed(route);
   }
 
