@@ -222,6 +222,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       upcoming: data?.upcoming ?? const <MyMatchesItem>[],
       createdByMe: data?.createdByMe ?? const <MyMatchesItem>[],
       invites: data?.invites ?? const <MyMatchesItem>[],
+      upcomingPage: data?.upcomingPage ?? 1,
+      createdByMePage: data?.createdByMePage ?? 1,
+      invitesPage: data?.invitesPage ?? 1,
+      hasMoreUpcoming: data?.hasMoreUpcoming ?? false,
+      hasMoreCreatedByMe: data?.hasMoreCreatedByMe ?? false,
+      hasMoreInvites: data?.hasMoreInvites ?? false,
     );
   }
 
@@ -237,7 +243,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     try {
-      final data = await repository.listMyMatches();
+      final filters = _discoveryStore.filters;
+      final data = await repository.listMyMatches(
+        latitude: filters.hasCoordinates ? filters.latitude : null,
+        longitude: filters.hasCoordinates ? filters.longitude : null,
+      );
       if (!mounted) return;
       setState(() => _myMatchesData = data);
     } catch (_) {
@@ -248,6 +258,36 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     } finally {
       if (mounted) setState(() => _myMatchesLoading = false);
     }
+  }
+
+  Future<void> _loadMoreMyMatches(MyMatchesTab tab) async {
+    final repository = widget.matchRepository;
+    final current = _myMatchesData;
+    if (repository == null || current == null || !current.hasMoreForTab(tab)) {
+      return;
+    }
+
+    final nextPage = current.pageForTab(tab) + 1;
+    final filters = _discoveryStore.filters;
+
+    final next = await repository.listMyMatches(
+      latitude: filters.hasCoordinates ? filters.latitude : null,
+      longitude: filters.hasCoordinates ? filters.longitude : null,
+      upcomingPage: tab == MyMatchesTab.upcoming
+          ? nextPage
+          : current.upcomingPage,
+      createdByMePage: tab == MyMatchesTab.createdByMe
+          ? nextPage
+          : current.createdByMePage,
+      invitesPage: tab == MyMatchesTab.invites
+          ? nextPage
+          : current.invitesPage,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _myMatchesData = current.appendPage(next, tab);
+    });
   }
 
   Future<void> _refreshMatches() async {
@@ -347,6 +387,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           onRefresh: widget.matchRepository == null
               ? null
               : (_) => _refreshMyMatches(),
+          onLoadMore: widget.matchRepository == null
+              ? null
+              : _loadMoreMyMatches,
           onNotificationTap: widget.onNotificationTap,
           onMessageTap: widget.onMessageTap,
         );
