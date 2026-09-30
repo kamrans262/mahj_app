@@ -24,7 +24,7 @@ class SubscriptionEntryScreen extends StatefulWidget {
 
   final SubscriptionRepository repository;
   final VoidCallback? onBack;
-  final VoidCallback? onActivated;
+  final Future<void> Function()? onActivated;
   final VoidCallback? onTermsTap;
   final VoidCallback? onPrivacyPolicyTap;
 
@@ -116,7 +116,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       }
 
       setState(() => _state = result.state);
-      widget.onActivated?.call();
+      await widget.onActivated?.call();
     } catch (error) {
       if (!mounted) return;
       _showMessage(_messageFor(error));
@@ -145,7 +145,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       if (state.status == 'trialing' || state.status == 'active') {
         _waitingForCheckout = false;
         _pendingCheckoutSessionId = null;
-        widget.onActivated?.call();
+        await widget.onActivated?.call();
         return;
       }
 
