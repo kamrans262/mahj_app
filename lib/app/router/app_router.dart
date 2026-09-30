@@ -730,6 +730,7 @@ abstract final class AppRouter {
           item.match,
           invitationId: item.invitationId,
           inviterName: item.inviterName,
+          inviterAvatarUrl: item.inviterAvatarUrl,
         );
       },
       onNotificationTap: () {
@@ -848,6 +849,7 @@ abstract final class AppRouter {
     HomeMatch match, {
     String? invitationId,
     String? inviterName,
+    String? inviterAvatarUrl,
   }) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
@@ -860,6 +862,7 @@ abstract final class AppRouter {
           match,
           invitationId: invitationId,
           inviterName: inviterName,
+          inviterAvatarUrl: inviterAvatarUrl,
         ),
       ),
     );
@@ -870,10 +873,12 @@ abstract final class AppRouter {
     HomeMatch match, {
     String? invitationId,
     String? inviterName,
+    String? inviterAvatarUrl,
   }) {
     return InvitationReceivingScreen(
       match: match,
       inviterName: inviterName ?? match.hostName ?? 'Host',
+      inviterAvatarUrl: inviterAvatarUrl,
       onBack: () => Navigator.of(context).maybePop(),
       onDecline: (_) async {
         if (invitationId != null) {
