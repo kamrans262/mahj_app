@@ -54,9 +54,7 @@ class CreateMatchFormState {
     bool? isInviteOnly,
   }) {
     return CreateMatchFormState(
-      selectedSport: clearSport
-          ? null
-          : selectedSport ?? this.selectedSport,
+      selectedSport: clearSport ? null : selectedSport ?? this.selectedSport,
       customSportName: customSportName ?? this.customSportName,
       locationAddress: clearLocation
           ? null
