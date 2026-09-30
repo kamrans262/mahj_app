@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as ll;
 
@@ -69,10 +68,12 @@ class MatchLocationMap extends StatelessWidget {
               width: 74,
               height: 86,
               alignment: const Alignment(0, -0.20),
-              child: SvgPicture.asset(
-                AppAssets.mapMatchMarkerSvg,
+              child: Image.asset(
+                AppAssets.mapMatchMarkerPng,
                 width: 68,
                 height: 78,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
               ),
             ),
           ],
