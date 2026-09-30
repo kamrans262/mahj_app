@@ -736,28 +736,44 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   }
 
   Widget _buildActions() {
-    if (_isCurrentUserJoined) {
-      final chatButton = AppButton.secondary(
-        label: 'Chat',
-        textStyle: AppTypography.matchSuccessSecondaryButton,
-        onPressed: _openChat,
-      );
-
-      final cancelButton = AppButton.destructiveOutlined(
-        label: 'Cancel Match',
-        textStyle: AppTypography.matchSuccessSecondaryButton.copyWith(
-          color: AppColors.destructive,
-        ),
-        onPressed: _cancelRequestInFlight ? null : _showCancelConfirmation,
-      );
-
+    if (widget.canCancelMatch) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (widget.canCancelMatch)
-            AppResponsiveActionPair(first: chatButton, second: cancelButton)
-          else
-            chatButton,
+          AppResponsiveActionPair(
+            first: AppButton.secondary(
+              key: const ValueKey('match-details-invite-players'),
+              label: 'Invite Players',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: _handleInvitePlayers,
+            ),
+            second: AppButton.secondary(
+              label: 'Chat',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: _openChat,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton.destructiveOutlined(
+            label: 'Cancel Match',
+            textStyle: AppTypography.matchSuccessSecondaryButton.copyWith(
+              color: AppColors.destructive,
+            ),
+            onPressed: _cancelRequestInFlight ? null : _showCancelConfirmation,
+          ),
+        ],
+      );
+    }
+
+    if (_isCurrentUserJoined) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppButton.secondary(
+            label: 'Chat',
+            textStyle: AppTypography.matchSuccessSecondaryButton,
+            onPressed: _openChat,
+          ),
           const SizedBox(height: AppSpacing.lg),
           AppButton.primary(
             label: 'Leave Match',
