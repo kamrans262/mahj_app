@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../../../app/app_assets.dart';
 import '../../../core/network/api_client.dart';
 import '../../home/domain/home_match.dart';
@@ -100,6 +102,24 @@ class MatchRepository {
     final path = Uri(path: '/my-matches', queryParameters: params).toString();
     final payload = await _apiClient.get(path);
 
+    HomeMatch withFallbackDistance(HomeMatch match) {
+      if (match.distanceMiles != null ||
+          latitude == null ||
+          longitude == null ||
+          match.latitude == null ||
+          match.longitude == null) {
+        return match;
+      }
+
+      final distance = _distanceMiles(
+        latitude,
+        longitude,
+        match.latitude!,
+        match.longitude!,
+      );
+      return match.copyWith(distanceMiles: distance);
+    }
+
     List<MyMatchesItem> mapMatches(dynamic raw) {
       if (raw is! List) return const <MyMatchesItem>[];
 
@@ -110,7 +130,7 @@ class MatchRepository {
               (key, value) => MapEntry(key.toString(), value),
             );
             return MyMatchesItem(
-              match: HomeMatch.fromJson(json),
+              match: withFallbackDistance(HomeMatch.fromJson(json)),
               sportImageAsset: AppAssets.sportImage,
             );
           })
@@ -137,7 +157,7 @@ class MatchRepository {
                 : const <String, dynamic>{};
 
             return MyMatchesItem(
-              match: HomeMatch.fromJson(matchJson),
+              match: withFallbackDistance(HomeMatch.fromJson(matchJson)),
               sportImageAsset: AppAssets.sportImage,
               invitationId: json['id']?.toString(),
               inviterName: inviter['name']?.toString(),
@@ -289,6 +309,33 @@ class MatchRepository {
     final payload = await _apiClient.post('/matches/$matchId/cancel');
     return _matchFromEnvelope(payload);
   }
+
+  double _distanceMiles(
+    double originLatitude,
+    double originLongitude,
+    double targetLatitude,
+    double targetLongitude,
+  ) {
+    const earthRadiusMiles = 3958.7613;
+
+    final latitudeDelta = _degreesToRadians(targetLatitude - originLatitude);
+    final longitudeDelta = _degreesToRadians(
+      targetLongitude - originLongitude,
+    );
+    final originLatitudeRadians = _degreesToRadians(originLatitude);
+    final targetLatitudeRadians = _degreesToRadians(targetLatitude);
+
+    final a =
+        math.pow(math.sin(latitudeDelta / 2), 2).toDouble() +
+        math.cos(originLatitudeRadians) *
+            math.cos(targetLatitudeRadians) *
+            math.pow(math.sin(longitudeDelta / 2), 2).toDouble();
+
+    final centralAngle = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusMiles * centralAngle;
+  }
+
+  double _degreesToRadians(double degrees) => degrees * math.pi / 180;
 
   HomeMatch _matchFromEnvelope(Map<String, dynamic> payload) {
     final raw = payload['match'];
