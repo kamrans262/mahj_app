@@ -237,6 +237,7 @@ class MatchRepository {
         currentPlayers: match.currentPlayers,
         maxPlayers: match.maxPlayers,
         sportImageAsset: AppAssets.sportImage,
+        avatarUrl: json['avatar_url']?.toString(),
         latitude: match.latitude,
         longitude: match.longitude,
       );
