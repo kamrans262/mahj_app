@@ -10,6 +10,7 @@ class HomeMatch {
     required this.maxPlayers,
     required this.status,
     this.sportIconAsset = '',
+    this.sportIconKey = '',
     this.bannerAsset = '',
     this.isJoinable = true,
     this.venueName,
@@ -34,6 +35,7 @@ class HomeMatch {
   final int maxPlayers;
   final MatchStatus status;
   final String sportIconAsset;
+  final String sportIconKey;
   final String bannerAsset;
   final bool isJoinable;
   final String? venueName;
@@ -76,6 +78,7 @@ class HomeMatch {
       maxPlayers: (json['max_players'] as num?)?.toInt() ?? 4,
       status: _statusFromJson(json['status']?.toString()),
       isJoinable: json['can_join'] == true,
+      sportIconKey: json['sport_icon_key']?.toString() ?? '',
       venueName: json['venue_name']?.toString(),
       hostUserId: hostMap['id']?.toString(),
       hostName: hostMap['name']?.toString(),
@@ -100,6 +103,7 @@ class HomeMatch {
     int? maxPlayers,
     MatchStatus? status,
     String? sportIconAsset,
+    String? sportIconKey,
     String? bannerAsset,
     bool? isJoinable,
     String? venueName,
@@ -124,6 +128,7 @@ class HomeMatch {
       maxPlayers: maxPlayers ?? this.maxPlayers,
       status: status ?? this.status,
       sportIconAsset: sportIconAsset ?? this.sportIconAsset,
+      sportIconKey: sportIconKey ?? this.sportIconKey,
       bannerAsset: bannerAsset ?? this.bannerAsset,
       isJoinable: isJoinable ?? this.isJoinable,
       venueName: venueName ?? this.venueName,
