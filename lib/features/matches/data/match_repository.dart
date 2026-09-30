@@ -77,8 +77,28 @@ class MatchRepository {
         .toList(growable: false);
   }
 
-  Future<MyMatchesData> listMyMatches() async {
-    final payload = await _apiClient.get('/my-matches');
+  Future<MyMatchesData> listMyMatches({
+    double? latitude,
+    double? longitude,
+    int upcomingPage = 1,
+    int createdByMePage = 1,
+    int invitesPage = 1,
+    int perPage = 20,
+  }) async {
+    final params = <String, String>{
+      'upcoming_page': upcomingPage.toString(),
+      'created_page': createdByMePage.toString(),
+      'invites_page': invitesPage.toString(),
+      'per_page': perPage.toString(),
+    };
+
+    if (latitude != null && longitude != null) {
+      params['latitude'] = latitude.toStringAsFixed(7);
+      params['longitude'] = longitude.toStringAsFixed(7);
+    }
+
+    final path = Uri(path: '/my-matches', queryParameters: params).toString();
+    final payload = await _apiClient.get(path);
 
     List<MyMatchesItem> mapMatches(dynamic raw) {
       if (raw is! List) return const <MyMatchesItem>[];
@@ -121,9 +141,35 @@ class MatchRepository {
               sportImageAsset: AppAssets.sportImage,
               invitationId: json['id']?.toString(),
               inviterName: inviter['name']?.toString(),
+              inviterAvatarUrl: inviter['avatar_url']?.toString(),
             );
           }).toList(growable: false)
         : const <MyMatchesItem>[];
+
+    Map<String, dynamic> readMeta(String key) {
+      final rawMeta = payload['meta'];
+      if (rawMeta is! Map) return const <String, dynamic>{};
+      final normalized = rawMeta.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+      final value = normalized[key];
+      if (value is! Map) return const <String, dynamic>{};
+      return value.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+    }
+
+    int readPage(Map<String, dynamic> meta, int fallback) {
+      final value = meta['page'];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+
+    bool readHasMore(Map<String, dynamic> meta) => meta['has_more'] == true;
+
+    final upcomingMeta = readMeta('upcoming');
+    final createdMeta = readMeta('created_by_me');
+    final invitesMeta = readMeta('invites');
 
     return MyMatchesData(
       unreadNotificationCount: 0,
@@ -131,6 +177,12 @@ class MatchRepository {
       upcoming: mapMatches(payload['upcoming']),
       createdByMe: mapMatches(payload['created_by_me']),
       invites: invites,
+      upcomingPage: readPage(upcomingMeta, upcomingPage),
+      createdByMePage: readPage(createdMeta, createdByMePage),
+      invitesPage: readPage(invitesMeta, invitesPage),
+      hasMoreUpcoming: readHasMore(upcomingMeta),
+      hasMoreCreatedByMe: readHasMore(createdMeta),
+      hasMoreInvites: readHasMore(invitesMeta),
     );
   }
 
@@ -165,6 +217,8 @@ class MatchRepository {
         currentPlayers: match.currentPlayers,
         maxPlayers: match.maxPlayers,
         sportImageAsset: AppAssets.sportImage,
+        latitude: match.latitude,
+        longitude: match.longitude,
       );
     }).where((result) => result.id.isNotEmpty).toList(growable: false);
   }
