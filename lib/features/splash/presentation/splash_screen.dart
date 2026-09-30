@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../app/app_assets.dart';
@@ -23,8 +21,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
   static const _logoToLoaderGap = 35.0;
   static const _logoWidthFactor = 0.52;
   static const _minimumLogoWidth = 180.0;
@@ -34,20 +30,18 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     if (widget.navigateToLogin) {
-      _timer = Timer(widget.duration, _openNextRoute);
+      _openNextRoute();
     }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
   }
 
   Future<void> _openNextRoute() async {
     if (!mounted) return;
 
-    final route = await widget.onResolveRoute?.call() ?? AppRoutes.login;
+    final routeFuture = widget.onResolveRoute?.call() ??
+        Future<String>.value(AppRoutes.login);
+
+    await Future<void>.delayed(widget.duration);
+    final route = await routeFuture;
     if (!mounted) return;
 
     Navigator.of(context).pushReplacementNamed(route);
