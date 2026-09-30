@@ -109,11 +109,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       return HomePreviewData.create();
     }
 
-    final upcoming = _liveMatches
-        .where(
-          (match) => match.isCurrentUserJoined || match.isOwnedByCurrentUser,
-        )
-        .toList(growable: false);
+    final featured = _liveMatches.where((match) => match.isFeatured).toList()
+      ..sort((a, b) {
+        final order = a.featuredOrder.compareTo(b.featuredOrder);
+        if (order != 0) return order;
+        return a.startsAt.compareTo(b.startsAt);
+      });
     final nearby = _liveMatches
         .where(
           (match) => !match.isCurrentUserJoined && !match.isOwnedByCurrentUser,
@@ -129,7 +130,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           : _profileData.addressLine,
       unreadNotificationCount: _profileData.unreadNotificationCount,
       unreadMessageCount: _profileData.unreadMessageCount,
-      upcomingMatches: upcoming,
+      upcomingMatches: featured,
       nearbyMatches: nearby,
     );
   }
