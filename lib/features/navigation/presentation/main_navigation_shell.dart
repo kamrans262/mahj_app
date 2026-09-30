@@ -53,7 +53,7 @@ class MainNavigationShell extends StatefulWidget {
   final ValueChanged<HomeMatch>? onMatchTap;
   final void Function(MyMatchesItem item, MyMatchesTab tab)?
   onMyMatchesMatchTap;
-  final ValueChanged<MyMatchesItem>? onMyMatchesInvitationTap;
+  final Future<void> Function(MyMatchesItem item)? onMyMatchesInvitationTap;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onMessageTap;
   final VoidCallback? onProfileSettingsTap;
@@ -76,6 +76,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   late final MatchDiscoveryStore _discoveryStore;
   late final bool _ownsDiscoveryStore;
   bool _matchesLoading = false;
+  MyMatchesData? _myMatchesData;
+  bool _myMatchesLoading = false;
+  String? _myMatchesError;
 
   @override
   void initState() {
@@ -98,6 +101,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     if (widget.matchRepository != null && preloaded == null) {
       _initializeMatches();
+    }
+    if (widget.matchRepository != null && _currentIndex == 2) {
+      _refreshMyMatches();
     }
   }
 
@@ -157,6 +163,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         _homeOverlayOpen = false;
       }
     });
+
+    if (index == 2 && widget.matchRepository != null) {
+      _refreshMyMatches();
+    }
   }
 
   void _setHomeOverlayVisible(bool visible) {
@@ -202,6 +212,42 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       upcomingMatches: featured,
       nearbyMatches: nearby,
     );
+  }
+
+  MyMatchesData get _resolvedMyMatchesData {
+    final data = _myMatchesData;
+    return MyMatchesData(
+      unreadNotificationCount: _profileData.unreadNotificationCount,
+      unreadMessageCount: _profileData.unreadMessageCount,
+      upcoming: data?.upcoming ?? const <MyMatchesItem>[],
+      createdByMe: data?.createdByMe ?? const <MyMatchesItem>[],
+      invites: data?.invites ?? const <MyMatchesItem>[],
+    );
+  }
+
+  Future<void> _refreshMyMatches() async {
+    final repository = widget.matchRepository;
+    if (repository == null) return;
+
+    if (mounted) {
+      setState(() {
+        _myMatchesLoading = true;
+        _myMatchesError = null;
+      });
+    }
+
+    try {
+      final data = await repository.listMyMatches();
+      if (!mounted) return;
+      setState(() => _myMatchesData = data);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _myMatchesError = 'Could not load your matches. Please try again.';
+      });
+    } finally {
+      if (mounted) setState(() => _myMatchesLoading = false);
+    }
   }
 
   Future<void> _refreshMatches() async {
@@ -271,12 +317,31 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           useLiveMap: widget.matchRepository != null,
         );
       case 2:
+        final myMatchesError = _myMatchesError;
         return MyMatchesScreen(
           key: const ValueKey('main-navigation-my-matches'),
+          data: widget.matchRepository == null ? null : _resolvedMyMatchesData,
           initialTab: _myMatchesTab,
+          loadingTabs: _myMatchesLoading
+              ? Set<MyMatchesTab>.from(MyMatchesTab.values)
+              : const <MyMatchesTab>{},
+          errorMessages: myMatchesError == null
+              ? const <MyMatchesTab, String>{}
+              : {
+                  for (final tab in MyMatchesTab.values)
+                    tab: myMatchesError,
+                },
           onTabChanged: _rememberMyMatchesTab,
           onMatchTap: widget.onMyMatchesMatchTap,
-          onInvitationTap: widget.onMyMatchesInvitationTap,
+          onInvitationTap: widget.onMyMatchesInvitationTap == null
+              ? null
+              : (item) async {
+                  await widget.onMyMatchesInvitationTap!(item);
+                  await _refreshMyMatches();
+                },
+          onRefresh: widget.matchRepository == null
+              ? null
+              : (_) => _refreshMyMatches(),
           onNotificationTap: widget.onNotificationTap,
           onMessageTap: widget.onMessageTap,
         );
