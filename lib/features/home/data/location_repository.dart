@@ -13,8 +13,9 @@ class LocationAccessException implements Exception {
 }
 
 class LocationRepository {
-  const LocationRepository({required ApiClient apiClient})
-    : _apiClient = apiClient;
+  const LocationRepository({required ApiClient apiClient}) : this._(apiClient);
+
+  const LocationRepository._(this._apiClient);
 
   final ApiClient _apiClient;
 

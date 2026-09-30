@@ -89,7 +89,7 @@ class _ConnectedCreateMatchScreenState
       final results = await locations.search(request.locationAddress);
       if (results.isNotEmpty) {
         final resolved = results.first;
-        return widget.repository.create(
+        return await widget.repository.create(
           request.withCoordinates(
             latitude: resolved.latitude,
             longitude: resolved.longitude,

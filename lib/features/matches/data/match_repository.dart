@@ -5,8 +5,9 @@ import '../domain/create_match_form_state.dart';
 import '../domain/sport_option.dart';
 
 class MatchRepository {
-  const MatchRepository({required ApiClient apiClient})
-    : _apiClient = apiClient;
+  const MatchRepository({required ApiClient apiClient}) : this._(apiClient);
+
+  const MatchRepository._(this._apiClient);
 
   final ApiClient _apiClient;
 
