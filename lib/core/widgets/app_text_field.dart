@@ -10,6 +10,7 @@ class AppTextField extends StatefulWidget {
     required this.controller,
     required this.hintText,
     this.leadingIcon,
+    this.alignLeadingIconTop = false,
     super.key,
     this.focusNode,
     this.keyboardType,
@@ -32,6 +33,7 @@ class AppTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final String hintText;
   final IconData? leadingIcon;
+  final bool alignLeadingIconTop;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
@@ -70,7 +72,10 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    final topAlignedLeadingIcon =
+        widget.alignLeadingIconTop && widget.leadingIcon != null;
+
+    final field = TextFormField(
       controller: widget.controller,
       focusNode: widget.focusNode,
       keyboardType: widget.keyboardType,
@@ -94,8 +99,10 @@ class _AppTextFieldState extends State<AppTextField> {
         hintStyle: AppTypography.fieldHint,
         contentPadding:
             widget.contentPadding ??
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        prefixIcon: widget.leadingIcon == null
+            (topAlignedLeadingIcon
+                ? const EdgeInsets.fromLTRB(48, 13, 18, 13)
+                : const EdgeInsets.symmetric(horizontal: 18, vertical: 13)),
+        prefixIcon: widget.leadingIcon == null || topAlignedLeadingIcon
             ? null
             : Icon(
                 widget.leadingIcon,
@@ -126,6 +133,27 @@ class _AppTextFieldState extends State<AppTextField> {
         focusedErrorBorder: _border(AppColors.error, width: 1.2),
         border: _border(AppColors.controlBorder),
       ),
+    );
+
+    if (!topAlignedLeadingIcon) {
+      return field;
+    }
+
+    return Stack(
+      children: [
+        field,
+        Positioned(
+          left: 13,
+          top: 13,
+          child: IgnorePointer(
+            child: Icon(
+              widget.leadingIcon,
+              size: 22,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

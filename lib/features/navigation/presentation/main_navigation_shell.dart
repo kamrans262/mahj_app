@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../app/app_scroll_behavior.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../home/data/home_preview_data.dart';
+import '../../home/domain/home_data.dart';
 import '../../home/domain/home_match.dart';
 import '../../home/presentation/home_screen.dart';
 import '../../home/presentation/widgets/app_bottom_navigation.dart';
 import '../../map/presentation/map_screen.dart';
+import '../../matches/data/match_repository.dart';
 import '../../matches/domain/my_matches_data.dart';
 import '../../matches/presentation/my_matches_screen.dart';
 import '../../profile/data/profile_preview_data.dart';
@@ -17,6 +20,7 @@ class MainNavigationShell extends StatefulWidget {
     super.key,
     this.initialIndex = 0,
     this.initialProfileData,
+    this.matchRepository,
     this.onNearbyViewAll,
     this.onCreateMatch,
     this.onMatchTap,
@@ -32,6 +36,7 @@ class MainNavigationShell extends StatefulWidget {
 
   final int initialIndex;
   final ProfileData? initialProfileData;
+  final MatchRepository? matchRepository;
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
   final ValueChanged<HomeMatch>? onMatchTap;
@@ -55,6 +60,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   late ProfileData _profileData;
   bool _homeOverlayOpen = false;
   MyMatchesTab _myMatchesTab = MyMatchesTab.upcoming;
+  List<HomeMatch> _liveMatches = const [];
 
   @override
   void initState() {
@@ -63,6 +69,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         ? widget.initialIndex
         : 0;
     _profileData = widget.initialProfileData ?? ProfilePreviewData.currentUser;
+
+    if (widget.matchRepository != null) {
+      _refreshMatches();
+    }
   }
 
   bool _isSupportedIndex(int index) => index >= 0 && index <= 3;
@@ -85,6 +95,71 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   void _rememberMyMatchesTab(MyMatchesTab tab) {
     _myMatchesTab = tab;
+  }
+
+  String get _greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
+  HomeData get _homeData {
+    if (widget.matchRepository == null) {
+      return HomePreviewData.create();
+    }
+
+    final featured = _liveMatches.where((match) => match.isFeatured).toList()
+      ..sort((a, b) {
+        final order = a.featuredOrder.compareTo(b.featuredOrder);
+        if (order != 0) return order;
+        return a.startsAt.compareTo(b.startsAt);
+      });
+    final nearby = _liveMatches
+        .where(
+          (match) => !match.isCurrentUserJoined && !match.isOwnedByCurrentUser,
+        )
+        .toList(growable: false);
+
+    return HomeData(
+      greeting: _greeting,
+      displayName: _profileData.name,
+      subtitle: 'Find and join matches near you',
+      location: _profileData.addressLine.isEmpty
+          ? 'Set your location'
+          : _profileData.addressLine,
+      unreadNotificationCount: _profileData.unreadNotificationCount,
+      unreadMessageCount: _profileData.unreadMessageCount,
+      upcomingMatches: featured,
+      nearbyMatches: nearby,
+    );
+  }
+
+  Future<void> _refreshMatches() async {
+    final repository = widget.matchRepository;
+    if (repository == null) return;
+
+    try {
+      final matches = await repository.list();
+      if (!mounted) return;
+      setState(() => _liveMatches = matches);
+    } catch (_) {
+      // Keep the current list visible. Home pull-to-refresh can retry.
+    }
+  }
+
+  Future<void> _joinHomeMatch(HomeMatch match) async {
+    final repository = widget.matchRepository;
+    if (repository == null) return;
+
+    final updated = await repository.join(match.id);
+    if (!mounted) return;
+
+    setState(() {
+      _liveMatches = _liveMatches
+          .map((item) => item.id == updated.id ? updated : item)
+          .toList(growable: false);
+    });
   }
 
   void _requestEditProfile() {
@@ -132,9 +207,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       default:
         return HomeScreen(
           key: const ValueKey('main-navigation-home'),
+          data: _homeData,
           onNearbyViewAll: widget.onNearbyViewAll,
           onMatchTap: widget.onMatchTap,
+          onJoinMatch: widget.matchRepository == null ? null : _joinHomeMatch,
           onCreateMatch: widget.onCreateMatch,
+          onRefresh: widget.matchRepository == null ? null : _refreshMatches,
           showBottomNavigation: false,
           showCreateFab: false,
           onFilterVisibilityChanged: _setHomeOverlayVisible,

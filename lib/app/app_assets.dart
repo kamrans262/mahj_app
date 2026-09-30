@@ -15,6 +15,16 @@ abstract final class AppAssets {
   static const String homeMessageIcon = 'assets/icons/message.svg';
   static const String homeFootballIcon = 'assets/icons/football.svg';
   static const String basketballIcon = 'assets/icons/basketball.svg';
+  static const String americanFootballIcon =
+      'assets/icons/american_football.svg';
+  static const String baseballIcon = 'assets/icons/baseball.svg';
+  static const String tennisIcon = 'assets/icons/tennis.svg';
+  static const String volleyballIcon = 'assets/icons/volleyball.svg';
+  static const String hockeyIcon = 'assets/icons/hockey.svg';
+  static const String pickleballIcon = 'assets/icons/pickleball.svg';
+  static const String golfIcon = 'assets/icons/golf.svg';
+  static const String lacrosseIcon = 'assets/icons/lacrosse.svg';
+  static const String genericSportIcon = 'assets/icons/sport_generic.svg';
   static const String homeBannerImage = 'assets/banner1.png';
   static const String homeFootballImage = 'assets/football.png';
   static const String notificationPlayersIcon = 'assets/icons/players.svg';

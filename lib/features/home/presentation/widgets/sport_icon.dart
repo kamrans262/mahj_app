@@ -1,27 +1,55 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/app_assets.dart';
-import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/app_asset_icon.dart';
 import '../../domain/home_match.dart';
 
 abstract final class SportIconResolver {
-  static String? assetFor(HomeMatch match) {
+  static String assetForKey(String iconKey) {
+    return switch (iconKey) {
+      'football' => AppAssets.americanFootballIcon,
+      'basketball' => AppAssets.basketballIcon,
+      'baseball' => AppAssets.baseballIcon,
+      'soccer' => AppAssets.homeFootballIcon,
+      'tennis' => AppAssets.tennisIcon,
+      'volleyball' => AppAssets.volleyballIcon,
+      'hockey' => AppAssets.hockeyIcon,
+      'pickleball' => AppAssets.pickleballIcon,
+      'golf' => AppAssets.golfIcon,
+      'softball' => AppAssets.baseballIcon,
+      'lacrosse' => AppAssets.lacrosseIcon,
+      _ => AppAssets.genericSportIcon,
+    };
+  }
+
+  static String assetFor(HomeMatch match) {
     if (match.sportIconAsset.isNotEmpty) {
       return match.sportIconAsset;
     }
 
-    final sport = match.sportName.toLowerCase();
-
-    if (sport.contains('basket')) {
-      return AppAssets.basketballIcon;
+    if (match.sportIconKey.isNotEmpty) {
+      return assetForKey(match.sportIconKey);
     }
 
-    if (sport.contains('football') || sport.contains('soccer')) {
+    final sport = match.sportName.toLowerCase();
+    if (sport.contains('american football')) {
+      return AppAssets.americanFootballIcon;
+    }
+    if (sport.contains('basket')) return AppAssets.basketballIcon;
+    if (sport.contains('baseball') || sport.contains('softball')) {
+      return AppAssets.baseballIcon;
+    }
+    if (sport.contains('soccer') || sport == 'football') {
       return AppAssets.homeFootballIcon;
     }
+    if (sport.contains('tennis')) return AppAssets.tennisIcon;
+    if (sport.contains('volley')) return AppAssets.volleyballIcon;
+    if (sport.contains('hockey')) return AppAssets.hockeyIcon;
+    if (sport.contains('pickle')) return AppAssets.pickleballIcon;
+    if (sport.contains('golf')) return AppAssets.golfIcon;
+    if (sport.contains('lacrosse')) return AppAssets.lacrosseIcon;
 
-    return null;
+    return AppAssets.genericSportIcon;
   }
 }
 
@@ -33,12 +61,9 @@ class SportIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assetPath = SportIconResolver.assetFor(match);
-
-    if (assetPath != null) {
-      return AppAssetIcon(assetPath: assetPath, size: size);
-    }
-
-    return Icon(Icons.sports, size: size, color: AppColors.heading);
+    return AppAssetIcon(
+      assetPath: SportIconResolver.assetFor(match),
+      size: size,
+    );
   }
 }
