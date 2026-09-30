@@ -1,6 +1,7 @@
 import '../../../core/network/api_client.dart';
 import '../../home/domain/home_match.dart';
 import '../domain/create_match_form_state.dart';
+import '../domain/sport_option.dart';
 
 class MatchRepository {
   const MatchRepository({required ApiClient apiClient}) : this._(apiClient);
@@ -8,6 +9,22 @@ class MatchRepository {
   const MatchRepository._(this._apiClient);
 
   final ApiClient _apiClient;
+
+  Future<List<SportOption>> listSports() async {
+    final payload = await _apiClient.get('/sports');
+    final raw = payload['data'];
+    if (raw is! List) return const <SportOption>[];
+
+    return raw
+        .whereType<Map>()
+        .map(
+          (item) => SportOption.fromJson(
+            item.map((key, value) => MapEntry(key.toString(), value)),
+          ),
+        )
+        .where((sport) => sport.name.isNotEmpty && sport.slug.isNotEmpty)
+        .toList(growable: false);
+  }
 
   Future<List<HomeMatch>> list() async {
     final payload = await _apiClient.get('/matches');
@@ -33,7 +50,9 @@ class MatchRepository {
     final payload = await _apiClient.post(
       '/matches',
       body: {
-        'name': request.matchName,
+        'sport_id': request.sportId,
+        'custom_sport_name': request.customSportName,
+        'name': request.sportName,
         'location_address': request.locationAddress,
         'venue_name': request.venueName,
         'notes': request.notes,
