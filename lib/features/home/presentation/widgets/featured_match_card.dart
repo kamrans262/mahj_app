@@ -202,4 +202,3 @@ class _Background extends StatelessWidget {
     );
   }
 }
-
