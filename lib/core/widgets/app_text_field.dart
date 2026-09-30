@@ -85,6 +85,8 @@ class _AppTextFieldState extends State<AppTextField> {
       onFieldSubmitted: widget.onFieldSubmitted,
       inputFormatters: widget.inputFormatters,
       textAlign: widget.textAlign,
+      textAlignVertical:
+          widget.alignLeadingIconTop ? TextAlignVertical.top : null,
       minLines: widget.obscureText ? 1 : widget.minLines,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
       textCapitalization: widget.textCapitalization,
@@ -97,15 +99,16 @@ class _AppTextFieldState extends State<AppTextField> {
         contentPadding:
             widget.contentPadding ??
             const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+        prefixIconConstraints: widget.alignLeadingIconTop
+            ? const BoxConstraints(minWidth: 48, minHeight: 0)
+            : null,
         prefixIcon: widget.leadingIcon == null
             ? null
             : widget.alignLeadingIconTop
-            ? Align(
-                alignment: Alignment.topCenter,
-                widthFactor: 1,
-                heightFactor: 1,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 14),
+            ? Padding(
+                padding: const EdgeInsets.only(top: 11),
+                child: Align(
+                  alignment: Alignment.topCenter,
                   child: Icon(
                     widget.leadingIcon,
                     size: 22,
