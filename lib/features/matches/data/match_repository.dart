@@ -139,12 +139,12 @@ class MatchRepository {
     String query,
   ) async {
     final trimmed = query.trim();
-    if (trimmed.isEmpty) return const <InvitePlayerResult>[];
-
-    final path = Uri(
-      path: '/matches/${match.id}/invite-candidates',
-      queryParameters: {'q': trimmed},
-    ).toString();
+    final path = trimmed.isEmpty
+        ? '/matches/${match.id}/invite-candidates'
+        : Uri(
+            path: '/matches/${match.id}/invite-candidates',
+            queryParameters: {'q': trimmed},
+          ).toString();
     final payload = await _apiClient.get(path);
     final raw = payload['data'];
     if (raw is! List) return const <InvitePlayerResult>[];
