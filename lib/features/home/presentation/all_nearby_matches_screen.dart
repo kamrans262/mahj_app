@@ -4,27 +4,32 @@ import '../../../app/app_assets.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
-import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_icon_action_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../data/nearby_matches_preview_data.dart';
+import '../domain/discovery_location.dart';
 import '../domain/home_match.dart';
+import '../domain/match_filters.dart';
 import 'widgets/location_selection_dialog.dart';
 import 'widgets/location_selector.dart';
 import 'widgets/match_card.dart';
 
-enum NearbyMatchesSortOption { distance }
+enum NearbyMatchesSortOption { distance, date }
 
 class AllNearbyMatchesScreen extends StatefulWidget {
   const AllNearbyMatchesScreen({
     super.key,
     this.matches,
-    this.initialLocation = '1001, New York, NY',
+    this.initialFilters,
     this.onBack,
     this.onLocationChanged,
     this.onSearch,
     this.onSortChanged,
+    this.onFiltersChanged,
+    this.onLocationSearch,
+    this.onCurrentLocation,
     this.onMatchTap,
     this.onCreateMatch,
     this.onRefresh,
@@ -34,11 +39,15 @@ class AllNearbyMatchesScreen extends StatefulWidget {
   });
 
   final List<HomeMatch>? matches;
-  final String initialLocation;
+  final MatchFilters? initialFilters;
   final VoidCallback? onBack;
   final ValueChanged<String>? onLocationChanged;
   final Future<void> Function(String query)? onSearch;
   final ValueChanged<NearbyMatchesSortOption>? onSortChanged;
+  final Future<void> Function(MatchFilters filters)? onFiltersChanged;
+  final Future<List<DiscoveryLocation>> Function(String query)?
+  onLocationSearch;
+  final Future<DiscoveryLocation> Function()? onCurrentLocation;
   final ValueChanged<HomeMatch>? onMatchTap;
   final VoidCallback? onCreateMatch;
   final Future<void> Function()? onRefresh;
@@ -55,31 +64,35 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
   final _searchFocusNode = FocusNode();
   final _scrollController = ScrollController();
 
-  late String _selectedLocation;
-  NearbyMatchesSortOption _sortOption = NearbyMatchesSortOption.distance;
+  late MatchFilters _filters;
   String _submittedQuery = '';
   bool _loadMoreRequested = false;
   bool _searching = false;
+  bool _updatingFilters = false;
 
   List<HomeMatch> get _sourceMatches =>
       widget.matches ?? NearbyMatchesPreviewData.create();
 
   List<HomeMatch> get _visibleMatches {
+    if (widget.onSearch != null) return _sourceMatches;
+
     final query = _submittedQuery.trim().toLowerCase();
     if (query.isEmpty) return _sourceMatches;
 
     return _sourceMatches
-        .where((match) {
-          return match.sportName.toLowerCase().contains(query) ||
-              match.location.toLowerCase().contains(query);
-        })
+        .where(
+          (match) =>
+              match.sportName.toLowerCase().contains(query) ||
+              match.location.toLowerCase().contains(query) ||
+              (match.venueName?.toLowerCase().contains(query) ?? false),
+        )
         .toList(growable: false);
   }
 
   @override
   void initState() {
     super.initState();
-    _selectedLocation = widget.initialLocation;
+    _filters = widget.initialFilters ?? MatchFilters.defaults();
     _scrollController.addListener(_handleScroll);
   }
 
@@ -88,6 +101,12 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.matches?.length != widget.matches?.length) {
       _loadMoreRequested = false;
+    }
+
+    final incomingFilters = widget.initialFilters;
+    if (incomingFilters != null &&
+        incomingFilters != oldWidget.initialFilters) {
+      _filters = incomingFilters;
     }
   }
 
@@ -123,15 +142,27 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
   Future<void> _selectLocation() async {
     FocusManager.instance.primaryFocus?.unfocus();
 
+    final search = widget.onLocationSearch;
+    final current = widget.onCurrentLocation;
+    if (search == null || current == null) return;
+
     final selected = await showLocationSelectionDialog(
       context: context,
-      selectedLocation: _selectedLocation,
+      selectedLocation: _filters.selectedLocation,
+      onSearch: search,
+      onCurrentLocation: current,
     );
 
     if (!mounted || selected == null) return;
 
-    setState(() => _selectedLocation = selected);
-    widget.onLocationChanged?.call(selected);
+    final next = _filters.copyWith(
+      selectedLocation: selected.label,
+      latitude: selected.latitude,
+      longitude: selected.longitude,
+    );
+    setState(() => _filters = next);
+    widget.onLocationChanged?.call(selected.label);
+    await _applyFilters(next);
   }
 
   Future<void> _submitSearch() async {
@@ -157,11 +188,28 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
     }
   }
 
-  void _setSort(NearbyMatchesSortOption value) {
-    if (_sortOption == value) return;
+  Future<void> _setSort(NearbyMatchesSortOption value) async {
+    final matchSort = value == NearbyMatchesSortOption.distance
+        ? MatchSortOption.distance
+        : MatchSortOption.date;
+    if (_filters.sortOption == matchSort || _updatingFilters) return;
 
-    setState(() => _sortOption = value);
+    final next = _filters.copyWith(sortOption: matchSort);
+    setState(() => _filters = next);
     widget.onSortChanged?.call(value);
+    await _applyFilters(next);
+  }
+
+  Future<void> _applyFilters(MatchFilters filters) async {
+    final callback = widget.onFiltersChanged;
+    if (callback == null || _updatingFilters) return;
+
+    setState(() => _updatingFilters = true);
+    try {
+      await callback(filters);
+    } finally {
+      if (mounted) setState(() => _updatingFilters = false);
+    }
   }
 
   String _countLabel(int count) {
@@ -211,6 +259,10 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
   }
 
   Widget _buildResultsHeader(int count) {
+    final activeSort = _filters.sortOption == MatchSortOption.distance
+        ? NearbyMatchesSortOption.distance
+        : NearbyMatchesSortOption.date;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -229,7 +281,7 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
         ),
         const SizedBox(width: 12),
         PopupMenuButton<NearbyMatchesSortOption>(
-          initialValue: _sortOption,
+          initialValue: activeSort,
           onSelected: _setSort,
           tooltip: 'Sort nearby matches',
           color: AppColors.background,
@@ -238,16 +290,23 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
               value: NearbyMatchesSortOption.distance,
               child: Text('Distance'),
             ),
+            PopupMenuItem(
+              value: NearbyMatchesSortOption.date,
+              child: Text('Date'),
+            ),
           ],
           child: Semantics(
             button: true,
-            label: 'Sort nearby matches by distance',
+            label: 'Sort nearby matches',
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 44),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Sort: Distance', style: AppTypography.homeMeta12),
+                  Text(
+                    'Sort: ${_filters.sortOption.label}',
+                    style: AppTypography.homeMeta12,
+                  ),
                   const SizedBox(width: 5),
                   const Icon(
                     Icons.keyboard_arrow_down,
@@ -278,10 +337,22 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
     }
 
     if (matches.isEmpty) {
-      return const _NearbyStateCard(message: 'No nearby matches found');
+      return _NearbyStateCard(
+        message: 'No games found nearby',
+        actionLabel: widget.onCreateMatch == null ? null : 'Create Match',
+        onAction: widget.onCreateMatch == null
+            ? null
+            : () async => widget.onCreateMatch!(),
+      );
     }
 
     return const SizedBox.shrink();
+  }
+
+  String _subtitleFor(HomeMatch match) {
+    final distance = match.distanceMiles;
+    if (distance == null) return match.location;
+    return '${match.location} · ${distance.toStringAsFixed(1)} mi';
   }
 
   @override
@@ -301,7 +372,7 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               LocationSelector(
-                location: _selectedLocation,
+                location: _filters.selectedLocation,
                 onTap: _selectLocation,
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -329,6 +400,7 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
 
                 return MatchCard(
                   match: match,
+                  subtitle: _subtitleFor(match),
                   onTap: widget.onMatchTap == null
                       ? null
                       : () => widget.onMatchTap!(match),

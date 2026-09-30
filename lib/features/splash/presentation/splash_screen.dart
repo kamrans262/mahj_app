@@ -23,33 +23,52 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
   static const _logoToLoaderGap = 35.0;
   static const _logoWidthFactor = 0.52;
   static const _minimumLogoWidth = 180.0;
   static const _maximumLogoWidth = 280.0;
 
+  Timer? _minimumDurationTimer;
+  String? _resolvedRoute;
+  bool _minimumDurationElapsed = false;
+  bool _navigationStarted = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.navigateToLogin) {
-      _timer = Timer(widget.duration, _openNextRoute);
+      _resolveRoute();
+      _minimumDurationTimer = Timer(widget.duration, () {
+        _minimumDurationElapsed = true;
+        _openResolvedRoute();
+      });
     }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _minimumDurationTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _openNextRoute() async {
-    if (!mounted) return;
-
+  Future<void> _resolveRoute() async {
     final route = await widget.onResolveRoute?.call() ?? AppRoutes.login;
     if (!mounted) return;
 
+    _resolvedRoute = route;
+    _openResolvedRoute();
+  }
+
+  void _openResolvedRoute() {
+    final route = _resolvedRoute;
+    if (!mounted ||
+        !_minimumDurationElapsed ||
+        _navigationStarted ||
+        route == null) {
+      return;
+    }
+
+    _navigationStarted = true;
     Navigator.of(context).pushReplacementNamed(route);
   }
 

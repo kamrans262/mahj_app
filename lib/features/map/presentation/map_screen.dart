@@ -7,13 +7,15 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_surface_container.dart';
 import '../../home/domain/home_match.dart';
+import '../../home/domain/match_filters.dart';
 import '../../home/presentation/home_date_time_formatter.dart';
 import '../../home/presentation/widgets/match_card.dart';
-import '../../home/presentation/widgets/sport_icon.dart';
 import '../../home/presentation/widgets/player_avatar_stack.dart';
+import '../../home/presentation/widgets/sport_icon.dart';
 import '../data/map_preview_data.dart';
 import '../domain/map_match_marker.dart';
 import 'widgets/demo_match_map.dart';
+import 'widgets/live_match_map.dart';
 import 'widgets/map_filter_chip.dart';
 
 enum MapDateFilter { today, tomorrow }
@@ -22,19 +24,25 @@ class MapScreen extends StatefulWidget {
   const MapScreen({
     super.key,
     this.markers,
+    this.filters,
     this.onBack,
     this.onViewDetails,
     this.onDateFilterChanged,
     this.onRadiusChanged,
+    this.onFiltersChanged,
     this.isLoading = false,
+    this.useLiveMap = false,
   });
 
   final List<MapMatchMarker>? markers;
+  final MatchFilters? filters;
   final VoidCallback? onBack;
   final ValueChanged<HomeMatch>? onViewDetails;
   final ValueChanged<MapDateFilter>? onDateFilterChanged;
   final ValueChanged<int>? onRadiusChanged;
+  final Future<void> Function(MatchFilters filters)? onFiltersChanged;
   final bool isLoading;
+  final bool useLiveMap;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -42,42 +50,64 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   static const _radiusOptions = <int>[1, 5, 10];
+  static const _dateOptions = <MatchDateFilter>[
+    MatchDateFilter.today,
+    MatchDateFilter.tomorrow,
+    MatchDateFilter.weekend,
+    MatchDateFilter.nextThreeDays,
+    MatchDateFilter.any,
+  ];
 
-  MapDateFilter _dateFilter = MapDateFilter.today;
-  int _radiusMiles = 10;
+  late MatchFilters _filters;
   String? _selectedMatchId;
   late final List<MapMatchMarker> _previewMarkers;
 
   List<MapMatchMarker> get _sourceMarkers => widget.markers ?? _previewMarkers;
 
-  List<MapMatchMarker> get _visibleMarkers =>
-      _filteredMarkers(dateFilter: _dateFilter, radiusMiles: _radiusMiles);
-
-  List<MapMatchMarker> _filteredMarkers({
-    required MapDateFilter dateFilter,
-    required int radiusMiles,
-  }) {
-    final now = DateTime.now();
-    final targetDate = dateFilter == MapDateFilter.today
-        ? now
-        : now.add(const Duration(days: 1));
-
+  List<MapMatchMarker> get _visibleMarkers {
     return _sourceMarkers
         .where(
           (marker) =>
-              marker.distanceMiles <= radiusMiles &&
-              _isSameLocalDay(marker.match.startsAt, targetDate),
+              marker.distanceMiles <= _filters.radiusMiles &&
+              _matchesDateFilter(marker.match.startsAt, _filters.dateFilter),
         )
         .toList(growable: false);
   }
 
-  bool _isSameLocalDay(DateTime value, DateTime target) {
-    final localValue = value.toLocal();
-    final localTarget = target.toLocal();
+  bool _matchesDateFilter(DateTime value, MatchDateFilter filter) {
+    if (filter == MatchDateFilter.any) return true;
 
-    return localValue.year == localTarget.year &&
-        localValue.month == localTarget.month &&
-        localValue.day == localTarget.day;
+    final now = DateTime.now();
+    final localValue = value.toLocal();
+    final today = DateTime(now.year, now.month, now.day);
+    final matchDay = DateTime(
+      localValue.year,
+      localValue.month,
+      localValue.day,
+    );
+
+    if (filter == MatchDateFilter.today) {
+      return matchDay == today;
+    }
+    if (filter == MatchDateFilter.tomorrow) {
+      return matchDay == today.add(const Duration(days: 1));
+    }
+    if (filter == MatchDateFilter.nextThreeDays) {
+      final lastDay = today.add(const Duration(days: 2));
+      return !matchDay.isBefore(today) && !matchDay.isAfter(lastDay);
+    }
+
+    var weekendStart = today;
+    if (today.weekday == DateTime.sunday) {
+      weekendStart = today.subtract(const Duration(days: 1));
+    } else if (today.weekday != DateTime.saturday) {
+      weekendStart = today.add(
+        Duration(days: DateTime.saturday - today.weekday),
+      );
+    }
+    final weekendEnd = weekendStart.add(const Duration(days: 1));
+
+    return !matchDay.isBefore(weekendStart) && !matchDay.isAfter(weekendEnd);
   }
 
   MapMatchMarker? get _selectedMarker {
@@ -97,6 +127,13 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _previewMarkers = MapPreviewData.create();
+    _filters =
+        widget.filters ??
+        MatchFilters.defaults().copyWith(
+          radiusMiles: 10,
+          dateFilter: MatchDateFilter.today,
+          showOpenOnly: false,
+        );
     final markers = _visibleMarkers;
     _selectedMatchId = markers.isEmpty ? null : markers.first.match.id;
   }
@@ -104,6 +141,11 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void didUpdateWidget(covariant MapScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    final incomingFilters = widget.filters;
+    if (incomingFilters != null && incomingFilters != oldWidget.filters) {
+      _filters = incomingFilters;
+    }
 
     final markers = _visibleMarkers;
     if (markers.isEmpty) {
@@ -119,34 +161,10 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _toggleDateFilter() {
-    final next = _dateFilter == MapDateFilter.today
-        ? MapDateFilter.tomorrow
-        : MapDateFilter.today;
-
+  Future<void> _applyFilters(MatchFilters next) async {
     setState(() {
-      _dateFilter = next;
-      final visible = _filteredMarkers(
-        dateFilter: next,
-        radiusMiles: _radiusMiles,
-      );
-      _selectedMatchId = visible.isEmpty ? null : visible.first.match.id;
-    });
-    widget.onDateFilterChanged?.call(next);
-  }
-
-  void _cycleRadius() {
-    final currentIndex = _radiusOptions.indexOf(_radiusMiles);
-    final nextIndex = (currentIndex + 1) % _radiusOptions.length;
-    final next = _radiusOptions[nextIndex];
-
-    setState(() {
-      final visible = _filteredMarkers(
-        dateFilter: _dateFilter,
-        radiusMiles: next,
-      );
-      _radiusMiles = next;
-
+      _filters = next;
+      final visible = _visibleMarkers;
       final selectedStillVisible = visible.any(
         (marker) => marker.match.id == _selectedMatchId,
       );
@@ -155,21 +173,77 @@ class _MapScreenState extends State<MapScreen> {
       }
     });
 
+    final callback = widget.onFiltersChanged;
+    if (callback != null) {
+      await callback(next);
+    }
+  }
+
+  Future<void> _toggleDateFilter() async {
+    final currentIndex = _dateOptions.indexOf(_filters.dateFilter);
+    final nextIndex = currentIndex < 0
+        ? 0
+        : (currentIndex + 1) % _dateOptions.length;
+    final nextFilter = _dateOptions[nextIndex];
+
+    await _applyFilters(_filters.copyWith(dateFilter: nextFilter));
+
+    if (nextFilter == MatchDateFilter.today) {
+      widget.onDateFilterChanged?.call(MapDateFilter.today);
+    } else if (nextFilter == MatchDateFilter.tomorrow) {
+      widget.onDateFilterChanged?.call(MapDateFilter.tomorrow);
+    }
+  }
+
+  Future<void> _cycleRadius() async {
+    final currentRadius = _filters.radiusMiles.round();
+    final currentIndex = _radiusOptions.indexOf(currentRadius);
+    final nextIndex = currentIndex < 0
+        ? 0
+        : (currentIndex + 1) % _radiusOptions.length;
+    final next = _radiusOptions[nextIndex];
+
+    await _applyFilters(_filters.copyWith(radiusMiles: next.toDouble()));
     widget.onRadiusChanged?.call(next);
   }
 
   void _selectMarker(MapMatchMarker marker) {
     if (_selectedMatchId == marker.match.id) return;
-
     setState(() => _selectedMatchId = marker.match.id);
   }
 
-  String get _dateFilterLabel {
-    return _dateFilter == MapDateFilter.today ? 'Today' : 'Tomorrow';
-  }
+  String get _dateFilterLabel => _filters.dateFilter.label;
 
   String get _radiusLabel {
-    return _radiusMiles == 1 ? '1 mile' : '$_radiusMiles miles';
+    final miles = _filters.radiusMiles.round();
+    return miles == 1 ? '1 mile' : '$miles miles';
+  }
+
+  Widget _buildMap(List<MapMatchMarker> visibleMarkers) {
+    if (!widget.useLiveMap) {
+      return DemoMatchMap(
+        key: const ValueKey('map-demo-canvas'),
+        markers: visibleMarkers,
+        selectedMatchId: _selectedMarker?.match.id,
+        onMarkerTap: _selectMarker,
+        isLoading: widget.isLoading,
+      );
+    }
+
+    return LiveMatchMap(
+      key: const ValueKey('map-live-canvas'),
+      markers: visibleMarkers,
+      selectedMatchId: _selectedMarker?.match.id,
+      onMarkerTap: _selectMarker,
+      centerLatitude: _filters.latitude,
+      centerLongitude: _filters.longitude,
+      currentLocationLatitude: _filters.usesCurrentLocation
+          ? _filters.latitude
+          : null,
+      currentLocationLongitude: _filters.usesCurrentLocation
+          ? _filters.longitude
+          : null,
+    );
   }
 
   @override
@@ -211,13 +285,17 @@ class _MapScreenState extends State<MapScreen> {
                           MapFilterChip(
                             label: _dateFilterLabel,
                             semanticLabel: 'Date filter',
-                            onTap: _toggleDateFilter,
+                            onTap: () {
+                              _toggleDateFilter();
+                            },
                           ),
                           const SizedBox(width: 14),
                           MapFilterChip(
                             label: _radiusLabel,
                             semanticLabel: 'Distance radius filter',
-                            onTap: _cycleRadius,
+                            onTap: () {
+                              _cycleRadius();
+                            },
                           ),
                         ],
                       ),
@@ -228,13 +306,7 @@ class _MapScreenState extends State<MapScreen> {
                       width: double.infinity,
                       child: AspectRatio(
                         aspectRatio: 0.82,
-                        child: DemoMatchMap(
-                          key: const ValueKey('map-demo-canvas'),
-                          markers: visibleMarkers,
-                          selectedMatchId: selected?.match.id,
-                          onMarkerTap: _selectMarker,
-                          isLoading: widget.isLoading,
-                        ),
+                        child: _buildMap(visibleMarkers),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -309,6 +381,15 @@ class _SelectedMatchDetails extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.homeMeta14,
                   ),
+                  if (match.distanceMiles != null) ...[
+                    const SizedBox(height: AppSpacing.micro),
+                    Text(
+                      '${match.distanceMiles!.toStringAsFixed(1)} miles away',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.homeMeta12,
+                    ),
+                  ],
                 ],
               ),
             ),

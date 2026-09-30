@@ -82,18 +82,26 @@ abstract final class AppRoutes {
 abstract final class AppRouter {
   static final _authRepository = AppServices.authRepository;
   static final _matchRepository = AppServices.matchRepository;
+  static final _homePreloadStore = AppServices.homePreloadStore;
 
   static Map<String, WidgetBuilder> get routes => {
     AppRoutes.splash: (_) => SplashScreen(
       onResolveRoute: () async {
         final restored = await _authRepository.restoreSession();
-        return restored ? AppRoutes.home : AppRoutes.login;
+        if (!restored) {
+          _homePreloadStore.clear();
+          return AppRoutes.login;
+        }
+
+        await _homePreloadStore.preload();
+        return AppRoutes.home;
       },
     ),
     AppRoutes.login: (context) => LoginScreen(
       onLogin: (email, password) async {
         try {
           await _authRepository.login(email: email, password: password);
+          await _homePreloadStore.preload();
           if (!context.mounted) return;
           Navigator.of(context)
               .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
@@ -173,9 +181,8 @@ abstract final class AppRouter {
     AppRoutes.premiumPlan: (context) => SubscriptionEntryScreen(
       repository: AppServices.subscriptionRepository,
       onBack: () => Navigator.of(context).maybePop(),
-      onActivated: () {
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+      onActivated: () async {
+        await _openHomeAfterPreload(context);
       },
       onTermsTap: () => _openLegal(context, LegalDocumentType.terms),
       onPrivacyPolicyTap: () => _openLegal(context, LegalDocumentType.privacy),
@@ -219,6 +226,7 @@ abstract final class AppRouter {
       onLogOut: () async {
         try {
           await _authRepository.logout();
+          _homePreloadStore.clear();
           if (!context.mounted) return true;
           Navigator.of(context)
               .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
@@ -231,6 +239,7 @@ abstract final class AppRouter {
       onDeleteAccount: () async {
         try {
           await _authRepository.deleteAccount();
+          _homePreloadStore.clear();
           if (!context.mounted) return true;
           Navigator.of(context)
               .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
@@ -279,6 +288,7 @@ abstract final class AppRouter {
       onDeleteAccount: () async {
         try {
           await _authRepository.deleteAccount();
+          _homePreloadStore.clear();
           if (!context.mounted) return true;
           Navigator.of(context)
               .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
@@ -327,6 +337,8 @@ abstract final class AppRouter {
         ),
     AppRoutes.nearbyMatches: (context) => ConnectedNearbyMatchesScreen(
       repository: _matchRepository,
+      discoveryStore: AppServices.matchDiscoveryStore,
+      locationRepository: AppServices.locationRepository,
       onBack: () {
         Navigator.of(context).maybePop();
       },
@@ -339,6 +351,7 @@ abstract final class AppRouter {
     ),
     AppRoutes.createMatch: (context) => ConnectedCreateMatchScreen(
       repository: _matchRepository,
+      locationRepository: AppServices.locationRepository,
       onBack: () {
         Navigator.of(context).maybePop();
       },
@@ -651,6 +664,14 @@ abstract final class AppRouter {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  static Future<void> _openHomeAfterPreload(BuildContext context) async {
+    await _homePreloadStore.preload();
+    if (!context.mounted) return;
+
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+  }
+
   static MainNavigationShell _mainShell(
     BuildContext context, {
     int initialIndex = 0,
@@ -658,9 +679,12 @@ abstract final class AppRouter {
     return MainNavigationShell(
       initialIndex: initialIndex,
       matchRepository: _matchRepository,
+      discoveryStore: AppServices.matchDiscoveryStore,
+      locationRepository: AppServices.locationRepository,
       initialProfileData:
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,
+      homePreloadStore: _homePreloadStore,
       onNearbyViewAll: () {
         Navigator.of(context).pushNamed(AppRoutes.nearbyMatches);
       },

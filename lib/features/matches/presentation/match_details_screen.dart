@@ -821,7 +821,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const MatchLocationMap(),
+                    MatchLocationMap(match: _match),
                     const SizedBox(height: AppSpacing.lg),
                     Text(
                       widget.venueName,

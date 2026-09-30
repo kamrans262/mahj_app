@@ -1,5 +1,6 @@
 import '../../../core/network/api_client.dart';
 import '../../home/domain/home_match.dart';
+import '../../home/domain/match_filters.dart';
 import '../domain/create_match_form_state.dart';
 import '../domain/sport_option.dart';
 
@@ -26,8 +27,40 @@ class MatchRepository {
         .toList(growable: false);
   }
 
-  Future<List<HomeMatch>> list() async {
-    final payload = await _apiClient.get('/matches');
+  Future<List<HomeMatch>> list({
+    MatchFilters? filters,
+    String query = '',
+    bool discoverOnly = false,
+  }) async {
+    final params = <String, String>{};
+
+    if (filters != null) {
+      params['radius_miles'] = filters.radiusMiles.toStringAsFixed(0);
+      params['date_filter'] = filters.dateFilter.apiValue;
+      params['open_spots_only'] = filters.showOpenOnly ? '1' : '0';
+      params['sort'] = filters.sortOption.apiValue;
+      params['timezone_offset_minutes'] = DateTime.now()
+          .timeZoneOffset
+          .inMinutes
+          .toString();
+
+      if (filters.hasCoordinates) {
+        params['latitude'] = filters.latitude!.toStringAsFixed(7);
+        params['longitude'] = filters.longitude!.toStringAsFixed(7);
+      }
+    }
+
+    if (query.trim().isNotEmpty) {
+      params['q'] = query.trim();
+    }
+    if (discoverOnly) {
+      params['discover_only'] = '1';
+    }
+
+    final path = params.isEmpty
+        ? '/matches'
+        : Uri(path: '/matches', queryParameters: params).toString();
+    final payload = await _apiClient.get(path);
     final raw = payload['data'];
     if (raw is! List) return const <HomeMatch>[];
 
