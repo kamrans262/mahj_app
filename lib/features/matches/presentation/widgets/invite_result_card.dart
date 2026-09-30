@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/app_asset_icon.dart';
 import '../../../../core/widgets/app_surface_container.dart';
 import '../../../home/presentation/home_date_time_formatter.dart';
 import '../../../home/presentation/widgets/match_card.dart';
 import '../../domain/invite_player_result.dart';
-import 'match_preview_media.dart';
 
 class InviteResultCard extends StatelessWidget {
   const InviteResultCard({
@@ -52,12 +53,7 @@ class InviteResultCard extends StatelessWidget {
       children: [
         SizedBox(
           height: 124,
-          child: MatchPreviewMedia(
-            hasLocationPreview: result.hasLocationPreview,
-            markerNormalizedX: result.markerNormalizedX,
-            markerNormalizedY: result.markerNormalizedY,
-            sportImageAsset: result.sportImageAsset,
-          ),
+          child: _InviteUserAvatar(result: result),
         ),
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -74,12 +70,7 @@ class InviteResultCard extends StatelessWidget {
         SizedBox(
           width: 104,
           height: 108,
-          child: MatchPreviewMedia(
-            hasLocationPreview: result.hasLocationPreview,
-            markerNormalizedX: result.markerNormalizedX,
-            markerNormalizedY: result.markerNormalizedY,
-            sportImageAsset: result.sportImageAsset,
-          ),
+          child: _InviteUserAvatar(result: result),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -94,6 +85,50 @@ class InviteResultCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _InviteUserAvatar extends StatelessWidget {
+  const _InviteUserAvatar({required this.result});
+
+  final InvitePlayerResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = result.avatarUrl?.trim();
+
+    return ColoredBox(
+      color: AppColors.subtleSurface,
+      child: Center(
+        child: ClipOval(
+          child: SizedBox(
+            width: 68,
+            height: 68,
+            child: avatarUrl != null && avatarUrl.isNotEmpty
+                ? Image.network(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _fallbackAvatar(),
+                  )
+                : _fallbackAvatar(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _fallbackAvatar() {
+    return ColoredBox(
+      color: AppColors.background,
+      child: Center(
+        child: AppAssetIcon(
+          assetPath: AppAssets.bottomProfileIcon,
+          size: 30,
+          color: AppColors.primary,
+        ),
+      ),
     );
   }
 }

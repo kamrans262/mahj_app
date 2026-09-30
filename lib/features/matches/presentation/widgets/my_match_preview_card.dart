@@ -28,7 +28,7 @@ class MyMatchPreviewCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final textScale = MediaQuery.textScalerOf(context).scale(1);
-          final shouldStack = constraints.maxWidth < 310 || textScale > 1.5;
+          final shouldStack = constraints.maxWidth < 350 || textScale > 1.3;
 
           if (shouldStack) {
             return Column(
@@ -38,9 +38,12 @@ class MyMatchPreviewCard extends StatelessWidget {
                   height: 140,
                   child: MatchPreviewMedia(
                     hasLocationPreview: item.hasLocationPreview,
+                    latitude: item.match.latitude,
+                    longitude: item.match.longitude,
                     markerNormalizedX: item.markerNormalizedX,
                     markerNormalizedY: item.markerNormalizedY,
                     sportImageAsset: item.sportImageAsset,
+                    markerSize: 88,
                   ),
                 ),
                 Padding(
@@ -51,32 +54,45 @@ class MyMatchPreviewCard extends StatelessWidget {
             );
           }
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 104,
-                height: 104,
-                child: MatchPreviewMedia(
-                  hasLocationPreview: item.hasLocationPreview,
-                  markerNormalizedX: item.markerNormalizedX,
-                  markerNormalizedY: item.markerNormalizedY,
-                  sportImageAsset: item.sportImageAsset,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    0,
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    AppSpacing.md,
+          return ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 132),
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 112,
+                  child: MatchPreviewMedia(
+                    hasLocationPreview: item.hasLocationPreview,
+                    latitude: item.match.latitude,
+                    longitude: item.match.longitude,
+                    markerNormalizedX: item.markerNormalizedX,
+                    markerNormalizedY: item.markerNormalizedY,
+                    sportImageAsset: item.sportImageAsset,
+                    markerSize: 88,
                   ),
-                  child: _MatchInformation(item: item),
                 ),
-              ),
-            ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(width: 112),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          0,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                        ),
+                        child: _MatchInformation(item: item),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           );
         },
       ),

@@ -509,17 +509,34 @@ abstract final class AppRouter {
           onMutualGameTap: (mutualMatch) {
             _openMatchDetails(context, mutualMatch);
           },
-          onSendInvite: () {
-            final resolvedMatch = inviteMatch ?? _defaultInviteMatch();
+          onSendInvite: () async {
+            var resolvedMatch = inviteMatch;
+            if (resolvedMatch == null) {
+              try {
+                final data = await _matchRepository.listMyMatches();
+                for (final item in data.createdByMe) {
+                  final candidate = item.match;
+                  if (candidate.status == MatchStatus.open) {
+                    resolvedMatch = candidate;
+                    break;
+                  }
+                }
+              } catch (_) {
+                // The normal invite screen will surface backend errors later.
+              }
+            }
+
+            if (!context.mounted) return;
             if (resolvedMatch == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Create a match before inviting this player.'),
+                  content: Text('Create an open match before inviting this player.'),
                 ),
               );
               return;
             }
-            _openInvitePlayers(context, resolvedMatch);
+
+            await _openInvitePlayers(context, resolvedMatch);
           },
         ),
       );
@@ -558,9 +575,9 @@ abstract final class AppRouter {
               initialMatch: match,
               repository: _matchRepository,
               onBack: () => Navigator.of(context).maybePop(),
-              onInvitePlayers: () {
-                _openInvitePlayers(context, match);
-              },
+              onInvitePlayers: match.canInviteOthers
+                  ? () => _openInvitePlayers(context, match)
+                  : null,
             );
           }
 
@@ -620,11 +637,21 @@ abstract final class AppRouter {
         settings: settings,
         builder: (context) => InvitePlayersScreen(
           match: match,
-          initialResults: InvitePlayersPreviewData.forMatch(match),
+          initialResults: match.isBackendMatch
+              ? const []
+              : InvitePlayersPreviewData.forMatch(match),
           onBack: () => Navigator.of(context).maybePop(),
-          onPreviewInvitationReceived: () {
-            _openInvitationReceiving(context, match);
-          },
+          onSearchUsers: match.isBackendMatch
+              ? (query) => _matchRepository.searchInviteCandidates(match, query)
+              : null,
+          onSendInvites: match.isBackendMatch
+              ? _matchRepository.sendInvitations
+              : null,
+          onPreviewInvitationReceived: match.isBackendMatch
+              ? null
+              : () {
+                  _openInvitationReceiving(context, match);
+                },
         ),
       );
     }
@@ -694,11 +721,17 @@ abstract final class AppRouter {
       onMatchTap: (match) {
         _openMatchDetails(context, match);
       },
-      onMyMatchesMatchTap: (item, tab) {
-        _openMyMatchesEntry(context, item, tab);
+      onMyMatchesMatchTap: (item, tab) async {
+        await _openMyMatchesEntry(context, item, tab);
       },
-      onMyMatchesInvitationTap: (item) {
-        _openInvitationReceiving(context, item.match);
+      onMyMatchesInvitationTap: (item) async {
+        await _openInvitationReceiving(
+          context,
+          item.match,
+          invitationId: item.invitationId,
+          inviterName: item.inviterName,
+          inviterAvatarUrl: item.inviterAvatarUrl,
+        );
       },
       onNotificationTap: () {
         Navigator.of(context).pushNamed(AppRoutes.notifications);
@@ -716,37 +749,62 @@ abstract final class AppRouter {
     );
   }
 
-  static void _openMyMatchesEntry(
+  static Future<void> _openMyMatchesEntry(
     BuildContext context,
     MyMatchesItem item,
     MyMatchesTab tab,
-  ) {
+  ) async {
     final match = item.match;
 
     if (match.status == MatchStatus.completed) {
-      Navigator.of(context)
+      await Navigator.of(context)
           .pushNamed(AppRoutes.matchCompleted, arguments: match);
       return;
     }
 
     if (tab == MyMatchesTab.invites) {
-      _openInvitationReceiving(context, match);
+      await _openInvitationReceiving(
+        context,
+        match,
+        invitationId: item.invitationId,
+        inviterName: item.inviterName,
+      );
+      return;
+    }
+
+    if (match.isBackendMatch) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (detailsContext) => ConnectedMatchDetailsScreen(
+            initialMatch: match,
+            repository: _matchRepository,
+            onBack: () => Navigator.of(detailsContext).maybePop(),
+            onInvitePlayers: match.canInviteOthers
+                ? () => _openInvitePlayers(detailsContext, match)
+                : null,
+            onChat: (_) {
+              Navigator.of(detailsContext)
+                  .pushNamed(AppRoutes.matchChat, arguments: match);
+            },
+          ),
+        ),
+      );
       return;
     }
 
     final isCreatedByMe = tab == MyMatchesTab.createdByMe;
-    Navigator.of(context).push(
+    await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (context) => MatchDetailsScreen(
+        builder: (detailsContext) => MatchDetailsScreen(
           match: match,
           isCurrentUserJoined: true,
           canCancelMatch: isCreatedByMe,
-          onBack: () => Navigator.of(context).maybePop(),
+          onBack: () => Navigator.of(detailsContext).maybePop(),
           onInvitePlayers: () {
-            _openInvitePlayers(context, match);
+            _openInvitePlayers(detailsContext, match);
           },
           onChat: (_) {
-            Navigator.of(context)
+            Navigator.of(detailsContext)
                 .pushNamed(AppRoutes.matchChat, arguments: match);
           },
         ),
@@ -766,11 +824,21 @@ abstract final class AppRouter {
         ),
         builder: (inviteContext) => InvitePlayersScreen(
           match: match,
-          initialResults: InvitePlayersPreviewData.forMatch(match),
+          initialResults: match.isBackendMatch
+              ? const []
+              : InvitePlayersPreviewData.forMatch(match),
           onBack: () => Navigator.of(inviteContext).maybePop(),
-          onPreviewInvitationReceived: () {
-            _openInvitationReceiving(inviteContext, match);
-          },
+          onSearchUsers: match.isBackendMatch
+              ? (query) => _matchRepository.searchInviteCandidates(match, query)
+              : null,
+          onSendInvites: match.isBackendMatch
+              ? _matchRepository.sendInvitations
+              : null,
+          onPreviewInvitationReceived: match.isBackendMatch
+              ? null
+              : () {
+                  _openInvitationReceiving(inviteContext, match);
+                },
         ),
       ),
     );
@@ -778,35 +846,54 @@ abstract final class AppRouter {
 
   static Future<void> _openInvitationReceiving(
     BuildContext context,
-    HomeMatch match,
-  ) async {
+    HomeMatch match, {
+    String? invitationId,
+    String? inviterName,
+    String? inviterAvatarUrl,
+  }) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(
           name: AppRoutes.invitationReceiving,
           arguments: match,
         ),
-        builder: (invitationContext) =>
-            _buildInvitationReceivingScreen(invitationContext, match),
+        builder: (invitationContext) => _buildInvitationReceivingScreen(
+          invitationContext,
+          match,
+          invitationId: invitationId,
+          inviterName: inviterName,
+          inviterAvatarUrl: inviterAvatarUrl,
+        ),
       ),
     );
   }
 
   static InvitationReceivingScreen _buildInvitationReceivingScreen(
     BuildContext context,
-    HomeMatch match,
-  ) {
+    HomeMatch match, {
+    String? invitationId,
+    String? inviterName,
+    String? inviterAvatarUrl,
+  }) {
     return InvitationReceivingScreen(
       match: match,
+      inviterName: inviterName ?? match.hostName ?? 'Host',
+      inviterAvatarUrl: inviterAvatarUrl,
       onBack: () => Navigator.of(context).maybePop(),
       onDecline: (_) async {
+        if (invitationId != null) {
+          await _matchRepository.declineInvitation(invitationId);
+        }
         if (context.mounted) {
           Navigator.of(context).maybePop();
         }
       },
       onAccept: (_) async {
+        final joinedMatch = invitationId == null
+            ? match.copyWith(isCurrentUserJoined: true)
+            : await _matchRepository.acceptInvitation(invitationId);
         if (!context.mounted) return;
-        _replaceWithJoinedMatchDetails(context, match);
+        _replaceWithJoinedMatchDetails(context, joinedMatch);
       },
       onOkay: () => Navigator.of(context).maybePop(),
     );
@@ -819,14 +906,13 @@ abstract final class AppRouter {
     Navigator.of(context).pushReplacement<void, void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(name: AppRoutes.matchDetails, arguments: match),
-        builder: (joinedContext) => MatchDetailsScreen(
-          match: match,
-          isCurrentUserJoined: true,
-          canCancelMatch: false,
+        builder: (joinedContext) => ConnectedMatchDetailsScreen(
+          initialMatch: match,
+          repository: _matchRepository,
           onBack: () => Navigator.of(joinedContext).maybePop(),
-          onInvitePlayers: () {
-            _openInvitePlayers(joinedContext, match);
-          },
+          onInvitePlayers: match.canInviteOthers
+              ? () => _openInvitePlayers(joinedContext, match)
+              : null,
           onChat: (_) {
             Navigator.of(joinedContext)
                 .pushNamed(AppRoutes.matchChat, arguments: match);

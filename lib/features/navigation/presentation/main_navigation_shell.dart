@@ -51,9 +51,9 @@ class MainNavigationShell extends StatefulWidget {
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
   final ValueChanged<HomeMatch>? onMatchTap;
-  final void Function(MyMatchesItem item, MyMatchesTab tab)?
+  final Future<void> Function(MyMatchesItem item, MyMatchesTab tab)?
   onMyMatchesMatchTap;
-  final ValueChanged<MyMatchesItem>? onMyMatchesInvitationTap;
+  final Future<void> Function(MyMatchesItem item)? onMyMatchesInvitationTap;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onMessageTap;
   final VoidCallback? onProfileSettingsTap;
@@ -76,6 +76,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   late final MatchDiscoveryStore _discoveryStore;
   late final bool _ownsDiscoveryStore;
   bool _matchesLoading = false;
+  MyMatchesData? _myMatchesData;
+  bool _myMatchesLoading = false;
+  String? _myMatchesError;
+  double? _myMatchesOriginLatitude;
+  double? _myMatchesOriginLongitude;
 
   @override
   void initState() {
@@ -98,6 +103,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     if (widget.matchRepository != null && preloaded == null) {
       _initializeMatches();
+    }
+    if (widget.matchRepository != null && _currentIndex == 2) {
+      _refreshMyMatches();
     }
   }
 
@@ -157,6 +165,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         _homeOverlayOpen = false;
       }
     });
+
+    if (index == 2 && widget.matchRepository != null) {
+      _refreshMyMatches();
+    }
   }
 
   void _setHomeOverlayVisible(bool visible) {
@@ -202,6 +214,160 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       upcomingMatches: featured,
       nearbyMatches: nearby,
     );
+  }
+
+  MyMatchesData get _resolvedMyMatchesData {
+    final data = _myMatchesData;
+    return MyMatchesData(
+      unreadNotificationCount: _profileData.unreadNotificationCount,
+      unreadMessageCount: _profileData.unreadMessageCount,
+      upcoming: data?.upcoming ?? const <MyMatchesItem>[],
+      createdByMe: data?.createdByMe ?? const <MyMatchesItem>[],
+      invites: data?.invites ?? const <MyMatchesItem>[],
+      upcomingPage: data?.upcomingPage ?? 1,
+      createdByMePage: data?.createdByMePage ?? 1,
+      invitesPage: data?.invitesPage ?? 1,
+      hasMoreUpcoming: data?.hasMoreUpcoming ?? false,
+      hasMoreCreatedByMe: data?.hasMoreCreatedByMe ?? false,
+      hasMoreInvites: data?.hasMoreInvites ?? false,
+    );
+  }
+
+  Future<({double latitude, double longitude})?>
+  _resolveMyMatchesOrigin() async {
+    final filters = _discoveryStore.filters;
+
+    if (filters.hasCoordinates) {
+      final latitude = filters.latitude;
+      final longitude = filters.longitude;
+      if (latitude != null && longitude != null) {
+        _myMatchesOriginLatitude = latitude;
+        _myMatchesOriginLongitude = longitude;
+        return (latitude: latitude, longitude: longitude);
+      }
+    }
+
+    if (_myMatchesOriginLatitude != null &&
+        _myMatchesOriginLongitude != null) {
+      return (
+        latitude: _myMatchesOriginLatitude!,
+        longitude: _myMatchesOriginLongitude!,
+      );
+    }
+
+    final locations = widget.locationRepository;
+    if (locations == null) return null;
+
+    final current = await locations.currentLocationIfGranted();
+    if (current != null) {
+      _myMatchesOriginLatitude = current.latitude;
+      _myMatchesOriginLongitude = current.longitude;
+      return (
+        latitude: current.latitude,
+        longitude: current.longitude,
+      );
+    }
+
+    final searchQueries = <String>[
+      if (!filters.usesCurrentLocation) filters.selectedLocation.trim(),
+      [
+        _profileData.city.trim(),
+        _profileData.state.trim(),
+      ].where((value) => value.isNotEmpty).join(', '),
+      _profileData.postCode.trim(),
+      _profileData.address.trim(),
+    ].where((value) => value.length >= 2).toSet();
+
+    for (final query in searchQueries) {
+      try {
+        final results = await locations.search(query);
+        if (results.isEmpty) continue;
+
+        final resolved = results.first;
+        _myMatchesOriginLatitude = resolved.latitude;
+        _myMatchesOriginLongitude = resolved.longitude;
+
+        return (
+          latitude: resolved.latitude,
+          longitude: resolved.longitude,
+        );
+      } catch (_) {
+        // Try the next available location source.
+      }
+    }
+
+    try {
+      final requested = await locations.currentLocation();
+      _myMatchesOriginLatitude = requested.latitude;
+      _myMatchesOriginLongitude = requested.longitude;
+
+      return (
+        latitude: requested.latitude,
+        longitude: requested.longitude,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _refreshMyMatches() async {
+    final repository = widget.matchRepository;
+    if (repository == null) return;
+
+    if (mounted) {
+      setState(() {
+        _myMatchesLoading = true;
+        _myMatchesError = null;
+      });
+    }
+
+    try {
+      final origin = await _resolveMyMatchesOrigin();
+
+      final data = await repository.listMyMatches(
+        latitude: origin?.latitude,
+        longitude: origin?.longitude,
+      );
+      if (!mounted) return;
+      setState(() => _myMatchesData = data);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _myMatchesError = 'Could not load your matches. Please try again.';
+      });
+    } finally {
+      if (mounted) setState(() => _myMatchesLoading = false);
+    }
+  }
+
+  Future<void> _loadMoreMyMatches(MyMatchesTab tab) async {
+    final repository = widget.matchRepository;
+    final current = _myMatchesData;
+    if (repository == null || current == null || !current.hasMoreForTab(tab)) {
+      return;
+    }
+
+    final nextPage = current.pageForTab(tab) + 1;
+    final origin = await _resolveMyMatchesOrigin();
+
+    final next = await repository.listMyMatches(
+      latitude: origin?.latitude,
+      longitude: origin?.longitude,
+      upcomingPage: tab == MyMatchesTab.upcoming
+          ? nextPage
+          : current.upcomingPage,
+      createdByMePage: tab == MyMatchesTab.createdByMe
+          ? nextPage
+          : current.createdByMePage,
+      invitesPage: tab == MyMatchesTab.invites
+          ? nextPage
+          : current.invitesPage,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _myMatchesData = current.appendPage(next, tab);
+    });
   }
 
   Future<void> _refreshMatches() async {
@@ -271,12 +437,39 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           useLiveMap: widget.matchRepository != null,
         );
       case 2:
+        final myMatchesError = _myMatchesError;
         return MyMatchesScreen(
           key: const ValueKey('main-navigation-my-matches'),
+          data: widget.matchRepository == null ? null : _resolvedMyMatchesData,
           initialTab: _myMatchesTab,
+          loadingTabs: _myMatchesLoading
+              ? Set<MyMatchesTab>.from(MyMatchesTab.values)
+              : const <MyMatchesTab>{},
+          errorMessages: myMatchesError == null
+              ? const <MyMatchesTab, String>{}
+              : {
+                  for (final tab in MyMatchesTab.values)
+                    tab: myMatchesError,
+                },
           onTabChanged: _rememberMyMatchesTab,
-          onMatchTap: widget.onMyMatchesMatchTap,
-          onInvitationTap: widget.onMyMatchesInvitationTap,
+          onMatchTap: widget.onMyMatchesMatchTap == null
+              ? null
+              : (item, tab) async {
+                  await widget.onMyMatchesMatchTap!(item, tab);
+                  await _refreshMyMatches();
+                },
+          onInvitationTap: widget.onMyMatchesInvitationTap == null
+              ? null
+              : (item) async {
+                  await widget.onMyMatchesInvitationTap!(item);
+                  await _refreshMyMatches();
+                },
+          onRefresh: widget.matchRepository == null
+              ? null
+              : (_) => _refreshMyMatches(),
+          onLoadMore: widget.matchRepository == null
+              ? null
+              : _loadMoreMyMatches,
           onNotificationTap: widget.onNotificationTap,
           onMessageTap: widget.onMessageTap,
         );

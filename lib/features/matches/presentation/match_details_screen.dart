@@ -736,6 +736,35 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   }
 
   Widget _buildActions() {
+    if (widget.canCancelMatch) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppResponsiveActionPair(
+            first: AppButton.secondary(
+              key: const ValueKey('match-details-invite-players'),
+              label: 'Invite Players',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: _handleInvitePlayers,
+            ),
+            second: AppButton.secondary(
+              label: 'Chat',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: _openChat,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton.destructiveOutlined(
+            label: 'Cancel Match',
+            textStyle: AppTypography.matchSuccessSecondaryButton.copyWith(
+              color: AppColors.destructive,
+            ),
+            onPressed: _cancelRequestInFlight ? null : _showCancelConfirmation,
+          ),
+        ],
+      );
+    }
+
     if (_isCurrentUserJoined) {
       final chatButton = AppButton.secondary(
         label: 'Chat',
@@ -743,19 +772,19 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         onPressed: _openChat,
       );
 
-      final cancelButton = AppButton.destructiveOutlined(
-        label: 'Cancel Match',
-        textStyle: AppTypography.matchSuccessSecondaryButton.copyWith(
-          color: AppColors.destructive,
-        ),
-        onPressed: _cancelRequestInFlight ? null : _showCancelConfirmation,
-      );
-
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (widget.canCancelMatch)
-            AppResponsiveActionPair(first: chatButton, second: cancelButton)
+          if (widget.onInvitePlayers != null)
+            AppResponsiveActionPair(
+              first: AppButton.secondary(
+                key: const ValueKey('match-details-invite-players'),
+                label: 'Invite Players',
+                textStyle: AppTypography.matchSuccessSecondaryButton,
+                onPressed: _handleInvitePlayers,
+              ),
+              second: chatButton,
+            )
           else
             chatButton,
           const SizedBox(height: AppSpacing.lg),
@@ -767,22 +796,27 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       );
     }
 
+    final reportButton = AppButton.secondary(
+      label: 'Report',
+      textStyle: AppTypography.matchSuccessSecondaryButton,
+      onPressed: _showReportDialog,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppResponsiveActionPair(
-          first: AppButton.secondary(
-            key: const ValueKey('match-details-invite-players'),
-            label: 'Invite Players',
-            textStyle: AppTypography.matchSuccessSecondaryButton,
-            onPressed: _handleInvitePlayers,
-          ),
-          second: AppButton.secondary(
-            label: 'Report',
-            textStyle: AppTypography.matchSuccessSecondaryButton,
-            onPressed: _showReportDialog,
-          ),
-        ),
+        if (widget.onInvitePlayers != null)
+          AppResponsiveActionPair(
+            first: AppButton.secondary(
+              key: const ValueKey('match-details-invite-players'),
+              label: 'Invite Players',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: _handleInvitePlayers,
+            ),
+            second: reportButton,
+          )
+        else
+          reportButton,
         const SizedBox(height: AppSpacing.lg),
         AppButton.primary(
           label: 'Join Match',

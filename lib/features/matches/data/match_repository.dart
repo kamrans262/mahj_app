@@ -1,7 +1,12 @@
+import 'dart:math' as math;
+
+import '../../../app/app_assets.dart';
 import '../../../core/network/api_client.dart';
 import '../../home/domain/home_match.dart';
 import '../../home/domain/match_filters.dart';
 import '../domain/create_match_form_state.dart';
+import '../domain/invite_player_result.dart';
+import '../domain/my_matches_data.dart';
 import '../domain/sport_option.dart';
 
 class MatchRepository {
@@ -74,6 +79,197 @@ class MatchRepository {
         .toList(growable: false);
   }
 
+  Future<MyMatchesData> listMyMatches({
+    double? latitude,
+    double? longitude,
+    int upcomingPage = 1,
+    int createdByMePage = 1,
+    int invitesPage = 1,
+    int perPage = 20,
+  }) async {
+    final params = <String, String>{
+      'upcoming_page': upcomingPage.toString(),
+      'created_page': createdByMePage.toString(),
+      'invites_page': invitesPage.toString(),
+      'per_page': perPage.toString(),
+    };
+
+    if (latitude != null && longitude != null) {
+      params['latitude'] = latitude.toStringAsFixed(7);
+      params['longitude'] = longitude.toStringAsFixed(7);
+    }
+
+    final path = Uri(path: '/my-matches', queryParameters: params).toString();
+    final payload = await _apiClient.get(path);
+
+    HomeMatch withFallbackDistance(HomeMatch match) {
+      if (match.distanceMiles != null ||
+          latitude == null ||
+          longitude == null ||
+          match.latitude == null ||
+          match.longitude == null) {
+        return match;
+      }
+
+      final distance = _distanceMiles(
+        latitude,
+        longitude,
+        match.latitude!,
+        match.longitude!,
+      );
+      return match.copyWith(distanceMiles: distance);
+    }
+
+    List<MyMatchesItem> mapMatches(dynamic raw) {
+      if (raw is! List) return const <MyMatchesItem>[];
+
+      return raw
+          .whereType<Map>()
+          .map((item) {
+            final json = item.map(
+              (key, value) => MapEntry(key.toString(), value),
+            );
+            return MyMatchesItem(
+              match: withFallbackDistance(HomeMatch.fromJson(json)),
+              sportImageAsset: AppAssets.sportImage,
+            );
+          })
+          .toList(growable: false);
+    }
+
+    final inviteRaw = payload['invites'];
+    final invites = inviteRaw is List
+        ? inviteRaw.whereType<Map>().map((item) {
+            final json = item.map(
+              (key, value) => MapEntry(key.toString(), value),
+            );
+            final matchRaw = json['match'];
+            final matchJson = matchRaw is Map
+                ? matchRaw.map(
+                    (key, value) => MapEntry(key.toString(), value),
+                  )
+                : const <String, dynamic>{};
+            final inviterRaw = json['inviter'];
+            final inviter = inviterRaw is Map
+                ? inviterRaw.map(
+                    (key, value) => MapEntry(key.toString(), value),
+                  )
+                : const <String, dynamic>{};
+
+            return MyMatchesItem(
+              match: withFallbackDistance(HomeMatch.fromJson(matchJson)),
+              sportImageAsset: AppAssets.sportImage,
+              invitationId: json['id']?.toString(),
+              inviterName: inviter['name']?.toString(),
+              inviterAvatarUrl: inviter['avatar_url']?.toString(),
+            );
+          }).toList(growable: false)
+        : const <MyMatchesItem>[];
+
+    Map<String, dynamic> readMeta(String key) {
+      final rawMeta = payload['meta'];
+      if (rawMeta is! Map) return const <String, dynamic>{};
+      final normalized = rawMeta.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+      final value = normalized[key];
+      if (value is! Map) return const <String, dynamic>{};
+      return value.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+    }
+
+    int readPage(Map<String, dynamic> meta, int fallback) {
+      final value = meta['page'];
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+
+    bool readHasMore(Map<String, dynamic> meta) => meta['has_more'] == true;
+
+    final upcomingMeta = readMeta('upcoming');
+    final createdMeta = readMeta('created_by_me');
+    final invitesMeta = readMeta('invites');
+
+    return MyMatchesData(
+      unreadNotificationCount: 0,
+      unreadMessageCount: 0,
+      upcoming: mapMatches(payload['upcoming']),
+      createdByMe: mapMatches(payload['created_by_me']),
+      invites: invites,
+      upcomingPage: readPage(upcomingMeta, upcomingPage),
+      createdByMePage: readPage(createdMeta, createdByMePage),
+      invitesPage: readPage(invitesMeta, invitesPage),
+      hasMoreUpcoming: readHasMore(upcomingMeta),
+      hasMoreCreatedByMe: readHasMore(createdMeta),
+      hasMoreInvites: readHasMore(invitesMeta),
+    );
+  }
+
+  Future<List<InvitePlayerResult>> searchInviteCandidates(
+    HomeMatch match,
+    String query,
+  ) async {
+    final trimmed = query.trim();
+    final path = trimmed.isEmpty
+        ? '/matches/${match.id}/invite-candidates'
+        : Uri(
+            path: '/matches/${match.id}/invite-candidates',
+            queryParameters: {'q': trimmed},
+          ).toString();
+    final payload = await _apiClient.get(path);
+    final raw = payload['data'];
+    if (raw is! List) return const <InvitePlayerResult>[];
+
+    return raw.whereType<Map>().map((item) {
+      final json = item.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+      final name = json['name']?.toString().trim() ?? '';
+      final email = json['email']?.toString().trim() ?? '';
+      final city = json['city']?.toString().trim() ?? '';
+
+      return InvitePlayerResult(
+        id: json['id']?.toString() ?? '',
+        searchText: [name, email, city].where((value) => value.isNotEmpty).join(' '),
+        title: name.isEmpty ? email : name,
+        startsAt: match.startsAt,
+        currentPlayers: match.currentPlayers,
+        maxPlayers: match.maxPlayers,
+        sportImageAsset: AppAssets.sportImage,
+        avatarUrl: json['avatar_url']?.toString(),
+        latitude: match.latitude,
+        longitude: match.longitude,
+      );
+    }).where((result) => result.id.isNotEmpty).toList(growable: false);
+  }
+
+  Future<void> sendInvitations(
+    String matchId,
+    Set<String> userIds,
+  ) async {
+    await _apiClient.post(
+      '/matches/$matchId/invitations',
+      body: {
+        'user_ids': userIds
+            .map(int.tryParse)
+            .whereType<int>()
+            .toList(growable: false),
+      },
+    );
+  }
+
+  Future<HomeMatch> acceptInvitation(String invitationId) async {
+    final payload = await _apiClient.post(
+      '/invitations/$invitationId/accept',
+    );
+    return _matchFromEnvelope(payload);
+  }
+
+  Future<void> declineInvitation(String invitationId) async {
+    await _apiClient.post('/invitations/$invitationId/decline');
+  }
+
   Future<HomeMatch> fetch(String matchId) async {
     final payload = await _apiClient.get('/matches/$matchId');
     return _matchFromEnvelope(payload);
@@ -114,6 +310,33 @@ class MatchRepository {
     final payload = await _apiClient.post('/matches/$matchId/cancel');
     return _matchFromEnvelope(payload);
   }
+
+  double _distanceMiles(
+    double originLatitude,
+    double originLongitude,
+    double targetLatitude,
+    double targetLongitude,
+  ) {
+    const earthRadiusMiles = 3958.7613;
+
+    final latitudeDelta = _degreesToRadians(targetLatitude - originLatitude);
+    final longitudeDelta = _degreesToRadians(
+      targetLongitude - originLongitude,
+    );
+    final originLatitudeRadians = _degreesToRadians(originLatitude);
+    final targetLatitudeRadians = _degreesToRadians(targetLatitude);
+
+    final a =
+        math.pow(math.sin(latitudeDelta / 2), 2).toDouble() +
+        math.cos(originLatitudeRadians) *
+            math.cos(targetLatitudeRadians) *
+            math.pow(math.sin(longitudeDelta / 2), 2).toDouble();
+
+    final centralAngle = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusMiles * centralAngle;
+  }
+
+  double _degreesToRadians(double degrees) => degrees * math.pi / 180;
 
   HomeMatch _matchFromEnvelope(Map<String, dynamic> payload) {
     final raw = payload['match'];

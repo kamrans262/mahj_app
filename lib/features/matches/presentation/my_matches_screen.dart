@@ -24,6 +24,7 @@ class MyMatchesScreen extends StatefulWidget {
     this.onMatchTap,
     this.onInvitationTap,
     this.onRefresh,
+    this.onLoadMore,
   });
 
   final MyMatchesData? data;
@@ -36,6 +37,7 @@ class MyMatchesScreen extends StatefulWidget {
   final void Function(MyMatchesItem item, MyMatchesTab tab)? onMatchTap;
   final ValueChanged<MyMatchesItem>? onInvitationTap;
   final Future<void> Function(MyMatchesTab tab)? onRefresh;
+  final Future<void> Function(MyMatchesTab tab)? onLoadMore;
 
   @override
   State<MyMatchesScreen> createState() => _MyMatchesScreenState();
@@ -43,6 +45,8 @@ class MyMatchesScreen extends StatefulWidget {
 
 class _MyMatchesScreenState extends State<MyMatchesScreen> {
   late MyMatchesTab _selectedTab;
+  final ScrollController _scrollController = ScrollController();
+  MyMatchesTab? _loadingMoreTab;
 
   MyMatchesData get _data => widget.data ?? MyMatchesPreviewData.create();
 
@@ -50,6 +54,15 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
   void initState() {
     super.initState();
     _selectedTab = widget.initialTab;
+    _scrollController.addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
+    super.dispose();
   }
 
   @override
@@ -81,6 +94,34 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
     }
   }
 
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+    if (position.maxScrollExtent - position.pixels <= 180) {
+      _requestMore();
+    }
+  }
+
+  Future<void> _requestMore() async {
+    final callback = widget.onLoadMore;
+    final tab = _selectedTab;
+    if (callback == null ||
+        _loadingMoreTab != null ||
+        !_data.hasMoreForTab(tab)) {
+      return;
+    }
+
+    setState(() => _loadingMoreTab = tab);
+    try {
+      await callback(tab);
+    } finally {
+      if (mounted && _loadingMoreTab == tab) {
+        setState(() => _loadingMoreTab = null);
+      }
+    }
+  }
+
   Widget _buildBody() {
     final data = _data;
     final items = data.forTab(_selectedTab);
@@ -88,6 +129,7 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
     final errorMessage = widget.errorMessages[_selectedTab];
 
     return CustomScrollView(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverSafeArea(
@@ -177,6 +219,13 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
                         },
                 );
               }, childCount: items.length * 2 - 1),
+            ),
+          ),
+        if (_loadingMoreTab == _selectedTab)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              child: Center(child: AppLoader()),
             ),
           ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),

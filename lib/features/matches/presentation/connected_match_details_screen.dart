@@ -51,7 +51,7 @@ class _ConnectedMatchDetailsScreenState
     try {
       final match = await widget.repository.fetch(_match.id);
       if (!mounted) return;
-      setState(() => _match = match);
+      setState(() => _match = _preserveDistance(match));
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _messageFor(error));
@@ -61,20 +61,38 @@ class _ConnectedMatchDetailsScreenState
   }
 
   Future<HomeMatch> _join(HomeMatch match) async {
-    final updated = await widget.repository.join(match.id);
+    final updated = _preserveDistance(
+      await widget.repository.join(match.id),
+    );
     if (mounted) setState(() => _match = updated);
     return updated;
   }
 
   Future<HomeMatch> _leave(HomeMatch match) async {
-    final updated = await widget.repository.leave(match.id);
+    final updated = _preserveDistance(
+      await widget.repository.leave(match.id),
+    );
     if (mounted) setState(() => _match = updated);
     return updated;
   }
 
   Future<void> _cancel(HomeMatch match) async {
-    final updated = await widget.repository.cancel(match.id);
+    final updated = _preserveDistance(
+      await widget.repository.cancel(match.id),
+    );
     if (mounted) setState(() => _match = updated);
+  }
+
+  HomeMatch _preserveDistance(HomeMatch updated) {
+    final distance = updated.distanceMiles ?? _match.distanceMiles;
+    if (distance == null) return updated;
+    return updated.copyWith(distanceMiles: distance);
+  }
+
+  String _distanceLabel(HomeMatch match) {
+    final miles = match.distanceMiles;
+    if (miles == null) return 'Distance unavailable';
+    return '${miles.toStringAsFixed(1)} miles';
   }
 
   String _messageFor(Object error) {
@@ -147,7 +165,7 @@ class _ConnectedMatchDetailsScreenState
       timeLabel: localizations.formatTimeOfDay(
         TimeOfDay.fromDateTime(localStart),
       ),
-      distanceLabel: '—',
+      distanceLabel: _distanceLabel(_match),
       createdBy: _match.hostName ?? 'Host',
       playersLabel: '${_match.currentPlayers}/${_match.maxPlayers}',
       playersSupportingText: _playersSupportingText(_match),

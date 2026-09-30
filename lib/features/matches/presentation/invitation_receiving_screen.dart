@@ -25,9 +25,10 @@ class InvitationReceivingScreen extends StatefulWidget {
     this.onAccept,
     this.onOkay,
     this.initialAvailabilityState,
-    this.inviterName = 'Austen Parker',
+    this.inviterName = 'Host',
     this.inviterAvatarAsset = AppAssets.demoAvatarOne,
-    this.distanceLabel = '2 miles',
+    this.inviterAvatarUrl,
+    this.distanceLabel,
   });
 
   final HomeMatch match;
@@ -38,7 +39,8 @@ class InvitationReceivingScreen extends StatefulWidget {
   final InvitationAvailabilityState? initialAvailabilityState;
   final String inviterName;
   final String inviterAvatarAsset;
-  final String distanceLabel;
+  final String? inviterAvatarUrl;
+  final String? distanceLabel;
 
   @override
   State<InvitationReceivingScreen> createState() =>
@@ -117,6 +119,25 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
       case MatchStatus.full:
         return AppColors.textSecondary;
     }
+  }
+
+  bool get _hasDistance =>
+      widget.distanceLabel?.trim().isNotEmpty == true ||
+      widget.match.distanceMiles != null;
+
+  String get _distanceLabel {
+    final explicit = widget.distanceLabel?.trim();
+    if (explicit != null && explicit.isNotEmpty) {
+      return explicit;
+    }
+
+    final miles = widget.match.distanceMiles;
+    if (miles != null) {
+      return '${miles.toStringAsFixed(1)} miles';
+    }
+
+    final location = widget.match.location.trim();
+    return location.isEmpty ? 'Location unavailable' : location;
   }
 
   String get _playersSupportingText {
@@ -218,6 +239,7 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   InviterUserRow(
                     avatarAsset: widget.inviterAvatarAsset,
+                    avatarUrl: widget.inviterAvatarUrl,
                     inviterName: widget.inviterName,
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -247,8 +269,8 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   MatchInfoRow(
                     iconAsset: AppAssets.matchDetailsDistanceIcon,
-                    label: 'Distance',
-                    value: Text(widget.distanceLabel, style: _valueStyle),
+                    label: _hasDistance ? 'Distance' : 'Location',
+                    value: Text(_distanceLabel, style: _valueStyle),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   const Divider(

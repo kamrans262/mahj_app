@@ -60,6 +60,12 @@ class HomeMatch {
   final double? distanceMiles;
 
   bool get isFull => currentPlayers >= maxPlayers || status == MatchStatus.full;
+  bool get canInviteOthers =>
+      status == MatchStatus.open &&
+      !isFull &&
+      (isOwnedByCurrentUser ||
+          isCurrentUserJoined ||
+          (isPublic && !isInviteOnly));
   bool get isBackendMatch => int.tryParse(id) != null;
   bool get hasCoordinates => latitude != null && longitude != null;
 
