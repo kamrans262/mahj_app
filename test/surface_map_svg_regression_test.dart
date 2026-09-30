@@ -5,6 +5,7 @@ import 'package:mahj_app/app/app_assets.dart';
 import 'package:mahj_app/app/theme/app_colors.dart';
 import 'package:mahj_app/core/widgets/app_button.dart';
 import 'package:mahj_app/features/map/presentation/map_screen.dart';
+import 'package:mahj_app/features/matches/domain/sport_option.dart';
 import 'package:mahj_app/features/matches/presentation/create_match_screen.dart';
 
 void main() {
@@ -29,7 +30,25 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MaterialApp(home: CreateMatchScreen()));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: CreateMatchScreen(
+          sports: [
+            SportOption(
+              id: 2,
+              name: 'Basketball',
+              slug: 'basketball',
+              iconKey: 'basketball',
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Basketball').last);
+    await tester.pumpAndSettle();
 
     final locationField = find.widgetWithText(
       TextFormField,
