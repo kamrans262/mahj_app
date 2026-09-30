@@ -72,7 +72,10 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    final topAlignedLeadingIcon =
+        widget.alignLeadingIconTop && widget.leadingIcon != null;
+
+    final field = TextFormField(
       controller: widget.controller,
       focusNode: widget.focusNode,
       keyboardType: widget.keyboardType,
@@ -85,8 +88,6 @@ class _AppTextFieldState extends State<AppTextField> {
       onFieldSubmitted: widget.onFieldSubmitted,
       inputFormatters: widget.inputFormatters,
       textAlign: widget.textAlign,
-      textAlignVertical:
-          widget.alignLeadingIconTop ? TextAlignVertical.top : null,
       minLines: widget.obscureText ? 1 : widget.minLines,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
       textCapitalization: widget.textCapitalization,
@@ -98,24 +99,11 @@ class _AppTextFieldState extends State<AppTextField> {
         hintStyle: AppTypography.fieldHint,
         contentPadding:
             widget.contentPadding ??
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        prefixIconConstraints: widget.alignLeadingIconTop
-            ? const BoxConstraints(minWidth: 48, minHeight: 0)
-            : null,
-        prefixIcon: widget.leadingIcon == null
+            (topAlignedLeadingIcon
+                ? const EdgeInsets.fromLTRB(48, 13, 18, 13)
+                : const EdgeInsets.symmetric(horizontal: 18, vertical: 13)),
+        prefixIcon: widget.leadingIcon == null || topAlignedLeadingIcon
             ? null
-            : widget.alignLeadingIconTop
-            ? Padding(
-                padding: const EdgeInsets.only(top: 11),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Icon(
-                    widget.leadingIcon,
-                    size: 22,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              )
             : Icon(
                 widget.leadingIcon,
                 size: 22,
@@ -145,6 +133,27 @@ class _AppTextFieldState extends State<AppTextField> {
         focusedErrorBorder: _border(AppColors.error, width: 1.2),
         border: _border(AppColors.controlBorder),
       ),
+    );
+
+    if (!topAlignedLeadingIcon) {
+      return field;
+    }
+
+    return Stack(
+      children: [
+        field,
+        Positioned(
+          left: 13,
+          top: 13,
+          child: IgnorePointer(
+            child: Icon(
+              widget.leadingIcon,
+              size: 22,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
