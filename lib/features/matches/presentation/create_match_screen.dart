@@ -37,6 +37,7 @@ class CreateMatchScreen extends StatefulWidget {
 class _CreateMatchScreenState extends State<CreateMatchScreen> {
   static const double _headerToBodyGap = 35;
 
+  final _matchNameController = TextEditingController();
   final _locationController = TextEditingController();
   final _venueController = TextEditingController();
   final _notesController = TextEditingController();
@@ -47,6 +48,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   @override
   void dispose() {
+    _matchNameController.dispose();
     _locationController.dispose();
     _venueController.dispose();
     _notesController.dispose();
@@ -140,6 +142,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   String? _validationMessage() {
     final location = _formState.locationAddress;
 
+    if (_formState.matchName.trim().isEmpty) {
+      return 'Please enter a sport or match name.';
+    }
     if (location == null || location.trim().isEmpty) {
       return 'Please enter a location or address.';
     }
@@ -216,6 +221,20 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Widget _buildMatchNameField() {
+    return AppTextField(
+      controller: _matchNameController,
+      hintText: 'Sport / Match Name',
+      leadingIcon: Icons.sports_soccer,
+      enabled: !_isSubmitting,
+      textInputAction: TextInputAction.next,
+      textCapitalization: TextCapitalization.words,
+      onChanged: (value) {
+        _formState = _formState.copyWith(matchName: value);
+      },
+    );
   }
 
   Widget _buildLocationField() {
@@ -398,6 +417,8 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
+                                  _buildMatchNameField(),
+                                  const SizedBox(height: AppSpacing.lg),
                                   _buildLocationField(),
                                   const SizedBox(height: AppSpacing.lg),
                                   _buildVenueField(),
