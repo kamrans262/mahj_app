@@ -1,5 +1,6 @@
 class CreateMatchFormState {
   const CreateMatchFormState({
+    this.matchName = '',
     this.locationAddress,
     this.venueName = '',
     this.notes = '',
@@ -9,6 +10,7 @@ class CreateMatchFormState {
     this.isInviteOnly = false,
   });
 
+  final String matchName;
   final String? locationAddress;
   final String venueName;
   final String notes;
@@ -18,12 +20,14 @@ class CreateMatchFormState {
   final bool isInviteOnly;
 
   bool get hasRequiredFields =>
+      matchName.trim().isNotEmpty &&
       locationAddress != null &&
       locationAddress!.trim().isNotEmpty &&
       selectedDate != null &&
       selectedTimeMinutes != null;
 
   CreateMatchFormState copyWith({
+    String? matchName,
     String? locationAddress,
     bool clearLocation = false,
     String? venueName,
@@ -36,6 +40,7 @@ class CreateMatchFormState {
     bool? isInviteOnly,
   }) {
     return CreateMatchFormState(
+      matchName: matchName ?? this.matchName,
       locationAddress: clearLocation
           ? null
           : locationAddress ?? this.locationAddress,
@@ -53,9 +58,11 @@ class CreateMatchFormState {
   CreateMatchRequest? toRequest() {
     final date = selectedDate;
     final minutes = selectedTimeMinutes;
+    final name = matchName.trim();
     final location = locationAddress?.trim();
 
-    if (date == null ||
+    if (name.isEmpty ||
+        date == null ||
         minutes == null ||
         location == null ||
         location.isEmpty) {
@@ -66,6 +73,7 @@ class CreateMatchFormState {
     final minute = minutes % 60;
 
     return CreateMatchRequest(
+      matchName: name,
       locationAddress: location,
       venueName: venueName.trim().isEmpty ? null : venueName.trim(),
       notes: notes.trim().isEmpty ? null : notes.trim(),
@@ -78,6 +86,7 @@ class CreateMatchFormState {
 
 class CreateMatchRequest {
   const CreateMatchRequest({
+    required this.matchName,
     required this.locationAddress,
     required this.startsAt,
     required this.isPublicMatch,
@@ -89,6 +98,7 @@ class CreateMatchRequest {
     this.longitude,
   });
 
+  final String matchName;
   final String locationAddress;
   final String? venueName;
   final String? notes;
