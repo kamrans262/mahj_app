@@ -1,7 +1,10 @@
+import '../../../app/app_assets.dart';
 import '../../../core/network/api_client.dart';
 import '../../home/domain/home_match.dart';
 import '../../home/domain/match_filters.dart';
 import '../domain/create_match_form_state.dart';
+import '../domain/invite_player_result.dart';
+import '../domain/my_matches_data.dart';
 import '../domain/sport_option.dart';
 
 class MatchRepository {
@@ -72,6 +75,124 @@ class MatchRepository {
           ),
         )
         .toList(growable: false);
+  }
+
+  Future<MyMatchesData> listMyMatches() async {
+    final payload = await _apiClient.get('/my-matches');
+
+    List<MyMatchesItem> mapMatches(dynamic raw) {
+      if (raw is! List) return const <MyMatchesItem>[];
+
+      return raw
+          .whereType<Map>()
+          .map((item) {
+            final json = item.map(
+              (key, value) => MapEntry(key.toString(), value),
+            );
+            return MyMatchesItem(
+              match: HomeMatch.fromJson(json),
+              sportImageAsset: AppAssets.sportImage,
+            );
+          })
+          .toList(growable: false);
+    }
+
+    final inviteRaw = payload['invites'];
+    final invites = inviteRaw is List
+        ? inviteRaw.whereType<Map>().map((item) {
+            final json = item.map(
+              (key, value) => MapEntry(key.toString(), value),
+            );
+            final matchRaw = json['match'];
+            final matchJson = matchRaw is Map
+                ? matchRaw.map(
+                    (key, value) => MapEntry(key.toString(), value),
+                  )
+                : const <String, dynamic>{};
+            final inviterRaw = json['inviter'];
+            final inviter = inviterRaw is Map
+                ? inviterRaw.map(
+                    (key, value) => MapEntry(key.toString(), value),
+                  )
+                : const <String, dynamic>{};
+
+            return MyMatchesItem(
+              match: HomeMatch.fromJson(matchJson),
+              sportImageAsset: AppAssets.sportImage,
+              invitationId: json['id']?.toString(),
+              inviterName: inviter['name']?.toString(),
+            );
+          }).toList(growable: false)
+        : const <MyMatchesItem>[];
+
+    return MyMatchesData(
+      unreadNotificationCount: 0,
+      unreadMessageCount: 0,
+      upcoming: mapMatches(payload['upcoming']),
+      createdByMe: mapMatches(payload['created_by_me']),
+      invites: invites,
+    );
+  }
+
+  Future<List<InvitePlayerResult>> searchInviteCandidates(
+    HomeMatch match,
+    String query,
+  ) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return const <InvitePlayerResult>[];
+
+    final path = Uri(
+      path: '/matches/${match.id}/invite-candidates',
+      queryParameters: {'q': trimmed},
+    ).toString();
+    final payload = await _apiClient.get(path);
+    final raw = payload['data'];
+    if (raw is! List) return const <InvitePlayerResult>[];
+
+    return raw.whereType<Map>().map((item) {
+      final json = item.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+      final name = json['name']?.toString().trim() ?? '';
+      final email = json['email']?.toString().trim() ?? '';
+      final city = json['city']?.toString().trim() ?? '';
+
+      return InvitePlayerResult(
+        id: json['id']?.toString() ?? '',
+        searchText: [name, email, city].where((value) => value.isNotEmpty).join(' '),
+        title: name.isEmpty ? email : name,
+        startsAt: match.startsAt,
+        currentPlayers: match.currentPlayers,
+        maxPlayers: match.maxPlayers,
+        sportImageAsset: AppAssets.sportImage,
+      );
+    }).where((result) => result.id.isNotEmpty).toList(growable: false);
+  }
+
+  Future<void> sendInvitations(
+    String matchId,
+    Set<String> userIds,
+  ) async {
+    await _apiClient.post(
+      '/matches/$matchId/invitations',
+      body: {
+        'user_ids': userIds
+            .map(int.tryParse)
+            .whereType<int>()
+            .toList(growable: false),
+      },
+    );
+  }
+
+  Future<HomeMatch> acceptInvitation(String invitationId) async {
+    final payload = await _apiClient.post(
+      '/invitations/$invitationId/accept',
+    );
+    return _matchFromEnvelope(payload);
+  }
+
+  Future<void> declineInvitation(String invitationId) async {
+    await _apiClient.post('/invitations/$invitationId/decline');
   }
 
   Future<HomeMatch> fetch(String matchId) async {
