@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/widgets/app_asset_icon.dart';
 import '../../domain/home_match.dart';
 import '../home_date_time_formatter.dart';
+import 'sport_icon.dart';
 
 class FeaturedMatchCard extends StatelessWidget {
   const FeaturedMatchCard({
@@ -45,7 +45,7 @@ class FeaturedMatchCard extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _SportIcon(match: match, size: 24),
+                          SportIcon(match: match, size: 24),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -203,25 +203,3 @@ class _Background extends StatelessWidget {
   }
 }
 
-class _SportIcon extends StatelessWidget {
-  const _SportIcon({required this.match, required this.size});
-
-  final HomeMatch match;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    if (match.sportIconAsset.isNotEmpty) {
-      return AppAssetIcon(assetPath: match.sportIconAsset, size: size);
-    }
-
-    final sport = match.sportName.toLowerCase();
-    final icon = sport.contains('basket')
-        ? Icons.sports_basketball
-        : sport.contains('tennis')
-        ? Icons.sports_tennis
-        : Icons.sports_soccer;
-
-    return Icon(icon, size: size, color: AppColors.heading);
-  }
-}
