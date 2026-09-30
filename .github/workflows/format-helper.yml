@@ -1,0 +1,39 @@
+name: Temporary Dart Format Helper
+
+on:
+  push:
+    branches:
+      - filters-map
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: filters-map
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Format M4 files
+        run: |
+          dart format             lib/features/map/presentation/widgets/live_match_map.dart             lib/features/matches/presentation/widgets/match_location_map.dart             lib/features/splash/presentation/splash_screen.dart
+
+      - name: Commit formatter output
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             lib/features/map/presentation/widgets/live_match_map.dart             lib/features/matches/presentation/widgets/match_location_map.dart             lib/features/splash/presentation/splash_screen.dart
+          git commit -m "style: apply Dart formatter"
+          git push origin HEAD:filters-map
