@@ -36,6 +36,7 @@ abstract final class AppAssets {
 
   // The map match pin uses the exact artwork embedded inside match.svg.
   static const String mapMatchMarkerIcon = 'assets/icons/match_render.png';
+  static const String mapMatchMarkerSvg = 'assets/icons/map_match_marker.svg';
 
   static const String matchDetailsCalendarIcon = 'assets/icons/calendar.svg';
   static const String matchDetailsTimeIcon = 'assets/icons/time.svg';
