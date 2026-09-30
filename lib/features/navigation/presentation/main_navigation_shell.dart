@@ -243,7 +243,26 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     try {
-      final filters = _discoveryStore.filters;
+      var filters = _discoveryStore.filters;
+      final locations = widget.locationRepository;
+
+      if (locations != null &&
+          filters.usesCurrentLocation &&
+          !filters.hasCoordinates) {
+        try {
+          final current = await locations.currentLocation();
+          filters = filters.copyWith(
+            selectedLocation: current.label,
+            latitude: current.latitude,
+            longitude: current.longitude,
+          );
+          _discoveryStore.update(filters, notify: false);
+        } catch (_) {
+          // My Matches still loads when location is unavailable; only distance
+          // remains unavailable until the user supplies a usable location.
+        }
+      }
+
       final data = await repository.listMyMatches(
         latitude: filters.hasCoordinates ? filters.latitude : null,
         longitude: filters.hasCoordinates ? filters.longitude : null,
