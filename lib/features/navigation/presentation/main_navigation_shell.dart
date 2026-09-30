@@ -79,6 +79,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   MyMatchesData? _myMatchesData;
   bool _myMatchesLoading = false;
   String? _myMatchesError;
+  double? _myMatchesOriginLatitude;
+  double? _myMatchesOriginLongitude;
 
   @override
   void initState() {
@@ -231,6 +233,83 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     );
   }
 
+  Future<({double latitude, double longitude})?>
+  _resolveMyMatchesOrigin() async {
+    final filters = _discoveryStore.filters;
+
+    if (filters.hasCoordinates) {
+      final latitude = filters.latitude;
+      final longitude = filters.longitude;
+      if (latitude != null && longitude != null) {
+        _myMatchesOriginLatitude = latitude;
+        _myMatchesOriginLongitude = longitude;
+        return (latitude: latitude, longitude: longitude);
+      }
+    }
+
+    if (_myMatchesOriginLatitude != null &&
+        _myMatchesOriginLongitude != null) {
+      return (
+        latitude: _myMatchesOriginLatitude!,
+        longitude: _myMatchesOriginLongitude!,
+      );
+    }
+
+    final locations = widget.locationRepository;
+    if (locations == null) return null;
+
+    final current = await locations.currentLocationIfGranted();
+    if (current != null) {
+      _myMatchesOriginLatitude = current.latitude;
+      _myMatchesOriginLongitude = current.longitude;
+      return (
+        latitude: current.latitude,
+        longitude: current.longitude,
+      );
+    }
+
+    final searchQueries = <String>[
+      if (!filters.usesCurrentLocation) filters.selectedLocation.trim(),
+      [
+        _profileData.city.trim(),
+        _profileData.state.trim(),
+      ].where((value) => value.isNotEmpty).join(', '),
+      _profileData.postCode.trim(),
+      _profileData.address.trim(),
+    ].where((value) => value.length >= 2).toSet();
+
+    for (final query in searchQueries) {
+      try {
+        final results = await locations.search(query);
+        if (results.isEmpty) continue;
+
+        final resolved = results.first;
+        _myMatchesOriginLatitude = resolved.latitude;
+        _myMatchesOriginLongitude = resolved.longitude;
+
+        return (
+          latitude: resolved.latitude,
+          longitude: resolved.longitude,
+        );
+      } catch (_) {
+        // Try the next available location source.
+      }
+    }
+
+    try {
+      final requested = await locations.currentLocation();
+      _myMatchesOriginLatitude = requested.latitude;
+      _myMatchesOriginLongitude = requested.longitude;
+
+      return (
+        latitude: requested.latitude,
+        longitude: requested.longitude,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _refreshMyMatches() async {
     final repository = widget.matchRepository;
     if (repository == null) return;
@@ -243,29 +322,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     try {
-      var filters = _discoveryStore.filters;
-      final locations = widget.locationRepository;
-
-      if (locations != null &&
-          filters.usesCurrentLocation &&
-          !filters.hasCoordinates) {
-        try {
-          final current = await locations.currentLocation();
-          filters = filters.copyWith(
-            selectedLocation: current.label,
-            latitude: current.latitude,
-            longitude: current.longitude,
-          );
-          _discoveryStore.update(filters, notify: false);
-        } catch (_) {
-          // My Matches still loads when location is unavailable; only distance
-          // remains unavailable until the user supplies a usable location.
-        }
-      }
+      final origin = await _resolveMyMatchesOrigin();
 
       final data = await repository.listMyMatches(
-        latitude: filters.hasCoordinates ? filters.latitude : null,
-        longitude: filters.hasCoordinates ? filters.longitude : null,
+        latitude: origin?.latitude,
+        longitude: origin?.longitude,
       );
       if (!mounted) return;
       setState(() => _myMatchesData = data);
@@ -287,11 +348,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     final nextPage = current.pageForTab(tab) + 1;
-    final filters = _discoveryStore.filters;
+    final origin = await _resolveMyMatchesOrigin();
 
     final next = await repository.listMyMatches(
-      latitude: filters.hasCoordinates ? filters.latitude : null,
-      longitude: filters.hasCoordinates ? filters.longitude : null,
+      latitude: origin?.latitude,
+      longitude: origin?.longitude,
       upcomingPage: tab == MyMatchesTab.upcoming
           ? nextPage
           : current.upcomingPage,
