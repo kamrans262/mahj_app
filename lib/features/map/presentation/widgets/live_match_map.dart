@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as ll;
 
@@ -237,10 +236,12 @@ class _MatchMapPin extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            AppAssets.mapMatchMarkerSvg,
+          Image.asset(
+            AppAssets.mapMatchMarkerPng,
             width: selected ? 62 : 58,
             height: selected ? 70 : 66,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
           ),
           Transform.translate(
             offset: const Offset(0, -3),
