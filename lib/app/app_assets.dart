@@ -34,8 +34,9 @@ abstract final class AppAssets {
   static const String bottomMatchesIcon = 'assets/icons/match_render.png';
   static const String bottomProfileIcon = 'assets/icons/profile.svg';
 
-  // The map match pin uses the exact artwork embedded inside match.svg.
+  // Live map markers use the supplied transparent PNG artwork.
   static const String mapMatchMarkerIcon = 'assets/icons/match_render.png';
+  static const String mapMatchMarkerPng = 'assets/icons/map_match_marker.png';
   static const String mapMatchMarkerSvg = 'assets/icons/map_match_marker.svg';
 
   static const String matchDetailsCalendarIcon = 'assets/icons/calendar.svg';
