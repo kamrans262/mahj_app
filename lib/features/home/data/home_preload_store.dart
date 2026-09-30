@@ -83,9 +83,7 @@ class HomePreloadStore {
     _snapshot = null;
   }
 
-  Future<List<HomeMatch>> _safeMatches(
-    Future<List<HomeMatch>> request,
-  ) async {
+  Future<List<HomeMatch>> _safeMatches(Future<List<HomeMatch>> request) async {
     try {
       return await request;
     } catch (_) {
