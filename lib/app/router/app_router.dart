@@ -694,8 +694,8 @@ abstract final class AppRouter {
       onMatchTap: (match) {
         _openMatchDetails(context, match);
       },
-      onMyMatchesMatchTap: (item, tab) {
-        _openMyMatchesEntry(context, item, tab);
+      onMyMatchesMatchTap: (item, tab) async {
+        await _openMyMatchesEntry(context, item, tab);
       },
       onMyMatchesInvitationTap: (item) async {
         await _openInvitationReceiving(
@@ -721,21 +721,21 @@ abstract final class AppRouter {
     );
   }
 
-  static void _openMyMatchesEntry(
+  static Future<void> _openMyMatchesEntry(
     BuildContext context,
     MyMatchesItem item,
     MyMatchesTab tab,
-  ) {
+  ) async {
     final match = item.match;
 
     if (match.status == MatchStatus.completed) {
-      Navigator.of(context)
+      await Navigator.of(context)
           .pushNamed(AppRoutes.matchCompleted, arguments: match);
       return;
     }
 
     if (tab == MyMatchesTab.invites) {
-      _openInvitationReceiving(
+      await _openInvitationReceiving(
         context,
         match,
         invitationId: item.invitationId,
@@ -744,19 +744,39 @@ abstract final class AppRouter {
       return;
     }
 
+    if (match.isBackendMatch) {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (detailsContext) => ConnectedMatchDetailsScreen(
+            initialMatch: match,
+            repository: _matchRepository,
+            onBack: () => Navigator.of(detailsContext).maybePop(),
+            onInvitePlayers: tab == MyMatchesTab.createdByMe
+                ? () => _openInvitePlayers(detailsContext, match)
+                : null,
+            onChat: (_) {
+              Navigator.of(detailsContext)
+                  .pushNamed(AppRoutes.matchChat, arguments: match);
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
     final isCreatedByMe = tab == MyMatchesTab.createdByMe;
-    Navigator.of(context).push(
+    await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (context) => MatchDetailsScreen(
+        builder: (detailsContext) => MatchDetailsScreen(
           match: match,
           isCurrentUserJoined: true,
           canCancelMatch: isCreatedByMe,
-          onBack: () => Navigator.of(context).maybePop(),
+          onBack: () => Navigator.of(detailsContext).maybePop(),
           onInvitePlayers: () {
-            _openInvitePlayers(context, match);
+            _openInvitePlayers(detailsContext, match);
           },
           onChat: (_) {
-            Navigator.of(context)
+            Navigator.of(detailsContext)
                 .pushNamed(AppRoutes.matchChat, arguments: match);
           },
         ),
