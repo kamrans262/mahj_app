@@ -12,6 +12,9 @@ class HomeMatch {
     this.sportIconAsset = '',
     this.sportIconKey = '',
     this.bannerAsset = '',
+    this.bannerImageUrl = '',
+    this.isFeatured = false,
+    this.featuredOrder = 0,
     this.isJoinable = true,
     this.venueName,
     this.hostUserId,
@@ -37,6 +40,9 @@ class HomeMatch {
   final String sportIconAsset;
   final String sportIconKey;
   final String bannerAsset;
+  final String bannerImageUrl;
+  final bool isFeatured;
+  final int featuredOrder;
   final bool isJoinable;
   final String? venueName;
   final String? hostUserId;
@@ -77,6 +83,9 @@ class HomeMatch {
       status: _statusFromJson(json['status']?.toString()),
       isJoinable: json['can_join'] == true,
       sportIconKey: json['sport_icon_key']?.toString() ?? '',
+      bannerImageUrl: json['banner_image_url']?.toString() ?? '',
+      isFeatured: json['is_featured'] == true,
+      featuredOrder: (json['featured_order'] as num?)?.toInt() ?? 0,
       venueName: json['venue_name']?.toString(),
       hostUserId: hostMap['id']?.toString(),
       hostName: hostMap['name']?.toString(),
@@ -103,6 +112,9 @@ class HomeMatch {
     String? sportIconAsset,
     String? sportIconKey,
     String? bannerAsset,
+    String? bannerImageUrl,
+    bool? isFeatured,
+    int? featuredOrder,
     bool? isJoinable,
     String? venueName,
     String? hostUserId,
@@ -128,6 +140,9 @@ class HomeMatch {
       sportIconAsset: sportIconAsset ?? this.sportIconAsset,
       sportIconKey: sportIconKey ?? this.sportIconKey,
       bannerAsset: bannerAsset ?? this.bannerAsset,
+      bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
+      isFeatured: isFeatured ?? this.isFeatured,
+      featuredOrder: featuredOrder ?? this.featuredOrder,
       isJoinable: isJoinable ?? this.isJoinable,
       venueName: venueName ?? this.venueName,
       hostUserId: hostUserId ?? this.hostUserId,
