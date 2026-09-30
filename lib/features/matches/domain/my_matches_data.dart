@@ -8,12 +8,16 @@ class MyMatchesItem {
     required this.sportImageAsset,
     this.markerNormalizedX,
     this.markerNormalizedY,
+    this.invitationId,
+    this.inviterName,
   });
 
   final HomeMatch match;
   final String sportImageAsset;
   final double? markerNormalizedX;
   final double? markerNormalizedY;
+  final String? invitationId;
+  final String? inviterName;
 
   bool get hasLocationPreview =>
       markerNormalizedX != null && markerNormalizedY != null;
