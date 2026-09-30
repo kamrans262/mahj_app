@@ -69,6 +69,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   bool _homeOverlayOpen = false;
   MyMatchesTab _myMatchesTab = MyMatchesTab.upcoming;
   List<HomeMatch> _liveMatches = const [];
+  List<HomeMatch> _discoveryMatches = const [];
   late final MatchDiscoveryStore _discoveryStore;
   late final bool _ownsDiscoveryStore;
   bool _matchesLoading = false;
@@ -174,11 +175,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         if (order != 0) return order;
         return a.startsAt.compareTo(b.startsAt);
       });
-    final nearby = _liveMatches
-        .where(
-          (match) => !match.isCurrentUserJoined && !match.isOwnedByCurrentUser,
-        )
-        .toList(growable: false);
+    final nearby = _discoveryMatches;
 
     return HomeData(
       greeting: _greeting,
@@ -202,12 +199,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     if (mounted) setState(() => _matchesLoading = true);
     try {
-      final matches = await repository.list(
-        filters: _discoveryStore.filters,
-        discoverOnly: true,
-      );
+      final results = await Future.wait<List<HomeMatch>>([
+        repository.list(),
+        repository.list(
+          filters: _discoveryStore.filters,
+          discoverOnly: true,
+        ),
+      ]);
       if (!mounted) return;
-      setState(() => _liveMatches = matches);
+      setState(() {
+        _liveMatches = results[0];
+        _discoveryMatches = results[1];
+      });
     } catch (_) {
       // Keep the current list visible. Pull-to-refresh or filter changes retry.
     } finally {
@@ -240,7 +243,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget _buildActivePage() {
     switch (_currentIndex) {
       case 1:
-        final markers = _liveMatches
+        final markers = _discoveryMatches
             .where((match) => match.hasCoordinates)
             .map(MapMatchMarker.fromMatch)
             .toList(growable: false);
