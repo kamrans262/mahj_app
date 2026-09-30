@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/widgets/app_asset_icon.dart';
+import '../../../../core/widgets/app_avatar.dart';
 import '../../domain/chat_models.dart';
 
 class ChatPlayerItem extends StatelessWidget {
@@ -22,11 +22,10 @@ class ChatPlayerItem extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              ClipOval(
-                child: AppAssetIcon(
-                  assetPath: participant.avatarAsset,
-                  size: 40,
-                ),
+              AppAvatar(
+                fallbackAsset: participant.avatarAsset,
+                imageUrl: participant.avatarUrl,
+                size: 40,
               ),
               if (participant.isOnline)
                 Positioned(
