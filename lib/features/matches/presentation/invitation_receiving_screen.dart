@@ -121,6 +121,10 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
     }
   }
 
+  bool get _hasDistance =>
+      widget.distanceLabel?.trim().isNotEmpty == true ||
+      widget.match.distanceMiles != null;
+
   String get _distanceLabel {
     final explicit = widget.distanceLabel?.trim();
     if (explicit != null && explicit.isNotEmpty) {
@@ -133,7 +137,7 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
     }
 
     final location = widget.match.location.trim();
-    return location.isEmpty ? 'Distance unavailable' : location;
+    return location.isEmpty ? 'Location unavailable' : location;
   }
 
   String get _playersSupportingText {
@@ -265,7 +269,7 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   MatchInfoRow(
                     iconAsset: AppAssets.matchDetailsDistanceIcon,
-                    label: 'Distance',
+                    label: _hasDistance ? 'Distance' : 'Location',
                     value: Text(_distanceLabel, style: _valueStyle),
                   ),
                   const SizedBox(height: AppSpacing.lg),
