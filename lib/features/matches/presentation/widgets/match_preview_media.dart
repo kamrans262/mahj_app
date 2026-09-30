@@ -16,6 +16,7 @@ class MatchPreviewMedia extends StatelessWidget {
     this.longitude,
     this.markerNormalizedX,
     this.markerNormalizedY,
+    this.markerSize = 44,
   });
 
   final bool hasLocationPreview;
@@ -24,6 +25,7 @@ class MatchPreviewMedia extends StatelessWidget {
   final double? longitude;
   final double? markerNormalizedX;
   final double? markerNormalizedY;
+  final double markerSize;
 
   bool get _hasLiveCoordinates => latitude != null && longitude != null;
 
@@ -37,6 +39,7 @@ class MatchPreviewMedia extends StatelessWidget {
       return _StaticLocationMap(
         latitude: latitude!,
         longitude: longitude!,
+        markerSize: markerSize,
       );
     }
 
@@ -50,9 +53,9 @@ class MatchPreviewMedia extends StatelessWidget {
         SvgPicture.asset(AppAssets.mapDemoBackground, fit: BoxFit.cover),
         Align(
           alignment: Alignment(normalizedX * 2 - 1, normalizedY * 2 - 1),
-          child: const AppAssetIcon(
+          child: AppAssetIcon(
             assetPath: AppAssets.mapMatchMarkerIcon,
-            size: 48,
+            size: markerSize,
           ),
         ),
       ],
@@ -70,10 +73,12 @@ class _StaticLocationMap extends StatelessWidget {
   const _StaticLocationMap({
     required this.latitude,
     required this.longitude,
+    required this.markerSize,
   });
 
   final double latitude;
   final double longitude;
+  final double markerSize;
 
   @override
   Widget build(BuildContext context) {
@@ -100,13 +105,13 @@ class _StaticLocationMap extends StatelessWidget {
             markers: [
               fm.Marker(
                 point: position,
-                width: 44,
-                height: 44,
+                width: markerSize,
+                height: markerSize,
                 alignment: Alignment.center,
                 child: Image.asset(
                   AppAssets.mapMatchMarkerPng,
-                  width: 44,
-                  height: 44,
+                  width: markerSize,
+                  height: markerSize,
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.high,
                 ),
