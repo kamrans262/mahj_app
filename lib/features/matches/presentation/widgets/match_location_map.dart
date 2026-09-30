@@ -1,48 +1,75 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
-import '../../../../core/widgets/app_asset_icon.dart';
+import '../../../home/domain/home_match.dart';
 
 class MatchLocationMap extends StatelessWidget {
   const MatchLocationMap({
+    required this.match,
     super.key,
-    this.markerAlignment = const Alignment(0.22, -0.12),
   });
 
-  final Alignment markerAlignment;
+  final HomeMatch match;
 
   @override
   Widget build(BuildContext context) {
+    final latitude = match.latitude;
+    final longitude = match.longitude;
+
     return Semantics(
       label: 'Match location map',
       child: AspectRatio(
         aspectRatio: 2.15,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.card),
-          child: DecoratedBox(
-            decoration: const BoxDecoration(color: AppColors.subtleSurface),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                SvgPicture.asset(
-                  AppAssets.mapDemoBackground,
-                  fit: BoxFit.cover,
-                ),
-                Align(
-                  alignment: markerAlignment,
-                  child: const AppAssetIcon(
-                    key: ValueKey('match-details-map-marker'),
-                    assetPath: AppAssets.mapMatchMarkerIcon,
-                    size: 44,
-                    color: AppColors.textSecondary,
+          child: latitude == null || longitude == null
+              ? const _MissingMatchLocation()
+              : GoogleMap(
+                  key: ValueKey('match-details-google-map-${match.id}'),
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(latitude, longitude),
+                    zoom: 15,
                   ),
+                  markers: {
+                    Marker(
+                      markerId: MarkerId('match-details-${match.id}'),
+                      position: LatLng(latitude, longitude),
+                      infoWindow: InfoWindow(
+                        title: match.venueName?.trim().isNotEmpty == true
+                            ? match.venueName
+                            : match.sportName,
+                        snippet: match.location,
+                      ),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueOrange,
+                      ),
+                    ),
+                  },
+                  mapType: MapType.normal,
+                  mapToolbarEnabled: false,
+                  zoomControlsEnabled: false,
+                  myLocationButtonEnabled: false,
+                  compassEnabled: true,
                 ),
-              ],
-            ),
-          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MissingMatchLocation extends StatelessWidget {
+  const _MissingMatchLocation();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppColors.subtleSurface,
+      child: Center(
+        child: Text(
+          'Location map unavailable',
+          textAlign: TextAlign.center,
         ),
       ),
     );
