@@ -29,6 +29,7 @@ void main() {
       expect(request.headers['authorization'], 'Bearer test-token');
 
       final body = jsonDecode(request.body) as Map<String, dynamic>;
+      expect(body['name'], 'Basketball');
       expect(body['location_address'], 'Central Park');
       expect(body['notes'], 'Bring water.');
       expect(body['is_public'], isTrue);
@@ -38,6 +39,7 @@ void main() {
         jsonEncode({
           'match': {
             'id': '41',
+            'name': 'Basketball',
             'sport_name': 'Basketball',
             'location': 'Central Park',
             'venue_name': 'Court 1',
@@ -70,6 +72,7 @@ void main() {
 
     final match = await repository.create(
       CreateMatchRequest(
+        matchName: 'Basketball',
         locationAddress: 'Central Park',
         venueName: 'Court 1',
         notes: 'Bring water.',
@@ -80,6 +83,7 @@ void main() {
     );
 
     expect(match.id, '41');
+    expect(match.sportName, 'Basketball');
     expect(match.currentPlayers, 1);
     expect(match.maxPlayers, 4);
     expect(match.isOwnedByCurrentUser, isTrue);
