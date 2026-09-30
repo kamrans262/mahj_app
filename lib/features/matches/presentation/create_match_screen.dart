@@ -245,14 +245,15 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
         Icons.keyboard_arrow_down_rounded,
         color: AppColors.textSecondary,
       ),
+      hint: const Text(
+        'Select Sport',
+        style: AppTypography.fieldHint,
+      ),
       decoration: InputDecoration(
-        hintText: 'Select Sport',
-        hintStyle: AppTypography.fieldHint,
-        prefixIcon: AppAssetIcon(
-          assetPath: SportIconResolver.assetForKey(
-            selectedSport?.iconKey ?? 'generic',
-          ),
-          size: 18,
+        prefixIcon: const Icon(
+          Icons.sports_outlined,
+          size: 22,
+          color: AppColors.textSecondary,
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
