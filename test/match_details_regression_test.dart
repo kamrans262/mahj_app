@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mahj_app/app/app_assets.dart';
 import 'package:mahj_app/app/theme/app_colors.dart';
 import 'package:mahj_app/core/widgets/app_asset_icon.dart';
 import 'package:mahj_app/features/home/domain/home_match.dart';
@@ -18,6 +19,8 @@ void main() {
       currentPlayers: 2,
       maxPlayers: 4,
       status: MatchStatus.open,
+      latitude: 30.1575,
+      longitude: 71.5249,
     );
   }
 
@@ -47,7 +50,7 @@ void main() {
     },
   );
 
-  testWidgets('Match Details map marker uses app grey instead of orange', (
+  testWidgets('Match Details uses the supplied live-map marker artwork', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -55,11 +58,12 @@ void main() {
     );
     await tester.pump();
 
-    final marker = tester.widget<AppAssetIcon>(
+    final marker = tester.widget<Image>(
       find.byKey(const ValueKey('match-details-map-marker')),
     );
+    final image = marker.image as AssetImage;
 
-    expect(marker.color, AppColors.textSecondary);
+    expect(image.assetName, AppAssets.mapMatchMarkerPng);
   });
 
   testWidgets('Map screen metadata icons and match markers use app grey', (
