@@ -54,6 +54,8 @@ class InviteResultCard extends StatelessWidget {
           height: 124,
           child: MatchPreviewMedia(
             hasLocationPreview: result.hasLocationPreview,
+            latitude: result.latitude,
+            longitude: result.longitude,
             markerNormalizedX: result.markerNormalizedX,
             markerNormalizedY: result.markerNormalizedY,
             sportImageAsset: result.sportImageAsset,
@@ -76,6 +78,8 @@ class InviteResultCard extends StatelessWidget {
           height: 108,
           child: MatchPreviewMedia(
             hasLocationPreview: result.hasLocationPreview,
+            latitude: result.latitude,
+            longitude: result.longitude,
             markerNormalizedX: result.markerNormalizedX,
             markerNormalizedY: result.markerNormalizedY,
             sportImageAsset: result.sportImageAsset,
