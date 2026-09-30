@@ -27,7 +27,7 @@ void main() {
     expect(find.text('Select Sport'), findsOneWidget);
     expect(find.text('Enter Sport Name'), findsNothing);
 
-    await tester.tap(find.text('Select Sport'));
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Other').last);
