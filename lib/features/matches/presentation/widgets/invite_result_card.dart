@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/app_asset_icon.dart';
 import '../../../../core/widgets/app_surface_container.dart';
 import '../../../home/presentation/home_date_time_formatter.dart';
 import '../../../home/presentation/widgets/match_card.dart';
 import '../../domain/invite_player_result.dart';
-import 'match_preview_media.dart';
 
 class InviteResultCard extends StatelessWidget {
   const InviteResultCard({
@@ -50,17 +51,8 @@ class InviteResultCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 124,
-          child: MatchPreviewMedia(
-            hasLocationPreview: result.hasLocationPreview,
-            latitude: result.latitude,
-            longitude: result.longitude,
-            markerNormalizedX: result.markerNormalizedX,
-            markerNormalizedY: result.markerNormalizedY,
-            sportImageAsset: result.sportImageAsset,
-          ),
-        ),
+        const SizedBox(height: AppSpacing.md),
+        Center(child: _UserAvatar(result: result, size: 72)),
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: _ResultInformation(result: result, isSelected: isSelected),
@@ -71,19 +63,12 @@ class InviteResultCard extends StatelessWidget {
 
   Widget _rowContent() {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
           width: 104,
           height: 108,
-          child: MatchPreviewMedia(
-            hasLocationPreview: result.hasLocationPreview,
-            latitude: result.latitude,
-            longitude: result.longitude,
-            markerNormalizedX: result.markerNormalizedX,
-            markerNormalizedY: result.markerNormalizedY,
-            sportImageAsset: result.sportImageAsset,
-          ),
+          child: Center(child: _UserAvatar(result: result, size: 68)),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -98,6 +83,46 @@ class InviteResultCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _UserAvatar extends StatelessWidget {
+  const _UserAvatar({required this.result, required this.size});
+
+  final InvitePlayerResult result;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = result.avatarUrl?.trim();
+
+    return ClipOval(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: avatarUrl != null && avatarUrl.isNotEmpty
+            ? Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _fallbackAvatar(),
+              )
+            : _fallbackAvatar(),
+      ),
+    );
+  }
+
+  Widget _fallbackAvatar() {
+    return ColoredBox(
+      color: AppColors.subtleSurface,
+      child: Center(
+        child: AppAssetIcon(
+          assetPath: AppAssets.bottomProfileIcon,
+          size: 30,
+          color: AppColors.primary,
+        ),
+      ),
     );
   }
 }
