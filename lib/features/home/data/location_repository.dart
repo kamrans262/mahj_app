@@ -66,10 +66,40 @@ class LocationRepository {
       );
     }
 
-    const settings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      timeLimit: Duration(seconds: 12),
+    return _readCurrentLocation(
+      const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 12),
+      ),
     );
+  }
+
+  Future<DiscoveryLocation?> currentLocationIfGranted() async {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      return null;
+    }
+
+    final permission = await Geolocator.checkPermission();
+    if (permission != LocationPermission.always &&
+        permission != LocationPermission.whileInUse) {
+      return null;
+    }
+
+    try {
+      return await _readCurrentLocation(
+        const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 3),
+        ),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<DiscoveryLocation> _readCurrentLocation(
+    LocationSettings settings,
+  ) async {
     final position = await Geolocator.getCurrentPosition(
       locationSettings: settings,
     );
