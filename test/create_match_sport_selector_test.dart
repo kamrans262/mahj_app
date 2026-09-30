@@ -21,9 +21,7 @@ void main() {
     ];
 
     await tester.pumpWidget(
-      const MaterialApp(
-        home: CreateMatchScreen(sports: sports),
-      ),
+      const MaterialApp(home: CreateMatchScreen(sports: sports)),
     );
 
     expect(find.text('Select Sport'), findsOneWidget);
