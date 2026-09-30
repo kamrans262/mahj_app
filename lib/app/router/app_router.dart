@@ -509,17 +509,34 @@ abstract final class AppRouter {
           onMutualGameTap: (mutualMatch) {
             _openMatchDetails(context, mutualMatch);
           },
-          onSendInvite: () {
-            final resolvedMatch = inviteMatch ?? _defaultInviteMatch();
+          onSendInvite: () async {
+            var resolvedMatch = inviteMatch;
+            if (resolvedMatch == null) {
+              try {
+                final data = await _matchRepository.listMyMatches();
+                for (final item in data.createdByMe) {
+                  final candidate = item.match;
+                  if (candidate.status == MatchStatus.open) {
+                    resolvedMatch = candidate;
+                    break;
+                  }
+                }
+              } catch (_) {
+                // The normal invite screen will surface backend errors later.
+              }
+            }
+
+            if (!context.mounted) return;
             if (resolvedMatch == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Create a match before inviting this player.'),
+                  content: Text('Create an open match before inviting this player.'),
                 ),
               );
               return;
             }
-            _openInvitePlayers(context, resolvedMatch);
+
+            await _openInvitePlayers(context, resolvedMatch);
           },
         ),
       );
@@ -620,11 +637,21 @@ abstract final class AppRouter {
         settings: settings,
         builder: (context) => InvitePlayersScreen(
           match: match,
-          initialResults: InvitePlayersPreviewData.forMatch(match),
+          initialResults: match.isBackendMatch
+              ? const []
+              : InvitePlayersPreviewData.forMatch(match),
           onBack: () => Navigator.of(context).maybePop(),
-          onPreviewInvitationReceived: () {
-            _openInvitationReceiving(context, match);
-          },
+          onSearchUsers: match.isBackendMatch
+              ? (query) => _matchRepository.searchInviteCandidates(match, query)
+              : null,
+          onSendInvites: match.isBackendMatch
+              ? _matchRepository.sendInvitations
+              : null,
+          onPreviewInvitationReceived: match.isBackendMatch
+              ? null
+              : () {
+                  _openInvitationReceiving(context, match);
+                },
         ),
       );
     }
