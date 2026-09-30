@@ -252,7 +252,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           assetPath: SportIconResolver.assetForKey(
             selectedSport?.iconKey ?? 'generic',
           ),
-          size: 22,
+          size: 18,
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
@@ -295,7 +295,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                 children: [
                   AppAssetIcon(
                     assetPath: SportIconResolver.assetForKey(sport.iconKey),
-                    size: 22,
+                    size: 20,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
