@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
+import '../../../core/widgets/app_asset_icon.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_surface_container.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../home/domain/home_match.dart';
 import '../../home/presentation/widgets/compact_switch.dart';
+import '../../home/presentation/widgets/sport_icon.dart';
 import '../domain/create_match_form_state.dart';
+import '../domain/sport_option.dart';
 import 'widgets/match_created_overlay.dart';
 
 class CreateMatchScreen extends StatefulWidget {
@@ -21,6 +25,7 @@ class CreateMatchScreen extends StatefulWidget {
     this.onInvitePlayers,
     this.onBackHome,
     this.onViewMatch,
+    this.sports = const <SportOption>[],
   });
 
   final VoidCallback? onBack;
@@ -29,6 +34,7 @@ class CreateMatchScreen extends StatefulWidget {
   final ValueChanged<HomeMatch>? onInvitePlayers;
   final ValueChanged<HomeMatch>? onBackHome;
   final ValueChanged<HomeMatch>? onViewMatch;
+  final List<SportOption> sports;
 
   @override
   State<CreateMatchScreen> createState() => _CreateMatchScreenState();
@@ -37,7 +43,7 @@ class CreateMatchScreen extends StatefulWidget {
 class _CreateMatchScreenState extends State<CreateMatchScreen> {
   static const double _headerToBodyGap = 35;
 
-  final _matchNameController = TextEditingController();
+  final _customSportController = TextEditingController();
   final _locationController = TextEditingController();
   final _venueController = TextEditingController();
   final _notesController = TextEditingController();
@@ -48,7 +54,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   @override
   void dispose() {
-    _matchNameController.dispose();
+    _customSportController.dispose();
     _locationController.dispose();
     _venueController.dispose();
     _notesController.dispose();
@@ -142,8 +148,12 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   String? _validationMessage() {
     final location = _formState.locationAddress;
 
-    if (_formState.matchName.trim().isEmpty) {
-      return 'Please enter a sport or match name.';
+    if (_formState.selectedSport == null) {
+      return 'Please select a sport.';
+    }
+    if (_formState.selectedSport!.isOther &&
+        _formState.customSportName.trim().isEmpty) {
+      return 'Please enter the sport name.';
     }
     if (location == null || location.trim().isEmpty) {
       return 'Please enter a location or address.';
@@ -223,16 +233,103 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Widget _buildMatchNameField() {
+  Widget _buildSportField() {
+    final options = <SportOption>[
+      ...widget.sports,
+      SportOption.other,
+    ];
+    final selectedSport = _formState.selectedSport;
+
+    return DropdownButtonFormField<String>(
+      key: ValueKey<String?>(selectedSport?.slug),
+      initialValue: selectedSport?.slug,
+      isExpanded: true,
+      icon: const Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: AppColors.textSecondary,
+      ),
+      decoration: InputDecoration(
+        hintText: 'Select Sport',
+        hintStyle: AppTypography.fieldHint,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 13,
+        ),
+        filled: true,
+        fillColor: AppColors.subtleSurface,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.control),
+          borderSide: const BorderSide(color: AppColors.controlBorder),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.control),
+          borderSide: const BorderSide(color: AppColors.controlBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.control),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 1.2,
+          ),
+        ),
+      ),
+      style: AppTypography.field,
+      items: options
+          .map(
+            (sport) => DropdownMenuItem<String>(
+              value: sport.slug,
+              child: Row(
+                children: [
+                  AppAssetIcon(
+                    assetPath: SportIconResolver.assetForKey(sport.iconKey),
+                    size: 22,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      sport.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.field,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(growable: false),
+      onChanged: _isSubmitting
+          ? null
+          : (slug) {
+              if (slug == null) return;
+              final sport = options.firstWhere(
+                (option) => option.slug == slug,
+              );
+              setState(() {
+                _formState = _formState.copyWith(
+                  selectedSport: sport,
+                  customSportName: sport.isOther
+                      ? _formState.customSportName
+                      : '',
+                );
+                if (!sport.isOther) {
+                  _customSportController.clear();
+                }
+              });
+            },
+    );
+  }
+
+  Widget _buildCustomSportField() {
     return AppTextField(
-      controller: _matchNameController,
-      hintText: 'Sport / Match Name',
-      leadingIcon: Icons.sports_soccer,
+      controller: _customSportController,
+      hintText: 'Enter Sport Name',
+      leadingIcon: Icons.edit_outlined,
       enabled: !_isSubmitting,
       textInputAction: TextInputAction.next,
       textCapitalization: TextCapitalization.words,
       onChanged: (value) {
-        _formState = _formState.copyWith(matchName: value);
+        _formState = _formState.copyWith(customSportName: value);
       },
     );
   }
@@ -417,7 +514,11 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _buildMatchNameField(),
+                                  _buildSportField(),
+                                  if (_formState.selectedSport?.isOther == true) ...[
+                                    const SizedBox(height: AppSpacing.lg),
+                                    _buildCustomSportField(),
+                                  ],
                                   const SizedBox(height: AppSpacing.lg),
                                   _buildLocationField(),
                                   const SizedBox(height: AppSpacing.lg),
