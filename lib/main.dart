@@ -14,7 +14,7 @@ void main() {
     // the default texture-based platform view can show the Maps surface/logo
     // while failing to render the actual map tiles.
     // ignore: deprecated_member_use
-    GoogleMap.useAndroidViewSurface = true;
+    AndroidGoogleMapsFlutter.useAndroidViewSurface = true;
   }
 
   SystemChrome.setSystemUIOverlayStyle(
