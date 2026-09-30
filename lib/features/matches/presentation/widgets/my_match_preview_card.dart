@@ -38,6 +38,8 @@ class MyMatchPreviewCard extends StatelessWidget {
                   height: 140,
                   child: MatchPreviewMedia(
                     hasLocationPreview: item.hasLocationPreview,
+                    latitude: item.match.latitude,
+                    longitude: item.match.longitude,
                     markerNormalizedX: item.markerNormalizedX,
                     markerNormalizedY: item.markerNormalizedY,
                     sportImageAsset: item.sportImageAsset,
@@ -51,32 +53,36 @@ class MyMatchPreviewCard extends StatelessWidget {
             );
           }
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 104,
-                height: 104,
-                child: MatchPreviewMedia(
-                  hasLocationPreview: item.hasLocationPreview,
-                  markerNormalizedX: item.markerNormalizedX,
-                  markerNormalizedY: item.markerNormalizedY,
-                  sportImageAsset: item.sportImageAsset,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    0,
-                    AppSpacing.md,
-                    AppSpacing.md,
-                    AppSpacing.md,
+          return SizedBox(
+            height: 132,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 112,
+                  child: MatchPreviewMedia(
+                    hasLocationPreview: item.hasLocationPreview,
+                    latitude: item.match.latitude,
+                    longitude: item.match.longitude,
+                    markerNormalizedX: item.markerNormalizedX,
+                    markerNormalizedY: item.markerNormalizedY,
+                    sportImageAsset: item.sportImageAsset,
                   ),
-                  child: _MatchInformation(item: item),
                 ),
-              ),
-            ],
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                    ),
+                    child: _MatchInformation(item: item),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
