@@ -34,14 +34,22 @@ class MatchLocationMap extends StatelessWidget {
         aspectRatio: 2.15,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.card),
-          child: latitude == null || longitude == null
-              ? const _MissingMatchLocation()
-              : _useGoogleMaps
-              ? _buildGoogleMap(latitude, longitude)
-              : _buildOpenStreetMap(latitude, longitude),
+          child: _buildMap(latitude, longitude),
         ),
       ),
     );
+  }
+
+  Widget _buildMap(double? latitude, double? longitude) {
+    if (latitude == null || longitude == null) {
+      return const _MissingMatchLocation();
+    }
+
+    if (_useGoogleMaps) {
+      return _buildGoogleMap(latitude, longitude);
+    }
+
+    return _buildOpenStreetMap(latitude, longitude);
   }
 
   Widget _buildOpenStreetMap(double latitude, double longitude) {
@@ -97,10 +105,26 @@ class MatchLocationMap extends StatelessWidget {
       children: [
         ColorFiltered(
           colorFilter: const ColorFilter.matrix(<double>[
-            0.72, 0, 0, 0, 64,
-            0, 0.72, 0, 0, 62,
-            0, 0, 0.72, 0, 58,
-            0, 0, 0, 1, 0,
+            0.72,
+            0,
+            0,
+            0,
+            64,
+            0,
+            0.72,
+            0,
+            0,
+            62,
+            0,
+            0,
+            0.72,
+            0,
+            58,
+            0,
+            0,
+            0,
+            1,
+            0,
           ]),
           child: tileWidget,
         ),
