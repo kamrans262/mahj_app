@@ -46,10 +46,7 @@ class LiveMatchMap extends StatelessWidget {
       result.add(
         Marker(
           markerId: const MarkerId('current-location'),
-          position: LatLng(
-            currentLocationLatitude!,
-            currentLocationLongitude!,
-          ),
+          position: LatLng(currentLocationLatitude!, currentLocationLongitude!),
           zIndexInt: 3,
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueAzure,

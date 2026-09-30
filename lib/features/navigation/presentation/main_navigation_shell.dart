@@ -201,10 +201,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     try {
       final results = await Future.wait<List<HomeMatch>>([
         repository.list(),
-        repository.list(
-          filters: _discoveryStore.filters,
-          discoverOnly: true,
-        ),
+        repository.list(filters: _discoveryStore.filters, discoverOnly: true),
       ]);
       if (!mounted) return;
       setState(() {
