@@ -64,9 +64,7 @@ class HomeMatch {
     return HomeMatch(
       id: json['id']?.toString() ?? '',
       sportName:
-          json['name']?.toString() ??
-          json['sport_name']?.toString() ??
-          'Match',
+          json['name']?.toString() ?? json['sport_name']?.toString() ?? 'Match',
       location:
           json['location']?.toString() ??
           json['location_address']?.toString() ??
