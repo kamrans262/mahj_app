@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as ll;
 
+import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
-import '../../../home/presentation/widgets/sport_icon.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../home/presentation/home_date_time_formatter.dart';
 import '../../domain/map_match_marker.dart';
 
 class LiveMatchMap extends StatelessWidget {
@@ -66,8 +69,8 @@ class LiveMatchMap extends StatelessWidget {
             currentLocationLatitude!,
             currentLocationLongitude!,
           ),
-          width: 30,
-          height: 30,
+          width: 58,
+          height: 58,
           child: const _CurrentLocationMarker(),
         ),
       );
@@ -81,8 +84,9 @@ class LiveMatchMap extends StatelessWidget {
       mapMarkers.add(
         fm.Marker(
           point: ll.LatLng(latitude, longitude),
-          width: 52,
-          height: 52,
+          width: 150,
+          height: 132,
+          alignment: const Alignment(0, -0.12),
           child: GestureDetector(
             key: ValueKey('map-marker-${marker.match.id}'),
             behavior: HitTestBehavior.opaque,
@@ -104,11 +108,13 @@ class LiveMatchMap extends StatelessWidget {
           initialZoom: 13,
           minZoom: 3,
           maxZoom: 18,
+          backgroundColor: const Color(0xFFFFFCF8),
         ),
         children: [
           fm.TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             userAgentPackageName: 'com.example.mahj_app',
+            tileBuilder: _styledOsmTile,
           ),
           fm.MarkerLayer(markers: mapMarkers),
           const fm.RichAttributionWidget(
@@ -118,6 +124,28 @@ class LiveMatchMap extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  static Widget _styledOsmTile(
+    BuildContext context,
+    Widget tileWidget,
+    fm.TileImage tile,
+  ) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ColorFiltered(
+          colorFilter: const ColorFilter.matrix(<double>[
+            0.72, 0, 0, 0, 64,
+            0, 0.72, 0, 0, 62,
+            0, 0, 0.72, 0, 58,
+            0, 0, 0, 1, 0,
+          ]),
+          child: tileWidget,
+        ),
+        const ColoredBox(color: Color(0x0DEC5D01)),
+      ],
     );
   }
 
@@ -201,25 +229,67 @@ class _MatchMapPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
+    final match = marker.match;
+
+    return AnimatedScale(
       duration: const Duration(milliseconds: 160),
-      padding: const EdgeInsets.all(7),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: selected ? AppColors.primary : AppColors.controlBorder,
-          width: selected ? 3 : 1,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.controlShadow,
-            blurRadius: 6,
-            offset: Offset(0, 2),
+      scale: selected ? 1.05 : 1,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            AppAssets.mapMatchMarkerSvg,
+            width: selected ? 62 : 58,
+            height: selected ? 70 : 66,
+          ),
+          Transform.translate(
+            offset: const Offset(0, -3),
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 118, maxWidth: 142),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.96),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: selected
+                      ? AppColors.primary.withValues(alpha: 0.18)
+                      : AppColors.controlBorder.withValues(alpha: 0.45),
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: AppColors.controlShadow,
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    match.sportName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.homeMeta14.copyWith(
+                      color: AppColors.heading,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    HomeDateTimeFormatter.compactDate(match.startsAt),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.homeMeta12,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      child: SportIcon(match: marker.match, size: 28),
     );
   }
 }
@@ -229,23 +299,43 @@ class _CurrentLocationMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return Stack(
       key: const ValueKey('map-current-location'),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primary, width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.controlShadow,
-            blurRadius: 4,
-            offset: Offset(0, 2),
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.10),
+            shape: BoxShape.circle,
           ),
-        ],
-      ),
-      child: const Center(
-        child: Icon(Icons.my_location, size: 16, color: AppColors.primary),
-      ),
+        ),
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.18),
+            shape: BoxShape.circle,
+          ),
+        ),
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.controlShadow,
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
