@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 SectionHeader(
-                  title: 'Upcoming Matches',
+                  title: 'Featured Matches',
                   onViewAll: widget.onUpcomingViewAll,
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -348,7 +348,7 @@ class _UpcomingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (matches.isEmpty) {
-      return const _EmptyState(message: 'No upcoming matches yet.');
+      return const _EmptyState(message: 'No featured matches right now.');
     }
 
     return Column(
