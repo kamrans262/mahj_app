@@ -7,6 +7,8 @@ class InvitePlayerResult {
     required this.currentPlayers,
     required this.maxPlayers,
     required this.sportImageAsset,
+    this.latitude,
+    this.longitude,
     this.markerNormalizedX,
     this.markerNormalizedY,
   });
@@ -21,9 +23,12 @@ class InvitePlayerResult {
   final int currentPlayers;
   final int maxPlayers;
   final String sportImageAsset;
+  final double? latitude;
+  final double? longitude;
   final double? markerNormalizedX;
   final double? markerNormalizedY;
 
   bool get hasLocationPreview =>
-      markerNormalizedX != null && markerNormalizedY != null;
+      (latitude != null && longitude != null) ||
+      (markerNormalizedX != null && markerNormalizedY != null);
 }
