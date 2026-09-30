@@ -327,6 +327,8 @@ abstract final class AppRouter {
         ),
     AppRoutes.nearbyMatches: (context) => ConnectedNearbyMatchesScreen(
       repository: _matchRepository,
+      discoveryStore: AppServices.matchDiscoveryStore,
+      locationRepository: AppServices.locationRepository,
       onBack: () {
         Navigator.of(context).maybePop();
       },
@@ -339,6 +341,7 @@ abstract final class AppRouter {
     ),
     AppRoutes.createMatch: (context) => ConnectedCreateMatchScreen(
       repository: _matchRepository,
+      locationRepository: AppServices.locationRepository,
       onBack: () {
         Navigator.of(context).maybePop();
       },
@@ -658,6 +661,8 @@ abstract final class AppRouter {
     return MainNavigationShell(
       initialIndex: initialIndex,
       matchRepository: _matchRepository,
+      discoveryStore: AppServices.matchDiscoveryStore,
+      locationRepository: AppServices.locationRepository,
       initialProfileData:
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,

@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../app/app_scroll_behavior.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../home/data/home_preview_data.dart';
+import '../../home/data/location_repository.dart';
+import '../../home/data/match_discovery_store.dart';
 import '../../home/domain/home_data.dart';
 import '../../home/domain/home_match.dart';
+import '../../home/domain/match_filters.dart';
 import '../../home/presentation/home_screen.dart';
 import '../../home/presentation/widgets/app_bottom_navigation.dart';
+import '../../map/domain/map_match_marker.dart';
 import '../../map/presentation/map_screen.dart';
 import '../../matches/data/match_repository.dart';
 import '../../matches/domain/my_matches_data.dart';
@@ -21,6 +25,8 @@ class MainNavigationShell extends StatefulWidget {
     this.initialIndex = 0,
     this.initialProfileData,
     this.matchRepository,
+    this.discoveryStore,
+    this.locationRepository,
     this.onNearbyViewAll,
     this.onCreateMatch,
     this.onMatchTap,
@@ -37,6 +43,8 @@ class MainNavigationShell extends StatefulWidget {
   final int initialIndex;
   final ProfileData? initialProfileData;
   final MatchRepository? matchRepository;
+  final MatchDiscoveryStore? discoveryStore;
+  final LocationRepository? locationRepository;
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
   final ValueChanged<HomeMatch>? onMatchTap;
@@ -61,6 +69,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   bool _homeOverlayOpen = false;
   MyMatchesTab _myMatchesTab = MyMatchesTab.upcoming;
   List<HomeMatch> _liveMatches = const [];
+  late final MatchDiscoveryStore _discoveryStore;
+  late final bool _ownsDiscoveryStore;
+  bool _matchesLoading = false;
 
   @override
   void initState() {
@@ -69,10 +80,58 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         ? widget.initialIndex
         : 0;
     _profileData = widget.initialProfileData ?? ProfilePreviewData.currentUser;
+    _ownsDiscoveryStore = widget.discoveryStore == null;
+    _discoveryStore = widget.discoveryStore ?? MatchDiscoveryStore();
+    _discoveryStore.addListener(_handleDiscoveryFiltersChanged);
 
     if (widget.matchRepository != null) {
-      _refreshMatches();
+      _initializeMatches();
     }
+  }
+
+  @override
+  void dispose() {
+    _discoveryStore.removeListener(_handleDiscoveryFiltersChanged);
+    if (_ownsDiscoveryStore) {
+      _discoveryStore.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _initializeMatches() async {
+    var filters = _discoveryStore.filters;
+    final locations = widget.locationRepository;
+
+    if (locations != null &&
+        filters.usesCurrentLocation &&
+        !filters.hasCoordinates) {
+      try {
+        final current = await locations.currentLocation();
+        filters = filters.copyWith(
+          selectedLocation: current.label,
+          latitude: current.latitude,
+          longitude: current.longitude,
+        );
+        _discoveryStore.update(filters, notify: false);
+      } catch (_) {
+        // Discovery still works without a device coordinate; radius is simply
+        // not applied until the user grants location or selects a city/ZIP.
+      }
+    }
+
+    await _refreshMatches();
+  }
+
+  void _handleDiscoveryFiltersChanged() {
+    if (!mounted) return;
+    setState(() {});
+    _refreshMatches();
+  }
+
+  Future<void> _applyDiscoveryFilters(MatchFilters filters) async {
+    _discoveryStore.update(filters, notify: false);
+    if (mounted) setState(() {});
+    await _refreshMatches();
   }
 
   bool _isSupportedIndex(int index) => index >= 0 && index <= 3;
@@ -125,9 +184,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       greeting: _greeting,
       displayName: _profileData.name,
       subtitle: 'Find and join matches near you',
-      location: _profileData.addressLine.isEmpty
-          ? 'Set your location'
-          : _profileData.addressLine,
+      location: _discoveryStore.filters.usesCurrentLocation
+          ? (_profileData.addressLine.isEmpty
+                ? MatchFilters.defaultLocation
+                : _profileData.addressLine)
+          : _discoveryStore.filters.selectedLocation,
       unreadNotificationCount: _profileData.unreadNotificationCount,
       unreadMessageCount: _profileData.unreadMessageCount,
       upcomingMatches: featured,
@@ -139,12 +200,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     final repository = widget.matchRepository;
     if (repository == null) return;
 
+    if (mounted) setState(() => _matchesLoading = true);
     try {
-      final matches = await repository.list();
+      final matches = await repository.list(
+        filters: _discoveryStore.filters,
+        discoverOnly: true,
+      );
       if (!mounted) return;
       setState(() => _liveMatches = matches);
     } catch (_) {
-      // Keep the current list visible. Home pull-to-refresh can retry.
+      // Keep the current list visible. Pull-to-refresh or filter changes retry.
+    } finally {
+      if (mounted) setState(() => _matchesLoading = false);
     }
   }
 
@@ -152,14 +219,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     final repository = widget.matchRepository;
     if (repository == null) return;
 
-    final updated = await repository.join(match.id);
+    await repository.join(match.id);
     if (!mounted) return;
-
-    setState(() {
-      _liveMatches = _liveMatches
-          .map((item) => item.id == updated.id ? updated : item)
-          .toList(growable: false);
-    });
+    await _refreshMatches();
   }
 
   void _requestEditProfile() {
@@ -178,10 +240,19 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget _buildActivePage() {
     switch (_currentIndex) {
       case 1:
+        final markers = _liveMatches
+            .where((match) => match.hasCoordinates)
+            .map(MapMatchMarker.fromMatch)
+            .toList(growable: false);
         return MapScreen(
           key: const ValueKey('main-navigation-map'),
+          markers: markers,
+          filters: _discoveryStore.filters,
           onBack: () => _selectTab(0),
           onViewDetails: widget.onMatchTap,
+          onFiltersChanged: _applyDiscoveryFilters,
+          isLoading: _matchesLoading,
+          useLiveMap: widget.matchRepository != null,
         );
       case 2:
         return MyMatchesScreen(
@@ -213,6 +284,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           onJoinMatch: widget.matchRepository == null ? null : _joinHomeMatch,
           onCreateMatch: widget.onCreateMatch,
           onRefresh: widget.matchRepository == null ? null : _refreshMatches,
+          onFiltersApplied: widget.matchRepository == null
+              ? null
+              : _applyDiscoveryFilters,
+          initialFilters: _discoveryStore.filters,
+          onLocationSearch: widget.locationRepository?.search,
+          onCurrentLocation: widget.locationRepository?.currentLocation,
           showBottomNavigation: false,
           showCreateFab: false,
           onFilterVisibilityChanged: _setHomeOverlayVisible,

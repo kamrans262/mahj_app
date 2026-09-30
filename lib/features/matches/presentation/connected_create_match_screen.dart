@@ -7,8 +7,10 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_loader.dart';
+import '../../home/data/location_repository.dart';
 import '../../home/domain/home_match.dart';
 import '../data/match_repository.dart';
+import '../domain/create_match_form_state.dart';
 import '../domain/sport_option.dart';
 import 'create_match_screen.dart';
 
@@ -16,6 +18,7 @@ class ConnectedCreateMatchScreen extends StatefulWidget {
   const ConnectedCreateMatchScreen({
     required this.repository,
     super.key,
+    this.locationRepository,
     this.onBack,
     this.onCancel,
     this.onInvitePlayers,
@@ -24,6 +27,7 @@ class ConnectedCreateMatchScreen extends StatefulWidget {
   });
 
   final MatchRepository repository;
+  final LocationRepository? locationRepository;
   final VoidCallback? onBack;
   final VoidCallback? onCancel;
   final ValueChanged<HomeMatch>? onInvitePlayers;
@@ -74,6 +78,31 @@ class _ConnectedCreateMatchScreenState
     }
   }
 
+  Future<HomeMatch> _createMatch(CreateMatchRequest request) async {
+    final locations = widget.locationRepository;
+    if (locations == null ||
+        (request.latitude != null && request.longitude != null)) {
+      return widget.repository.create(request);
+    }
+
+    try {
+      final results = await locations.search(request.locationAddress);
+      if (results.isNotEmpty) {
+        final resolved = results.first;
+        return widget.repository.create(
+          request.withCoordinates(
+            latitude: resolved.latitude,
+            longitude: resolved.longitude,
+          ),
+        );
+      }
+    } catch (_) {
+      // Match creation must still work if the optional geocoder is unavailable.
+    }
+
+    return widget.repository.create(request);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_loading && _error == null && _sports.isNotEmpty) {
@@ -81,7 +110,7 @@ class _ConnectedCreateMatchScreenState
         sports: _sports,
         onBack: widget.onBack,
         onCancel: widget.onCancel,
-        onSubmit: widget.repository.create,
+        onSubmit: _createMatch,
         onInvitePlayers: widget.onInvitePlayers,
         onBackHome: widget.onBackHome,
         onViewMatch: widget.onViewMatch,

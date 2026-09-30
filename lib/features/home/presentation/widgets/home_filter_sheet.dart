@@ -6,6 +6,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_surface_container.dart';
+import '../../domain/discovery_location.dart';
 import '../../domain/match_filters.dart';
 import 'compact_switch.dart';
 import 'location_selection_dialog.dart';
@@ -14,11 +15,15 @@ class HomeFilterSheet extends StatefulWidget {
   const HomeFilterSheet({
     required this.initialFilters,
     required this.onApply,
+    required this.onLocationSearch,
+    required this.onCurrentLocation,
     super.key,
   });
 
   final MatchFilters initialFilters;
   final Future<void> Function(MatchFilters filters) onApply;
+  final Future<List<DiscoveryLocation>> Function(String query) onLocationSearch;
+  final Future<DiscoveryLocation> Function() onCurrentLocation;
 
   @override
   State<HomeFilterSheet> createState() => _HomeFilterSheetState();
@@ -38,12 +43,18 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
     final selected = await showLocationSelectionDialog(
       context: context,
       selectedLocation: _draft.selectedLocation,
+      onSearch: widget.onLocationSearch,
+      onCurrentLocation: widget.onCurrentLocation,
     );
 
     if (!mounted || selected == null) return;
 
     setState(() {
-      _draft = _draft.copyWith(selectedLocation: selected);
+      _draft = _draft.copyWith(
+        selectedLocation: selected.label,
+        latitude: selected.latitude,
+        longitude: selected.longitude,
+      );
     });
   }
 
@@ -58,7 +69,19 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
 
     setState(() => _isApplying = true);
     try {
-      await widget.onApply(_draft);
+      var filters = _draft;
+      if (filters.usesCurrentLocation && !filters.hasCoordinates) {
+        final current = await widget.onCurrentLocation();
+        filters = filters.copyWith(
+          selectedLocation: current.label,
+          latitude: current.latitude,
+          longitude: current.longitude,
+        );
+      }
+
+      if (!mounted) return;
+      _draft = filters;
+      await widget.onApply(filters);
     } finally {
       if (mounted) {
         setState(() => _isApplying = false);
@@ -81,7 +104,7 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
       ),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.68),
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.72),
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
             AppSpacing.pageHorizontal,
@@ -114,6 +137,15 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
+              Text('Date', style: AppTypography.homeMatchTitle18),
+              const SizedBox(height: 12),
+              _DateFilterField(
+                value: _draft.dateFilter,
+                onChanged: (value) {
+                  setState(() => _draft = _draft.copyWith(dateFilter: value));
+                },
+              ),
+              const SizedBox(height: AppSpacing.lg),
               _FilterOptionRow(
                 label: 'Show Open Matches Only',
                 trailing: CompactSwitch(
@@ -133,10 +165,10 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
                   });
                 },
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.md),
               _FilterOptionRow(
                 label: 'Sort by Distance',
-                trailing: _DistanceRadio(
+                trailing: _FilterRadio(
                   selected: _draft.sortOption == MatchSortOption.distance,
                 ),
                 onTap: () {
@@ -144,6 +176,18 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
                     _draft = _draft.copyWith(
                       sortOption: MatchSortOption.distance,
                     );
+                  });
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _FilterOptionRow(
+                label: 'Sort by Date',
+                trailing: _FilterRadio(
+                  selected: _draft.sortOption == MatchSortOption.date,
+                ),
+                onTap: () {
+                  setState(() {
+                    _draft = _draft.copyWith(sortOption: MatchSortOption.date);
                   });
                 },
               ),
@@ -171,7 +215,7 @@ class _LocationField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayText = selectedLocation == MatchFilters.defaultLocation
-        ? 'Select by Location'
+        ? 'Current Location'
         : selectedLocation;
 
     return AppSurfaceContainer(
@@ -180,7 +224,7 @@ class _LocationField extends StatelessWidget {
       child: Row(
         children: [
           const Icon(
-            Icons.calendar_today,
+            Icons.location_on_outlined,
             size: 24,
             color: AppColors.textSecondary,
           ),
@@ -193,7 +237,57 @@ class _LocationField extends StatelessWidget {
               style: AppTypography.homeMeta14,
             ),
           ),
+          const Icon(
+            Icons.keyboard_arrow_down,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _DateFilterField extends StatelessWidget {
+  const _DateFilterField({required this.value, required this.onChanged});
+
+  final MatchDateFilter value;
+  final ValueChanged<MatchDateFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSurfaceContainer(
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<MatchDateFilter>(
+          value: value,
+          isExpanded: true,
+          icon: const Icon(
+            Icons.keyboard_arrow_down,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
+          items: MatchDateFilter.values
+              .map(
+                (filter) => DropdownMenuItem(
+                  value: filter,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(filter.label, style: AppTypography.homeMeta14),
+                    ],
+                  ),
+                ),
+              )
+              .toList(growable: false),
+          onChanged: (filter) {
+            if (filter != null) onChanged(filter);
+          },
+        ),
       ),
     );
   }
@@ -291,8 +385,8 @@ class _FilterOptionRow extends StatelessWidget {
   }
 }
 
-class _DistanceRadio extends StatelessWidget {
-  const _DistanceRadio({required this.selected});
+class _FilterRadio extends StatelessWidget {
+  const _FilterRadio({required this.selected});
 
   final bool selected;
 

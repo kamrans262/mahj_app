@@ -28,6 +28,7 @@ class HomeMatch {
     this.canCancel = false,
     this.latitude,
     this.longitude,
+    this.distanceMiles,
   });
 
   final String id;
@@ -56,10 +57,11 @@ class HomeMatch {
   final bool canCancel;
   final double? latitude;
   final double? longitude;
+  final double? distanceMiles;
 
   bool get isFull => currentPlayers >= maxPlayers || status == MatchStatus.full;
-
   bool get isBackendMatch => int.tryParse(id) != null;
+  bool get hasCoordinates => latitude != null && longitude != null;
 
   factory HomeMatch.fromJson(Map<String, dynamic> json) {
     final host = json['host'];
@@ -70,7 +72,9 @@ class HomeMatch {
     return HomeMatch(
       id: json['id']?.toString() ?? '',
       sportName:
-          json['name']?.toString() ?? json['sport_name']?.toString() ?? 'Match',
+          json['name']?.toString() ??
+          json['sport_name']?.toString() ??
+          'Match',
       location:
           json['location']?.toString() ??
           json['location_address']?.toString() ??
@@ -98,6 +102,7 @@ class HomeMatch {
       canCancel: json['can_cancel'] == true,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      distanceMiles: (json['distance_miles'] as num?)?.toDouble(),
     );
   }
 
@@ -128,6 +133,7 @@ class HomeMatch {
     bool? canCancel,
     double? latitude,
     double? longitude,
+    double? distanceMiles,
   }) {
     return HomeMatch(
       id: id ?? this.id,
@@ -156,6 +162,7 @@ class HomeMatch {
       canCancel: canCancel ?? this.canCancel,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      distanceMiles: distanceMiles ?? this.distanceMiles,
     );
   }
 

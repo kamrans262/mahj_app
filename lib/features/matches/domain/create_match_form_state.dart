@@ -134,10 +134,30 @@ class CreateMatchRequest {
   final DateTime startsAt;
   final bool isPublicMatch;
   final bool isInviteOnly;
-
-  // Backend-ready structured location fields. These remain null until the
-  // location API/model supplies structured values instead of only an address.
   final String? locationId;
   final double? latitude;
   final double? longitude;
+
+  CreateMatchRequest withCoordinates({
+    required double latitude,
+    required double longitude,
+    String? resolvedAddress,
+  }) {
+    return CreateMatchRequest(
+      sportId: sportId,
+      sportSlug: sportSlug,
+      customSportName: customSportName,
+      sportName: sportName,
+      sportIconKey: sportIconKey,
+      locationAddress: resolvedAddress ?? locationAddress,
+      venueName: venueName,
+      notes: notes,
+      startsAt: startsAt,
+      isPublicMatch: isPublicMatch,
+      isInviteOnly: isInviteOnly,
+      locationId: locationId,
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
 }

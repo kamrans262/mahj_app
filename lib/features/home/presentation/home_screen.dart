@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../data/home_preview_data.dart';
+import '../domain/discovery_location.dart';
 import '../domain/home_data.dart';
 import '../domain/home_match.dart';
 import '../domain/match_filters.dart';
@@ -29,6 +30,9 @@ class HomeScreen extends StatefulWidget {
     this.onBottomNavTap,
     this.onRefresh,
     this.onFiltersApplied,
+    this.initialFilters,
+    this.onLocationSearch,
+    this.onCurrentLocation,
     this.showBottomNavigation = true,
     this.showCreateFab = true,
     this.onFilterVisibilityChanged,
@@ -46,6 +50,9 @@ class HomeScreen extends StatefulWidget {
   final ValueChanged<int>? onBottomNavTap;
   final Future<void> Function()? onRefresh;
   final Future<void> Function(MatchFilters)? onFiltersApplied;
+  final MatchFilters? initialFilters;
+  final Future<List<DiscoveryLocation>> Function(String query)? onLocationSearch;
+  final Future<DiscoveryLocation> Function()? onCurrentLocation;
   final bool showBottomNavigation;
   final bool showCreateFab;
   final ValueChanged<bool>? onFilterVisibilityChanged;
@@ -64,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen>
   int _pageIndex = 0;
   String? _joiningMatchId;
   bool _isFilterMounted = false;
-  MatchFilters _filters = MatchFilters.defaults();
+  late MatchFilters _filters;
 
   HomeData get _data => widget.data ?? HomePreviewData.create();
 
@@ -72,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _pageController = PageController();
+    _filters = widget.initialFilters ?? MatchFilters.defaults();
 
     _filterAnimationController = AnimationController(
       vsync: this,
@@ -93,6 +101,18 @@ class _HomeScreenState extends State<HomeScreen>
             reverseCurve: Curves.easeInCubic,
           ),
         );
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextFilters = widget.initialFilters;
+    if (nextFilters != null &&
+        nextFilters != oldWidget.initialFilters &&
+        nextFilters != _filters &&
+        !_isFilterMounted) {
+      _filters = nextFilters;
+    }
   }
 
   @override
@@ -280,6 +300,13 @@ class _HomeScreenState extends State<HomeScreen>
               child: HomeFilterSheet(
                 initialFilters: _filters,
                 onApply: _applyFilters,
+                onLocationSearch:
+                    widget.onLocationSearch ?? (_) async => const [],
+                onCurrentLocation:
+                    widget.onCurrentLocation ??
+                    () async => throw StateError(
+                      'Current location is not available in preview mode.',
+                    ),
               ),
             ),
           ),

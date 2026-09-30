@@ -33,7 +33,11 @@ class MatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedSubtitle = subtitle ?? match.location;
+    final resolvedSubtitle =
+        subtitle ??
+        (match.distanceMiles == null
+            ? match.location
+            : '${match.location} · ${match.distanceMiles!.toStringAsFixed(1)} mi');
     final resolvedSurface = surfaceColor ?? AppColors.nearbyMatchCardSurface;
 
     return Semantics(
