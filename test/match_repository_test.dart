@@ -22,13 +22,58 @@ class _MemoryTokenStore implements TokenStore {
 }
 
 void main() {
-  test('creates a four-player match and maps host state', () async {
+  test('loads managed sports catalog', () async {
+    final client = MockClient((request) async {
+      expect(request.method, 'GET');
+      expect(request.url.path, '/api/sports');
+
+      return http.Response(
+        jsonEncode({
+          'data': [
+            {
+              'id': 1,
+              'name': 'American Football',
+              'slug': 'american-football',
+              'icon_key': 'football',
+            },
+            {
+              'id': 2,
+              'name': 'Basketball',
+              'slug': 'basketball',
+              'icon_key': 'basketball',
+            },
+          ],
+        }),
+        200,
+        headers: {'content-type': 'application/json'},
+      );
+    });
+
+    final repository = MatchRepository(
+      apiClient: ApiClient(
+        baseUrl: 'https://example.com/api',
+        tokenStore: _MemoryTokenStore(),
+        httpClient: client,
+      ),
+    );
+
+    final sports = await repository.listSports();
+
+    expect(sports, hasLength(2));
+    expect(sports.first.name, 'American Football');
+    expect(sports.first.iconKey, 'football');
+    expect(sports.last.id, 2);
+  });
+
+  test('creates a four-player match and maps sport icon state', () async {
     final client = MockClient((request) async {
       expect(request.method, 'POST');
       expect(request.url.path, '/api/matches');
       expect(request.headers['authorization'], 'Bearer test-token');
 
       final body = jsonDecode(request.body) as Map<String, dynamic>;
+      expect(body['sport_id'], 2);
+      expect(body['custom_sport_name'], isNull);
       expect(body['name'], 'Basketball');
       expect(body['location_address'], 'Central Park');
       expect(body['notes'], 'Bring water.');
@@ -41,6 +86,13 @@ void main() {
             'id': '41',
             'name': 'Basketball',
             'sport_name': 'Basketball',
+            'sport_icon_key': 'basketball',
+            'sport': {
+              'id': '2',
+              'name': 'Basketball',
+              'slug': 'basketball',
+              'icon_key': 'basketball',
+            },
             'location': 'Central Park',
             'venue_name': 'Court 1',
             'starts_at': '2026-10-01T18:00:00.000000Z',
@@ -72,7 +124,10 @@ void main() {
 
     final match = await repository.create(
       CreateMatchRequest(
-        matchName: 'Basketball',
+        sportId: 2,
+        sportName: 'Basketball',
+        sportSlug: 'basketball',
+        sportIconKey: 'basketball',
         locationAddress: 'Central Park',
         venueName: 'Court 1',
         notes: 'Bring water.',
@@ -84,11 +139,66 @@ void main() {
 
     expect(match.id, '41');
     expect(match.sportName, 'Basketball');
+    expect(match.sportIconKey, 'basketball');
     expect(match.currentPlayers, 1);
     expect(match.maxPlayers, 4);
     expect(match.isOwnedByCurrentUser, isTrue);
     expect(match.isCurrentUserJoined, isTrue);
     expect(match.canCancel, isTrue);
+  });
+
+  test('Other sends custom sport without sport id', () async {
+    final client = MockClient((request) async {
+      final body = jsonDecode(request.body) as Map<String, dynamic>;
+      expect(body['sport_id'], isNull);
+      expect(body['custom_sport_name'], 'Ultimate Frisbee');
+
+      return http.Response(
+        jsonEncode({
+          'match': {
+            'id': '55',
+            'sport_name': 'Ultimate Frisbee',
+            'sport_icon_key': 'generic',
+            'location': 'Central Park',
+            'starts_at': '2026-10-01T18:00:00.000000Z',
+            'current_players': 1,
+            'max_players': 4,
+            'status': 'open',
+            'host': {'id': '7', 'name': 'Host User'},
+            'is_joined': true,
+            'is_host': true,
+            'can_join': false,
+            'can_leave': false,
+            'can_cancel': true,
+          },
+        }),
+        201,
+        headers: {'content-type': 'application/json'},
+      );
+    });
+
+    final repository = MatchRepository(
+      apiClient: ApiClient(
+        baseUrl: 'https://example.com/api',
+        tokenStore: _MemoryTokenStore(),
+        httpClient: client,
+      ),
+    );
+
+    final match = await repository.create(
+      CreateMatchRequest(
+        customSportName: 'Ultimate Frisbee',
+        sportName: 'Ultimate Frisbee',
+        sportIconKey: 'generic',
+        locationAddress: 'Central Park',
+        startsAt: DateTime.utc(2026, 10, 1, 18),
+        isPublicMatch: true,
+        isInviteOnly: false,
+      ),
+    );
+
+    expect(match.sportName, 'Ultimate Frisbee');
+    expect(match.sportIconKey, 'generic');
   });
 
   test('join maps confirmed state when the fourth player joins', () async {
@@ -101,6 +211,7 @@ void main() {
           'match': {
             'id': '41',
             'sport_name': 'Basketball',
+            'sport_icon_key': 'basketball',
             'location': 'Central Park',
             'starts_at': '2026-10-01T18:00:00.000000Z',
             'current_players': 4,
