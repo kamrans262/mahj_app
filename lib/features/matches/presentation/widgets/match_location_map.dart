@@ -75,6 +75,7 @@ class MatchLocationMap extends StatelessWidget {
               alignment: const Alignment(0, -0.20),
               child: Image.asset(
                 AppAssets.mapMatchMarkerPng,
+                key: const ValueKey('match-details-map-marker'),
                 width: 68,
                 height: 78,
                 fit: BoxFit.contain,
