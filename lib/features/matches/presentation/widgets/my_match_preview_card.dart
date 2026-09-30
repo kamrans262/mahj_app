@@ -28,7 +28,7 @@ class MyMatchPreviewCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final textScale = MediaQuery.textScalerOf(context).scale(1);
-          final shouldStack = constraints.maxWidth < 310 || textScale > 1.5;
+          final shouldStack = constraints.maxWidth < 350 || textScale > 1.3;
 
           if (shouldStack) {
             return Column(
@@ -43,6 +43,7 @@ class MyMatchPreviewCard extends StatelessWidget {
                     markerNormalizedX: item.markerNormalizedX,
                     markerNormalizedY: item.markerNormalizedY,
                     sportImageAsset: item.sportImageAsset,
+                    markerSize: 88,
                   ),
                 ),
                 Padding(
@@ -53,12 +54,14 @@ class MyMatchPreviewCard extends StatelessWidget {
             );
           }
 
-          return SizedBox(
-            height: 132,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          return ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 132),
+            child: Stack(
               children: [
-                SizedBox(
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
                   width: 112,
                   child: MatchPreviewMedia(
                     hasLocationPreview: item.hasLocationPreview,
@@ -67,19 +70,26 @@ class MyMatchPreviewCard extends StatelessWidget {
                     markerNormalizedX: item.markerNormalizedX,
                     markerNormalizedY: item.markerNormalizedY,
                     sportImageAsset: item.sportImageAsset,
+                    markerSize: 88,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      0,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.md,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(width: 112),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          0,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                        ),
+                        child: _MatchInformation(item: item),
+                      ),
                     ),
-                    child: _MatchInformation(item: item),
-                  ),
+                  ],
                 ),
               ],
             ),
