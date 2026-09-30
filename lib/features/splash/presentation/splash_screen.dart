@@ -52,8 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _resolveRoute() async {
-    final route =
-        await widget.onResolveRoute?.call() ?? AppRoutes.login;
+    final route = await widget.onResolveRoute?.call() ?? AppRoutes.login;
     if (!mounted) return;
 
     _resolvedRoute = route;
