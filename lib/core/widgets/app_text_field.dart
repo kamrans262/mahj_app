@@ -10,6 +10,7 @@ class AppTextField extends StatefulWidget {
     required this.controller,
     required this.hintText,
     this.leadingIcon,
+    this.alignLeadingIconTop = false,
     super.key,
     this.focusNode,
     this.keyboardType,
@@ -32,6 +33,7 @@ class AppTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final String hintText;
   final IconData? leadingIcon;
+  final bool alignLeadingIconTop;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
@@ -97,6 +99,20 @@ class _AppTextFieldState extends State<AppTextField> {
             const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
         prefixIcon: widget.leadingIcon == null
             ? null
+            : widget.alignLeadingIconTop
+            ? Align(
+                alignment: Alignment.topCenter,
+                widthFactor: 1,
+                heightFactor: 1,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: Icon(
+                    widget.leadingIcon,
+                    size: 22,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              )
             : Icon(
                 widget.leadingIcon,
                 size: 22,
