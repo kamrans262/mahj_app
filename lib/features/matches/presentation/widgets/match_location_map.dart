@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as ll;
 
+import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../home/domain/home_match.dart';
-import '../../../home/presentation/widgets/sport_icon.dart';
 
 class MatchLocationMap extends StatelessWidget {
   const MatchLocationMap({
@@ -53,19 +54,26 @@ class MatchLocationMap extends StatelessWidget {
         initialZoom: 15,
         minZoom: 3,
         maxZoom: 18,
+        backgroundColor: const Color(0xFFFFFCF8),
       ),
       children: [
         fm.TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.mahj_app',
+          tileBuilder: _styledOsmTile,
         ),
         fm.MarkerLayer(
           markers: [
             fm.Marker(
               point: position,
-              width: 54,
-              height: 54,
-              child: _SelectedMatchPin(match: match),
+              width: 74,
+              height: 86,
+              alignment: const Alignment(0, -0.20),
+              child: SvgPicture.asset(
+                AppAssets.mapMatchMarkerSvg,
+                width: 68,
+                height: 78,
+              ),
             ),
           ],
         ),
@@ -74,6 +82,28 @@ class MatchLocationMap extends StatelessWidget {
             fm.TextSourceAttribution('OpenStreetMap contributors'),
           ],
         ),
+      ],
+    );
+  }
+
+  static Widget _styledOsmTile(
+    BuildContext context,
+    Widget tileWidget,
+    fm.TileImage tile,
+  ) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ColorFiltered(
+          colorFilter: const ColorFilter.matrix(<double>[
+            0.72, 0, 0, 0, 64,
+            0, 0.72, 0, 0, 62,
+            0, 0, 0.72, 0, 58,
+            0, 0, 0, 1, 0,
+          ]),
+          child: tileWidget,
+        ),
+        const ColoredBox(color: Color(0x0DEC5D01)),
       ],
     );
   }
@@ -107,32 +137,6 @@ class MatchLocationMap extends StatelessWidget {
       zoomControlsEnabled: false,
       myLocationButtonEnabled: false,
       compassEnabled: true,
-    );
-  }
-}
-
-class _SelectedMatchPin extends StatelessWidget {
-  const _SelectedMatchPin({required this.match});
-
-  final HomeMatch match;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(7),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primary, width: 3),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.controlShadow,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: SportIcon(match: match, size: 28),
     );
   }
 }
