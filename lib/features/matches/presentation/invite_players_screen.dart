@@ -64,6 +64,12 @@ class _InvitePlayersScreenState extends State<InvitePlayersScreen> {
     super.initState();
     _sourceResults = List<InvitePlayerResult>.of(widget.initialResults);
     _visibleResults = List<InvitePlayerResult>.of(widget.initialResults);
+
+    if (widget.onSearchUsers != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _runSearch('');
+      });
+    }
   }
 
   @override
@@ -77,6 +83,12 @@ class _InvitePlayersScreenState extends State<InvitePlayersScreen> {
       _searchController.clear();
       _searchError = null;
       _inviteSucceeded = false;
+
+      if (widget.onSearchUsers != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _runSearch('');
+        });
+      }
     }
   }
 
@@ -184,7 +196,11 @@ class _InvitePlayersScreenState extends State<InvitePlayersScreen> {
         Set<String>.unmodifiable(_selectedInviteIds),
       );
       if (!mounted) return;
-      setState(() => _inviteSucceeded = true);
+      setState(() {
+        _inviteSucceeded = true;
+        _selectedInviteIds.clear();
+      });
+      await _runSearch(_searchController.text.trim());
     } catch (_) {
       if (!mounted) return;
       _showMessage('Could not send the invite. Please try again.');
