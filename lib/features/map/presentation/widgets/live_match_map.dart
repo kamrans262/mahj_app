@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart' as ll;
 import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/app_surface_container.dart';
 import '../../../home/presentation/home_date_time_formatter.dart';
 import '../../domain/map_match_marker.dart';
 
@@ -83,9 +84,9 @@ class LiveMatchMap extends StatelessWidget {
       mapMarkers.add(
         fm.Marker(
           point: ll.LatLng(latitude, longitude),
-          width: 150,
-          height: 132,
-          alignment: const Alignment(0, -0.12),
+          width: 126,
+          height: 136,
+          alignment: const Alignment(0, -0.10),
           child: GestureDetector(
             key: ValueKey('map-marker-${marker.match.id}'),
             behavior: HitTestBehavior.opaque,
@@ -230,66 +231,59 @@ class _MatchMapPin extends StatelessWidget {
   Widget build(BuildContext context) {
     final match = marker.match;
 
-    return AnimatedScale(
-      duration: const Duration(milliseconds: 160),
-      scale: selected ? 1.05 : 1,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            AppAssets.mapMatchMarkerPng,
-            width: selected ? 62 : 58,
-            height: selected ? 70 : 66,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
-          ),
-          Transform.translate(
-            offset: const Offset(0, -3),
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 118, maxWidth: 142),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.96),
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(
-                  color: selected
-                      ? AppColors.primary.withValues(alpha: 0.18)
-                      : AppColors.controlBorder.withValues(alpha: 0.45),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${match.sportName} map marker',
+      value: HomeDateTimeFormatter.compactDate(match.startsAt),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 180),
+        scale: selected ? 1.06 : 1,
+        child: SizedBox(
+          width: 126,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                AppAssets.mapMatchMarkerPng,
+                width: selected ? 54 : 50,
+                height: selected ? 61 : 57,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              ),
+              const SizedBox(height: 4),
+              AppSurfaceContainer(
+                minHeight: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
                 ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: AppColors.controlShadow,
-                    blurRadius: 8,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    match.sportName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: AppTypography.homeMeta14.copyWith(
-                      color: AppColors.heading,
-                      fontWeight: FontWeight.w500,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      match.sportName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.homeMeta12.copyWith(
+                        color: AppColors.heading,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    HomeDateTimeFormatter.compactDate(match.startsAt),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: AppTypography.homeMeta12,
-                  ),
-                ],
+                    const SizedBox(height: 5),
+                    Text(
+                      HomeDateTimeFormatter.compactDate(match.startsAt),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.homeMeta12,
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
