@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/widgets/app_asset_icon.dart';
+import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/widgets/app_surface_container.dart';
 import '../../domain/chat_models.dart';
 import 'system_chat_message.dart';
@@ -50,7 +51,6 @@ class _IncomingMessage extends StatelessWidget {
     final senderName = message.senderName?.trim().isNotEmpty == true
         ? message.senderName!
         : 'Player';
-    final avatar = message.senderAvatarAsset;
 
     return Align(
       alignment: Alignment.centerLeft,
@@ -61,10 +61,13 @@ class _IncomingMessage extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (avatar != null && avatar.isNotEmpty)
-                ClipOval(child: AppAssetIcon(assetPath: avatar, size: 20)),
-              if (avatar != null && avatar.isNotEmpty)
-                const SizedBox(width: AppSpacing.micro),
+              AppAvatar(
+                fallbackAsset:
+                    message.senderAvatarAsset ?? AppAssets.bottomProfileIcon,
+                imageUrl: message.senderAvatarUrl,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.micro),
               Flexible(
                 child: Text(
                   senderName,
@@ -112,8 +115,6 @@ class _OutgoingMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatar = message.senderAvatarAsset;
-
     return Align(
       alignment: Alignment.centerRight,
       child: Column(
@@ -144,10 +145,13 @@ class _OutgoingMessage extends StatelessWidget {
                   ),
                 ),
               ),
-              if (avatar != null && avatar.isNotEmpty) ...[
-                const SizedBox(width: 12),
-                ClipOval(child: AppAssetIcon(assetPath: avatar, size: 20)),
-              ],
+              const SizedBox(width: 12),
+              AppAvatar(
+                fallbackAsset:
+                    message.senderAvatarAsset ?? AppAssets.bottomProfileIcon,
+                imageUrl: message.senderAvatarUrl,
+                size: 20,
+              ),
             ],
           ),
         ],
@@ -157,8 +161,9 @@ class _OutgoingMessage extends StatelessWidget {
 }
 
 String _formatTime(DateTime value) {
-  final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
-  final minute = value.minute.toString().padLeft(2, '0');
-  final period = value.hour >= 12 ? 'PM' : 'AM';
+  final local = value.toLocal();
+  final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+  final minute = local.minute.toString().padLeft(2, '0');
+  final period = local.hour >= 12 ? 'PM' : 'AM';
   return '$hour:$minute $period';
 }
