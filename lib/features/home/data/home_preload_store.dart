@@ -17,13 +17,23 @@ class HomePreloadSnapshot {
 }
 
 class HomePreloadStore {
-  HomePreloadStore({
+  factory HomePreloadStore({
     required MatchRepository matchRepository,
     required LocationRepository locationRepository,
     required MatchDiscoveryStore discoveryStore,
-  }) : _matchRepository = matchRepository,
-       _locationRepository = locationRepository,
-       _discoveryStore = discoveryStore;
+  }) {
+    return HomePreloadStore._(
+      matchRepository,
+      locationRepository,
+      discoveryStore,
+    );
+  }
+
+  HomePreloadStore._(
+    this._matchRepository,
+    this._locationRepository,
+    this._discoveryStore,
+  );
 
   final MatchRepository _matchRepository;
   final LocationRepository _locationRepository;
