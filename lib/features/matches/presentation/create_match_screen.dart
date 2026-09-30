@@ -245,10 +245,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
         Icons.keyboard_arrow_down_rounded,
         color: AppColors.textSecondary,
       ),
-      hint: const Text(
-        'Select Sport',
-        style: AppTypography.fieldHint,
-      ),
+      hint: const Text('Select Sport', style: AppTypography.fieldHint),
       decoration: InputDecoration(
         prefixIcon: const Icon(
           Icons.sports_outlined,
