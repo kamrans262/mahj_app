@@ -575,9 +575,9 @@ abstract final class AppRouter {
               initialMatch: match,
               repository: _matchRepository,
               onBack: () => Navigator.of(context).maybePop(),
-              onInvitePlayers: () {
-                _openInvitePlayers(context, match);
-              },
+              onInvitePlayers: match.isOwnedByCurrentUser
+                  ? () => _openInvitePlayers(context, match)
+                  : null,
             );
           }
 
