@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/app_scroll_behavior.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../home/data/home_preload_store.dart';
 import '../../home/data/home_preview_data.dart';
 import '../../home/data/location_repository.dart';
 import '../../home/data/match_discovery_store.dart';
@@ -24,6 +25,7 @@ class MainNavigationShell extends StatefulWidget {
     super.key,
     this.initialIndex = 0,
     this.initialProfileData,
+    this.homePreloadStore,
     this.matchRepository,
     this.discoveryStore,
     this.locationRepository,
@@ -42,6 +44,7 @@ class MainNavigationShell extends StatefulWidget {
 
   final int initialIndex;
   final ProfileData? initialProfileData;
+  final HomePreloadStore? homePreloadStore;
   final MatchRepository? matchRepository;
   final MatchDiscoveryStore? discoveryStore;
   final LocationRepository? locationRepository;
@@ -83,9 +86,17 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     _profileData = widget.initialProfileData ?? ProfilePreviewData.currentUser;
     _ownsDiscoveryStore = widget.discoveryStore == null;
     _discoveryStore = widget.discoveryStore ?? MatchDiscoveryStore();
+
+    final preloaded = widget.homePreloadStore?.snapshot;
+    if (preloaded != null) {
+      _liveMatches = preloaded.liveMatches;
+      _discoveryMatches = preloaded.discoveryMatches;
+      _discoveryStore.update(preloaded.filters, notify: false);
+    }
+
     _discoveryStore.addListener(_handleDiscoveryFiltersChanged);
 
-    if (widget.matchRepository != null) {
+    if (widget.matchRepository != null && preloaded == null) {
       _initializeMatches();
     }
   }
@@ -208,6 +219,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         _liveMatches = results[0];
         _discoveryMatches = results[1];
       });
+      widget.homePreloadStore?.update(
+        liveMatches: results[0],
+        discoveryMatches: results[1],
+        filters: _discoveryStore.filters,
+      );
     } catch (_) {
       // Keep the current list visible. Pull-to-refresh or filter changes retry.
     } finally {
