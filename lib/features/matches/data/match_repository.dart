@@ -33,6 +33,7 @@ class MatchRepository {
     final payload = await _apiClient.post(
       '/matches',
       body: {
+        'name': request.matchName,
         'location_address': request.locationAddress,
         'venue_name': request.venueName,
         'notes': request.notes,
