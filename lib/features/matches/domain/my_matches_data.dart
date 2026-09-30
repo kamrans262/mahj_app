@@ -10,6 +10,7 @@ class MyMatchesItem {
     this.markerNormalizedY,
     this.invitationId,
     this.inviterName,
+    this.inviterAvatarUrl,
   });
 
   final HomeMatch match;
@@ -18,9 +19,11 @@ class MyMatchesItem {
   final double? markerNormalizedY;
   final String? invitationId;
   final String? inviterName;
+  final String? inviterAvatarUrl;
 
   bool get hasLocationPreview =>
-      markerNormalizedX != null && markerNormalizedY != null;
+      match.hasCoordinates ||
+      (markerNormalizedX != null && markerNormalizedY != null);
 }
 
 class MyMatchesData {
@@ -30,6 +33,12 @@ class MyMatchesData {
     required this.upcoming,
     required this.createdByMe,
     required this.invites,
+    this.upcomingPage = 1,
+    this.createdByMePage = 1,
+    this.invitesPage = 1,
+    this.hasMoreUpcoming = false,
+    this.hasMoreCreatedByMe = false,
+    this.hasMoreInvites = false,
   });
 
   final int unreadNotificationCount;
@@ -37,6 +46,12 @@ class MyMatchesData {
   final List<MyMatchesItem> upcoming;
   final List<MyMatchesItem> createdByMe;
   final List<MyMatchesItem> invites;
+  final int upcomingPage;
+  final int createdByMePage;
+  final int invitesPage;
+  final bool hasMoreUpcoming;
+  final bool hasMoreCreatedByMe;
+  final bool hasMoreInvites;
 
   List<MyMatchesItem> forTab(MyMatchesTab tab) {
     return switch (tab) {
@@ -44,5 +59,55 @@ class MyMatchesData {
       MyMatchesTab.createdByMe => createdByMe,
       MyMatchesTab.invites => invites,
     };
+  }
+
+  int pageForTab(MyMatchesTab tab) {
+    return switch (tab) {
+      MyMatchesTab.upcoming => upcomingPage,
+      MyMatchesTab.createdByMe => createdByMePage,
+      MyMatchesTab.invites => invitesPage,
+    };
+  }
+
+  bool hasMoreForTab(MyMatchesTab tab) {
+    return switch (tab) {
+      MyMatchesTab.upcoming => hasMoreUpcoming,
+      MyMatchesTab.createdByMe => hasMoreCreatedByMe,
+      MyMatchesTab.invites => hasMoreInvites,
+    };
+  }
+
+  MyMatchesData appendPage(MyMatchesData next, MyMatchesTab tab) {
+    return MyMatchesData(
+      unreadNotificationCount: next.unreadNotificationCount,
+      unreadMessageCount: next.unreadMessageCount,
+      upcoming: tab == MyMatchesTab.upcoming
+          ? [...upcoming, ...next.upcoming]
+          : upcoming,
+      createdByMe: tab == MyMatchesTab.createdByMe
+          ? [...createdByMe, ...next.createdByMe]
+          : createdByMe,
+      invites: tab == MyMatchesTab.invites
+          ? [...invites, ...next.invites]
+          : invites,
+      upcomingPage: tab == MyMatchesTab.upcoming
+          ? next.upcomingPage
+          : upcomingPage,
+      createdByMePage: tab == MyMatchesTab.createdByMe
+          ? next.createdByMePage
+          : createdByMePage,
+      invitesPage: tab == MyMatchesTab.invites
+          ? next.invitesPage
+          : invitesPage,
+      hasMoreUpcoming: tab == MyMatchesTab.upcoming
+          ? next.hasMoreUpcoming
+          : hasMoreUpcoming,
+      hasMoreCreatedByMe: tab == MyMatchesTab.createdByMe
+          ? next.hasMoreCreatedByMe
+          : hasMoreCreatedByMe,
+      hasMoreInvites: tab == MyMatchesTab.invites
+          ? next.hasMoreInvites
+          : hasMoreInvites,
+    );
   }
 }
