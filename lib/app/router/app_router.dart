@@ -181,8 +181,8 @@ abstract final class AppRouter {
     AppRoutes.premiumPlan: (context) => SubscriptionEntryScreen(
       repository: AppServices.subscriptionRepository,
       onBack: () => Navigator.of(context).maybePop(),
-      onActivated: () {
-        _openHomeAfterPreload(context);
+      onActivated: () async {
+        await _openHomeAfterPreload(context);
       },
       onTermsTap: () => _openLegal(context, LegalDocumentType.terms),
       onPrivacyPolicyTap: () => _openLegal(context, LegalDocumentType.privacy),
