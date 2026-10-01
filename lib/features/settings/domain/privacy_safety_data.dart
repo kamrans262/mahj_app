@@ -25,6 +25,14 @@ class PrivacySafetyRule {
   final String label;
 }
 
+const List<PrivacySafetyRule> privacySafetyRules = [
+  PrivacySafetyRule(id: 'respect', label: 'Be respectful to all players'),
+  PrivacySafetyRule(id: 'punctual', label: 'Arrive on time'),
+  PrivacySafetyRule(id: 'harassment', label: 'No hate speech or harassment'),
+  PrivacySafetyRule(id: 'suspicious', label: 'Report suspicious behavior'),
+  PrivacySafetyRule(id: 'community', label: 'Follow community rules'),
+];
+
 enum PrivacyReportStatus { pending, closed }
 
 class PrivacyReportHistoryEntry {
@@ -46,4 +54,14 @@ class PrivacyReportHistoryEntry {
     PrivacyReportStatus.pending => 'Pending',
     PrivacyReportStatus.closed => 'Closed',
   };
+}
+
+class PrivacySafetyData {
+  const PrivacySafetyData({
+    required this.blockedUsers,
+    required this.reportHistory,
+  });
+
+  final List<PrivacySafetyUser> blockedUsers;
+  final List<PrivacyReportHistoryEntry> reportHistory;
 }

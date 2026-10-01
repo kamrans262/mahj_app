@@ -43,6 +43,7 @@ import '../../features/settings/data/support_preview_data.dart';
 import '../../features/settings/domain/legal_data.dart';
 import '../../features/settings/presentation/account_settings_screen.dart';
 import '../../features/settings/presentation/connected_notification_settings_screen.dart';
+import '../../features/settings/presentation/connected_privacy_safety_screen.dart';
 import '../../features/settings/presentation/legal_screen.dart';
 import '../../features/settings/presentation/notification_settings_screen.dart';
 import '../../features/settings/presentation/privacy_safety_screen.dart';
@@ -90,6 +91,7 @@ abstract final class AppRouter {
   static final _authRepository = AppServices.authRepository;
   static final _matchRepository = AppServices.matchRepository;
   static final _chatRepository = AppServices.chatRepository;
+  static final _privacySafetyRepository = AppServices.privacySafetyRepository;
   static final _notificationStore = AppServices.notificationStore;
   static final _homePreloadStore = AppServices.homePreloadStore;
 
@@ -337,26 +339,27 @@ abstract final class AppRouter {
       topics: SupportPreviewData.topics,
       onBack: () => Navigator.of(context).maybePop(),
     ),
-    AppRoutes.privacySafety: (context) => PrivacySafetyScreen(
-      blockedUsers: PrivacySafetyPreviewData.blockedUsers,
-      rules: PrivacySafetyPreviewData.rules,
-      reportHistory: PrivacySafetyPreviewData.reportHistory,
-      onBack: () => Navigator.of(context).maybePop(),
-      onPlayerTap: (player) {
-        final profile = PlayerProfilePreviewData.forIdentity(
-          id: player.id,
-          displayName: player.displayName,
-          avatarAsset: player.avatarAsset,
-        );
-        Navigator.of(context).pushNamed(
-          AppRoutes.playerProfile,
-          arguments: PlayerProfileRouteArgs(
-            player: profile,
-            inviteMatch: _defaultInviteMatch(),
+    AppRoutes.privacySafety: (context) =>
+        _authRepository.currentUser == null
+        ? PrivacySafetyScreen(
+            blockedUsers: PrivacySafetyPreviewData.blockedUsers,
+            rules: PrivacySafetyPreviewData.rules,
+            reportHistory: PrivacySafetyPreviewData.reportHistory,
+            onBack: () => Navigator.of(context).maybePop(),
+          )
+        : ConnectedPrivacySafetyScreen(
+            repository: _privacySafetyRepository,
+            onBack: () => Navigator.of(context).maybePop(),
+            onPlayerTap: (player) async {
+              await Navigator.of(context).pushNamed(
+                AppRoutes.playerProfile,
+                arguments: PlayerProfileRouteArgs(
+                  player: player,
+                  inviteMatch: _defaultInviteMatch(),
+                ),
+              );
+            },
           ),
-        );
-      },
-    ),
     AppRoutes.manageSubscription: (context) =>
         ConnectedManageSubscriptionScreen(
           repository: AppServices.subscriptionRepository,
@@ -576,7 +579,7 @@ abstract final class AppRouter {
               ? null
               : (request) async {
                   try {
-                    await _chatRepository.reportPlayer(
+                    await _privacySafetyRepository.reportPlayer(
                       playerId: request.playerId,
                       reasonId: request.reasonId,
                       notes: request.notes,
@@ -593,7 +596,7 @@ abstract final class AppRouter {
               ? null
               : (request) async {
                   try {
-                    await _chatRepository.blockPlayer(
+                    await _privacySafetyRepository.blockPlayer(
                       playerId: request.playerId,
                       reasonId: request.reasonId,
                     );
@@ -685,6 +688,18 @@ abstract final class AppRouter {
             repository: _matchRepository,
             currentUserId: currentUser.id,
             onBack: () => Navigator.of(context).maybePop(),
+            onPlayerTap: (player) {
+              final profile = PlayerProfilePreviewData.forIdentity(
+                id: player.id,
+                displayName: player.displayName,
+                avatarAsset: player.avatarAsset,
+                avatarUrl: player.avatarUrl,
+              );
+              Navigator.of(context).pushNamed(
+                AppRoutes.playerProfile,
+                arguments: PlayerProfileRouteArgs(player: profile),
+              );
+            },
           ),
         );
       }
@@ -697,6 +712,18 @@ abstract final class AppRouter {
           inviterName: MatchCompletedPreviewData.inviterName,
           inviterAvatarAsset: MatchCompletedPreviewData.inviterAvatarAsset,
           onBack: () => Navigator.of(context).maybePop(),
+          onPlayerTap: (player) {
+            final profile = PlayerProfilePreviewData.forIdentity(
+              id: player.id,
+              displayName: player.displayName,
+              avatarAsset: player.avatarAsset,
+              avatarUrl: player.avatarUrl,
+            );
+            Navigator.of(context).pushNamed(
+              AppRoutes.playerProfile,
+              arguments: PlayerProfileRouteArgs(player: profile),
+            );
+          },
         ),
       );
     }

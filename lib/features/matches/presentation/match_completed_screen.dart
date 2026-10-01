@@ -21,6 +21,7 @@ typedef SubmitMatchScoresCallback = Future<void> Function(
   String matchId,
   Map<String, int> scores,
 );
+typedef MatchCompletedPlayerTapCallback = void Function(MatchScorePlayer player);
 
 class MatchCompletedScreen extends StatefulWidget {
   const MatchCompletedScreen({
@@ -29,6 +30,7 @@ class MatchCompletedScreen extends StatefulWidget {
     super.key,
     this.onBack,
     this.onSubmitScores,
+    this.onPlayerTap,
     this.inviterName = 'Host',
     this.inviterAvatarAsset = AppAssets.demoAvatarOne,
     this.inviterAvatarUrl,
@@ -40,6 +42,7 @@ class MatchCompletedScreen extends StatefulWidget {
   final List<MatchScorePlayer> players;
   final VoidCallback? onBack;
   final SubmitMatchScoresCallback? onSubmitScores;
+  final MatchCompletedPlayerTapCallback? onPlayerTap;
   final String inviterName;
   final String inviterAvatarAsset;
   final String? inviterAvatarUrl;
@@ -304,6 +307,11 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                                 player: player,
                                 controller: _scoreControllers[player.id]!,
                                 enabled: !_submitted && !_isSubmitting,
+                                onPlayerTap:
+                                    player.isCurrentUser ||
+                                        widget.onPlayerTap == null
+                                    ? null
+                                    : () => widget.onPlayerTap!(player),
                               );
                             },
                           ),
@@ -378,28 +386,48 @@ class _ScoreRow extends StatelessWidget {
     required this.player,
     required this.controller,
     required this.enabled,
+    this.onPlayerTap,
   });
 
   final MatchScorePlayer player;
   final TextEditingController controller;
   final bool enabled;
+  final VoidCallback? onPlayerTap;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        AppAvatar(
-          fallbackAsset: player.avatarAsset,
-          imageUrl: player.avatarUrl,
-          size: 30,
-        ),
-        const SizedBox(width: 6),
         Expanded(
-          child: Text(
-            player.isCurrentUser ? 'You' : player.displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.homeMatchTitle16,
+          child: Semantics(
+            button: onPlayerTap != null,
+            label: onPlayerTap == null
+                ? null
+                : 'Open ${player.displayName} safety options',
+            child: InkWell(
+              onTap: onPlayerTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    AppAvatar(
+                      fallbackAsset: player.avatarAsset,
+                      imageUrl: player.avatarUrl,
+                      size: 30,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        player.isCurrentUser ? 'You' : player.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.homeMatchTitle16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
