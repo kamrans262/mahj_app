@@ -71,12 +71,17 @@ class _ConnectedPrivacySafetyScreenState
     final callback = widget.onPlayerTap;
     if (callback == null) return;
 
+    final isBlocked =
+        _data?.blockedUsers.any((item) => item.id == player.id) ?? false;
+
     await callback(
       PlayerProfilePreviewData.forIdentity(
         id: player.id,
         displayName: player.displayName,
         avatarAsset: AppAssets.bottomProfileIcon,
         avatarUrl: player.avatarUrl,
+        canInvite: !isBlocked,
+        canBlock: !isBlocked,
       ),
     );
 
