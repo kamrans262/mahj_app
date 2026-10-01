@@ -84,6 +84,8 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
       MyMatchesTab.upcoming => 'No upcoming matches',
       MyMatchesTab.createdByMe => "You haven't created any matches yet",
       MyMatchesTab.invites => 'No match invitations',
+      MyMatchesTab.completed => 'No completed matches',
+      MyMatchesTab.cancelled => 'No cancelled matches',
     };
   }
 
@@ -302,58 +304,19 @@ class _MyMatchesTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textScale = MediaQuery.textScalerOf(context).scale(1);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final stack = constraints.maxWidth < 320 || textScale > 1.55;
-        if (stack) {
-          return Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: MyMatchesTab.values.map((tab) {
-              return _MyMatchesTabButton(
-                tab: tab,
-                selected: tab == selectedTab,
-                onTap: () => onSelected(tab),
-              );
-            }).toList(),
-          );
-        }
-
-        return Row(
-          children: [
-            Expanded(
-              flex: 10,
-              child: _MyMatchesTabButton(
-                tab: MyMatchesTab.upcoming,
-                selected: selectedTab == MyMatchesTab.upcoming,
-                onTap: () => onSelected(MyMatchesTab.upcoming),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              flex: 13,
-              child: _MyMatchesTabButton(
-                tab: MyMatchesTab.createdByMe,
-                selected: selectedTab == MyMatchesTab.createdByMe,
-                onTap: () => onSelected(MyMatchesTab.createdByMe),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              flex: 8,
-              child: _MyMatchesTabButton(
-                tab: MyMatchesTab.invites,
-                selected: selectedTab == MyMatchesTab.invites,
-                onTap: () => onSelected(MyMatchesTab.invites),
-              ),
-            ),
-          ],
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: MyMatchesTab.values.map((tab) {
+        return _MyMatchesTabButton(
+          tab: tab,
+          selected: tab == selectedTab,
+          onTap: () => onSelected(tab),
         );
-      },
+      }).toList(growable: false),
     );
   }
+
 }
 
 class _MyMatchesTabButton extends StatelessWidget {
@@ -372,6 +335,8 @@ class _MyMatchesTabButton extends StatelessWidget {
       MyMatchesTab.upcoming => 'Upcoming',
       MyMatchesTab.createdByMe => 'Created by Me',
       MyMatchesTab.invites => 'Invites',
+      MyMatchesTab.completed => 'Completed',
+      MyMatchesTab.cancelled => 'Cancelled',
     };
   }
 
