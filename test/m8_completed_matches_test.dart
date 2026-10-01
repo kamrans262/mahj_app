@@ -176,8 +176,12 @@ void main() {
     expect(find.byType(TextFormField), findsNWidgets(2));
     expect(tester.takeException(), isNull);
 
-    await tester.enterText(find.byType(TextFormField).at(0), '21');
-    await tester.enterText(find.byType(TextFormField).at(1), '18');
+    final currentScore = find.byKey(const ValueKey('match-score-10'));
+    final otherScore = find.byKey(const ValueKey('match-score-11'));
+    await tester.ensureVisible(currentScore);
+    await tester.enterText(currentScore, '21');
+    await tester.ensureVisible(otherScore);
+    await tester.enterText(otherScore, '18');
 
     final submitButton = find.text('Submit Scores');
     await tester.ensureVisible(submitButton);
