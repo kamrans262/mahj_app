@@ -220,7 +220,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final reason = find.byKey(
-      const ValueKey('report-reason-option-safety_concern'),
+      const ValueKey('report-reason-option-inappropriate_behavior'),
     );
     await tester.ensureVisible(reason);
     await tester.tap(reason);
