@@ -263,12 +263,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       upcoming: data?.upcoming ?? const <MyMatchesItem>[],
       createdByMe: data?.createdByMe ?? const <MyMatchesItem>[],
       invites: data?.invites ?? const <MyMatchesItem>[],
+      completed: data?.completed ?? const <MyMatchesItem>[],
+      cancelled: data?.cancelled ?? const <MyMatchesItem>[],
       upcomingPage: data?.upcomingPage ?? 1,
       createdByMePage: data?.createdByMePage ?? 1,
       invitesPage: data?.invitesPage ?? 1,
+      completedPage: data?.completedPage ?? 1,
+      cancelledPage: data?.cancelledPage ?? 1,
       hasMoreUpcoming: data?.hasMoreUpcoming ?? false,
       hasMoreCreatedByMe: data?.hasMoreCreatedByMe ?? false,
       hasMoreInvites: data?.hasMoreInvites ?? false,
+      hasMoreCompleted: data?.hasMoreCompleted ?? false,
+      hasMoreCancelled: data?.hasMoreCancelled ?? false,
     );
   }
 
@@ -389,6 +395,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           ? nextPage
           : current.createdByMePage,
       invitesPage: tab == MyMatchesTab.invites ? nextPage : current.invitesPage,
+      completedPage: tab == MyMatchesTab.completed
+          ? nextPage
+          : current.completedPage,
+      cancelledPage: tab == MyMatchesTab.cancelled
+          ? nextPage
+          : current.cancelledPage,
     );
 
     if (!mounted) return;
