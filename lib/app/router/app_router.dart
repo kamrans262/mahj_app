@@ -1137,15 +1137,13 @@ abstract final class AppRouter {
         );
         return;
       case MahjNotificationType.chatMessage:
-        await Navigator.of(
-          context,
-        ).pushNamed(AppRoutes.matchChat, arguments: match);
+        await Navigator.of(context)
+            .pushNamed(AppRoutes.matchChat, arguments: match);
         return;
       case MahjNotificationType.matchCompleted:
       case MahjNotificationType.scoreSubmitted:
-        await Navigator.of(
-          context,
-        ).pushNamed(AppRoutes.matchCompleted, arguments: match);
+        await Navigator.of(context)
+            .pushNamed(AppRoutes.matchCompleted, arguments: match);
         return;
       case MahjNotificationType.nearbyMatch:
       case MahjNotificationType.playerJoined:
@@ -1154,9 +1152,8 @@ abstract final class AppRouter {
       case MahjNotificationType.matchConfirmed:
       case MahjNotificationType.scheduleChanged:
       case MahjNotificationType.gameReminder:
-        await Navigator.of(
-          context,
-        ).pushNamed(AppRoutes.matchDetails, arguments: match);
+        await Navigator.of(context)
+            .pushNamed(AppRoutes.matchDetails, arguments: match);
         return;
       case MahjNotificationType.subscriptionUpdate:
         return;
