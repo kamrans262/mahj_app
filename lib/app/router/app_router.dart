@@ -768,7 +768,9 @@ abstract final class AppRouter {
       initialIndex: initialIndex,
       matchRepository: isAuthenticated ? _matchRepository : null,
       discoveryStore: AppServices.matchDiscoveryStore,
-      locationRepository: isAuthenticated ? AppServices.locationRepository : null,
+      locationRepository: isAuthenticated
+          ? AppServices.locationRepository
+          : null,
       initialProfileData:
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,
