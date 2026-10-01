@@ -18,7 +18,7 @@ class ConnectedPrivacySafetyScreen extends StatefulWidget {
 
   final PrivacySafetyRepository repository;
   final VoidCallback? onBack;
-  final ValueChanged<PlayerProfileData>? onPlayerTap;
+  final Future<void> Function(PlayerProfileData player)? onPlayerTap;
 
   @override
   State<ConnectedPrivacySafetyScreen> createState() =>
@@ -67,11 +67,11 @@ class _ConnectedPrivacySafetyScreenState
     }
   }
 
-  void _openPlayer(PrivacySafetyUser player) {
+  Future<void> _openPlayer(PrivacySafetyUser player) async {
     final callback = widget.onPlayerTap;
     if (callback == null) return;
 
-    callback(
+    await callback(
       PlayerProfilePreviewData.forIdentity(
         id: player.id,
         displayName: player.displayName,
@@ -79,6 +79,8 @@ class _ConnectedPrivacySafetyScreenState
         avatarUrl: player.avatarUrl,
       ),
     );
+
+    if (mounted) await _load();
   }
 
   void _showMessage(String message) {
