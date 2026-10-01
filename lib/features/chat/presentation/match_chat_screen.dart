@@ -309,7 +309,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   '${HomeDateTimeFormatter.compactDate(widget.match.startsAt)} · '
                   '${HomeDateTimeFormatter.time(widget.match.startsAt)}',
                   textAlign: TextAlign.end,
-                  style: AppTypography.homeMeta12,
+                  style: AppTypography.homeMeta14,
                 ),
               ),
             ],
@@ -322,7 +322,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'No players available',
-                      style: AppTypography.homeMeta12,
+                      style: AppTypography.homeMeta14,
                     ),
                   )
                 : ListView.separated(
@@ -357,7 +357,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
               child: Text(
                 'Chat is no longer available for this match.',
                 textAlign: TextAlign.center,
-                style: AppTypography.homeMeta12,
+                style: AppTypography.homeMeta14,
               ),
             ),
         ],
