@@ -86,6 +86,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   String? _myMatchesError;
   double? _myMatchesOriginLatitude;
   double? _myMatchesOriginLongitude;
+  Timer? _notificationRefreshTimer;
 
   @override
   void initState() {
@@ -109,6 +110,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     final notificationStore = widget.notificationStore;
     if (notificationStore != null) {
       unawaited(notificationStore.ensureLoaded());
+      _notificationRefreshTimer = Timer.periodic(
+        const Duration(seconds: 20),
+        (_) => unawaited(notificationStore.refresh()),
+      );
     }
 
     if (widget.matchRepository != null && preloaded == null) {
@@ -121,6 +126,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   @override
   void dispose() {
+    _notificationRefreshTimer?.cancel();
     _discoveryStore.removeListener(_handleDiscoveryFiltersChanged);
     widget.notificationStore?.removeListener(_handleNotificationChanged);
     if (_ownsDiscoveryStore) {
