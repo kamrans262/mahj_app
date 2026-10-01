@@ -5,8 +5,8 @@ import 'package:mahj_app/features/home/domain/home_match.dart';
 import 'package:mahj_app/features/matches/presentation/invitation_receiving_screen.dart';
 import 'package:mahj_app/features/matches/presentation/invite_players_screen.dart';
 import 'package:mahj_app/features/matches/presentation/match_details_screen.dart';
-import 'package:mahj_app/features/matches/presentation/my_matches_screen.dart';
 import 'package:mahj_app/features/matches/presentation/widgets/my_match_preview_card.dart';
+import 'package:mahj_app/features/navigation/presentation/main_navigation_shell.dart';
 
 HomeMatch _testMatch() {
   return HomeMatch(
@@ -128,11 +128,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final inviteCard = tester.widget<MyMatchPreviewCard>(firstInvite);
-    final myMatchesScreen = tester.widget<MyMatchesScreen>(
-      find.byType(MyMatchesScreen),
+    final navigationShell = tester.widget<MainNavigationShell>(
+      find.byType(MainNavigationShell),
     );
-    expect(myMatchesScreen.onInvitationTap, isNotNull);
-    myMatchesScreen.onInvitationTap!.call(inviteCard.item);
+    expect(navigationShell.onMyMatchesInvitationTap, isNotNull);
+    navigationShell.onMyMatchesInvitationTap!.call(inviteCard.item);
     await tester.pumpAndSettle();
 
     expect(find.byType(InvitationReceivingScreen), findsOneWidget);
