@@ -28,7 +28,9 @@ class NotificationReadResult {
 
 class NotificationRepository {
   const NotificationRepository({required ApiClient apiClient})
-    : this._apiClient = apiClient;
+    : this._(apiClient);
+
+  const NotificationRepository._(this._apiClient);
 
   final ApiClient _apiClient;
 
