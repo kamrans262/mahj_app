@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/app_scroll_behavior.dart';
@@ -445,9 +447,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 },
           onInvitationTap: widget.onMyMatchesInvitationTap == null
               ? null
-              : (item) async {
-                  await widget.onMyMatchesInvitationTap!(item);
-                  await _refreshMyMatches();
+              : (item) {
+                  final navigation = widget.onMyMatchesInvitationTap!(item);
+                  unawaited(
+                    navigation.whenComplete(() async {
+                      if (!mounted) return;
+                      await _refreshMyMatches();
+                    }),
+                  );
                 },
           onRefresh: widget.matchRepository == null
               ? null
