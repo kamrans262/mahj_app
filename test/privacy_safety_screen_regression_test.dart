@@ -105,6 +105,14 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('privacy-unblock-austen')));
     await tester.pumpAndSettle();
 
+    expect(find.text('Unblock Austen Parker?'), findsOneWidget);
+    expect(unblockedId, isNull);
+
+    await tester.tap(
+      find.byKey(const ValueKey('confirmation-confirm-button')),
+    );
+    await tester.pumpAndSettle();
+
     expect(unblockedId, 'austen');
     expect(find.byKey(const ValueKey('privacy-unblock-austen')), findsNothing);
     expect(find.byKey(const ValueKey('privacy-unblock-alex')), findsOneWidget);
