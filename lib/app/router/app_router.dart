@@ -37,13 +37,17 @@ import '../../features/profile/domain/player_profile_route_args.dart';
 import '../../features/profile/domain/profile_data.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/player_profile_screen.dart';
+import '../../features/settings/data/legal_preview_data.dart';
 import '../../features/settings/data/privacy_safety_preview_data.dart';
+import '../../features/settings/data/support_preview_data.dart';
 import '../../features/settings/domain/legal_data.dart';
 import '../../features/settings/presentation/account_settings_screen.dart';
 import '../../features/settings/presentation/connected_notification_settings_screen.dart';
 import '../../features/settings/presentation/connected_legal_screen.dart';
 import '../../features/settings/presentation/connected_privacy_safety_screen.dart';
 import '../../features/settings/presentation/connected_support_screen.dart';
+import '../../features/settings/presentation/legal_screen.dart';
+import '../../features/settings/presentation/support_screen.dart';
 import '../../features/settings/presentation/notification_settings_screen.dart';
 import '../../features/settings/presentation/privacy_safety_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
@@ -333,10 +337,18 @@ abstract final class AppRouter {
             repository: AppServices.notificationRepository,
             onBack: () => Navigator.of(context).maybePop(),
           ),
-    AppRoutes.support: (context) => ConnectedSupportScreen(
-      repository: _supportContentRepository,
-      onBack: () => Navigator.of(context).maybePop(),
-    ),
+    AppRoutes.support: (context) =>
+        _authRepository.currentUser == null
+        ? SupportScreen(
+            faqs: SupportPreviewData.faqs,
+            topics: SupportPreviewData.topics,
+            supportEmail: SupportPreviewData.supportEmail,
+            onBack: () => Navigator.of(context).maybePop(),
+          )
+        : ConnectedSupportScreen(
+            repository: _supportContentRepository,
+            onBack: () => Navigator.of(context).maybePop(),
+          ),
     AppRoutes.privacySafety: (context) =>
         _authRepository.currentUser == null
         ? PrivacySafetyScreen(
@@ -500,11 +512,18 @@ abstract final class AppRouter {
 
       return MaterialPageRoute<void>(
         settings: settings,
-        builder: (context) => ConnectedLegalScreen(
-          repository: _supportContentRepository,
-          initialDocument: initialDocument,
-          onBack: () => Navigator.of(context).maybePop(),
-        ),
+        builder: (context) => _authRepository.currentUser == null
+            ? LegalScreen(
+                terms: LegalPreviewData.terms,
+                privacy: LegalPreviewData.privacy,
+                initialDocument: initialDocument,
+                onBack: () => Navigator.of(context).maybePop(),
+              )
+            : ConnectedLegalScreen(
+                repository: _supportContentRepository,
+                initialDocument: initialDocument,
+                onBack: () => Navigator.of(context).maybePop(),
+              ),
       );
     }
 
