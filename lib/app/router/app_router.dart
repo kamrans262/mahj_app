@@ -10,6 +10,7 @@ import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/chat/data/match_chat_preview_data.dart';
 import '../../features/chat/domain/chat_models.dart';
+import '../../features/chat/presentation/connected_match_chat_screen.dart';
 import '../../features/chat/presentation/match_chat_screen.dart';
 import '../../features/home/data/home_preview_data.dart';
 import '../../features/home/domain/home_match.dart';
@@ -82,6 +83,7 @@ abstract final class AppRoutes {
 abstract final class AppRouter {
   static final _authRepository = AppServices.authRepository;
   static final _matchRepository = AppServices.matchRepository;
+  static final _chatRepository = AppServices.chatRepository;
   static final _homePreloadStore = AppServices.homePreloadStore;
 
   static Map<String, WidgetBuilder> get routes => {
@@ -578,6 +580,10 @@ abstract final class AppRouter {
               onInvitePlayers: match.canInviteOthers
                   ? () => _openInvitePlayers(context, match)
                   : null,
+              onChat: (_) {
+                Navigator.of(context)
+                    .pushNamed(AppRoutes.matchChat, arguments: match);
+              },
             );
           }
 
@@ -613,6 +619,24 @@ abstract final class AppRouter {
 
     if (settings.name == AppRoutes.matchChat) {
       if (match is! HomeMatch) return null;
+
+      final currentUser = _authRepository.currentUser;
+      if (match.isBackendMatch && currentUser != null) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (context) => ConnectedMatchChatScreen(
+            match: match,
+            repository: _chatRepository,
+            currentUserId: currentUser.id,
+            currentUserAvatarUrl: currentUser.avatarUrl,
+            onBack: () => Navigator.of(context).maybePop(),
+            onPlayerTap: (participant) {
+              if (participant.id == currentUser.id) return;
+              _openPlayerProfile(context, participant, match);
+            },
+          ),
+        );
+      }
 
       return MaterialPageRoute<void>(
         settings: settings,
@@ -931,6 +955,7 @@ abstract final class AppRouter {
       id: participant.id,
       displayName: participant.displayName,
       avatarAsset: participant.avatarAsset,
+      avatarUrl: participant.avatarUrl,
     );
 
     Navigator.of(context).pushNamed(
@@ -951,18 +976,48 @@ abstract final class AppRouter {
     return null;
   }
 
-  static void _openHeaderChat(BuildContext context) {
-    final myMatches = MyMatchesPreviewData.create();
-    HomeMatch? chatMatch;
-    for (final item in myMatches.upcoming) {
-      if (item.match.status != MatchStatus.cancelled) {
-        chatMatch = item.match;
-        break;
-      }
-    }
+  static Future<void> _openHeaderChat(BuildContext context) async {
+    try {
+      final data = await _matchRepository.listMyMatches();
+      HomeMatch? chatMatch;
 
-    final match = chatMatch ?? HomePreviewData.create().upcomingMatches.first;
-    Navigator.of(context).pushNamed(AppRoutes.matchChat, arguments: match);
+      for (final item in data.upcoming) {
+        final match = item.match;
+        if (match.status != MatchStatus.cancelled &&
+            match.status != MatchStatus.completed &&
+            match.isCurrentUserJoined) {
+          chatMatch = match;
+          break;
+        }
+      }
+
+      if (chatMatch == null) {
+        for (final item in data.createdByMe) {
+          final match = item.match;
+          if (match.status != MatchStatus.cancelled &&
+              match.status != MatchStatus.completed &&
+              match.isOwnedByCurrentUser) {
+            chatMatch = match;
+            break;
+          }
+        }
+      }
+
+      if (!context.mounted) return;
+
+      if (chatMatch == null) {
+        _showApiError(
+          context,
+          'Join or create an active match to use match chat.',
+        );
+        return;
+      }
+
+      Navigator.of(context)
+          .pushNamed(AppRoutes.matchChat, arguments: chatMatch);
+    } catch (error) {
+      if (context.mounted) _showApiError(context, error);
+    }
   }
 
   static void _openNotificationDestination(
