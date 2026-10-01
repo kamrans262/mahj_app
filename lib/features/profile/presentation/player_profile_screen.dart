@@ -71,6 +71,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   bool _isBlockDialogOpen = false;
   bool _reportRequestInFlight = false;
   bool _blockRequestInFlight = false;
+  bool _isBlocked = false;
 
   void _showMessage(String message) {
     if (!mounted) return;
@@ -171,7 +172,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   }
 
   Future<void> _showBlockDialog() async {
-    if (_isBlockDialogOpen || !widget.player.canBlock) return;
+    if (_isBlockDialogOpen || !widget.player.canBlock || _isBlocked) return;
     _isBlockDialogOpen = true;
 
     try {
@@ -206,6 +207,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       );
 
       if (blocked == true) {
+        setState(() => _isBlocked = true);
         _showMessage('Player blocked');
       }
     } finally {
@@ -230,7 +232,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   }
 
   void _sendInvite() {
-    if (!widget.player.canInvite) return;
+    if (!widget.player.canInvite || _isBlocked) return;
     final callback = widget.onSendInvite;
     if (callback == null) {
       _showMessage('Invite flow is not connected for this player yet.');
@@ -295,6 +297,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                     const SizedBox(height: AppSpacing.xxl),
                     _PlayerActions(
                       player: widget.player,
+                      isBlocked: _isBlocked,
                       onSendInvite: _sendInvite,
                       onReport: _showReportDialog,
                       onBlock: _showBlockDialog,
@@ -541,12 +544,14 @@ class _MutualGamesPreview extends StatelessWidget {
 class _PlayerActions extends StatelessWidget {
   const _PlayerActions({
     required this.player,
+    required this.isBlocked,
     required this.onSendInvite,
     required this.onReport,
     required this.onBlock,
   });
 
   final PlayerProfileData player;
+  final bool isBlocked;
   final VoidCallback onSendInvite;
   final VoidCallback onReport;
   final VoidCallback onBlock;
@@ -557,15 +562,15 @@ class _PlayerActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (player.canInvite)
+        if (player.canInvite && !isBlocked)
           AppButton.primary(
             key: const ValueKey('player-profile-send-invite'),
             label: 'Send Invite',
             onPressed: onSendInvite,
           ),
-        if (player.canInvite && (player.canReport || player.canBlock))
+        if (player.canInvite && !isBlocked && (player.canReport || (player.canBlock && !isBlocked)))
           const SizedBox(height: AppSpacing.lg),
-        if (player.canReport && player.canBlock)
+        if (player.canReport && player.canBlock && !isBlocked)
           AppResponsiveActionPair(
             horizontalGap: AppSpacing.md,
             first: AppButton.destructiveOutlined(
@@ -594,7 +599,7 @@ class _PlayerActions extends StatelessWidget {
               color: AppColors.destructive,
             ),
           )
-        else if (player.canBlock)
+        else if (player.canBlock && !isBlocked)
           AppButton.destructiveOutlined(
             key: const ValueKey('player-profile-block'),
             label: 'Block User',
