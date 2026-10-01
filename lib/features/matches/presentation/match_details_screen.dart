@@ -172,6 +172,10 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         !_match.isFull;
   }
 
+  bool get _chatAvailable =>
+      _match.status != MatchStatus.cancelled &&
+      _match.status != MatchStatus.completed;
+
   TextStyle get _valueStyle {
     return AppTypography.field.copyWith(
       color: AppColors.heading,
@@ -430,6 +434,11 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   }
 
   void _openChat() {
+    if (!_chatAvailable) {
+      _showMessage('Chat is no longer available for this match.');
+      return;
+    }
+
     final callback = widget.onChat;
     if (callback == null) {
       _showMessage('Match chat is not connected yet.');
@@ -750,7 +759,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
             second: AppButton.secondary(
               label: 'Chat',
               textStyle: AppTypography.matchSuccessSecondaryButton,
-              onPressed: _openChat,
+              onPressed: _chatAvailable ? _openChat : null,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -769,7 +778,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       final chatButton = AppButton.secondary(
         label: 'Chat',
         textStyle: AppTypography.matchSuccessSecondaryButton,
-        onPressed: _openChat,
+        onPressed: _chatAvailable ? _openChat : null,
       );
 
       return Column(
