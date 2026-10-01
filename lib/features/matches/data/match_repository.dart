@@ -6,6 +6,7 @@ import '../../home/domain/home_match.dart';
 import '../../home/domain/match_filters.dart';
 import '../domain/create_match_form_state.dart';
 import '../domain/invite_player_result.dart';
+import '../domain/match_completion_data.dart';
 import '../domain/my_matches_data.dart';
 import '../domain/sport_option.dart';
 
@@ -85,12 +86,16 @@ class MatchRepository {
     int upcomingPage = 1,
     int createdByMePage = 1,
     int invitesPage = 1,
+    int completedPage = 1,
+    int cancelledPage = 1,
     int perPage = 20,
   }) async {
     final params = <String, String>{
       'upcoming_page': upcomingPage.toString(),
       'created_page': createdByMePage.toString(),
       'invites_page': invitesPage.toString(),
+      'completed_page': completedPage.toString(),
+      'cancelled_page': cancelledPage.toString(),
       'per_page': perPage.toString(),
     };
 
@@ -191,6 +196,8 @@ class MatchRepository {
     final upcomingMeta = readMeta('upcoming');
     final createdMeta = readMeta('created_by_me');
     final invitesMeta = readMeta('invites');
+    final completedMeta = readMeta('completed');
+    final cancelledMeta = readMeta('cancelled');
 
     return MyMatchesData(
       unreadNotificationCount: 0,
@@ -198,12 +205,18 @@ class MatchRepository {
       upcoming: mapMatches(payload['upcoming']),
       createdByMe: mapMatches(payload['created_by_me']),
       invites: invites,
+      completed: mapMatches(payload['completed']),
+      cancelled: mapMatches(payload['cancelled']),
       upcomingPage: readPage(upcomingMeta, upcomingPage),
       createdByMePage: readPage(createdMeta, createdByMePage),
       invitesPage: readPage(invitesMeta, invitesPage),
+      completedPage: readPage(completedMeta, completedPage),
+      cancelledPage: readPage(cancelledMeta, cancelledPage),
       hasMoreUpcoming: readHasMore(upcomingMeta),
       hasMoreCreatedByMe: readHasMore(createdMeta),
       hasMoreInvites: readHasMore(invitesMeta),
+      hasMoreCompleted: readHasMore(completedMeta),
+      hasMoreCancelled: readHasMore(cancelledMeta),
     );
   }
 
@@ -313,6 +326,47 @@ class MatchRepository {
   Future<HomeMatch> cancel(String matchId) async {
     final payload = await _apiClient.post('/matches/$matchId/cancel');
     return _matchFromEnvelope(payload);
+  }
+
+  Future<HomeMatch> complete(String matchId) async {
+    final payload = await _apiClient.post('/matches/$matchId/complete');
+    return _matchFromEnvelope(payload);
+  }
+
+  Future<MatchCompletionData> fetchCompletion(
+    String matchId, {
+    required String currentUserId,
+  }) async {
+    final payload = await _apiClient.get('/matches/$matchId/completion');
+    return MatchCompletionData.fromJson(
+      payload,
+      currentUserId: currentUserId,
+    );
+  }
+
+  Future<MatchCompletionData> submitScores(
+    String matchId,
+    Map<String, int> scores, {
+    required String currentUserId,
+  }) async {
+    final payload = await _apiClient.post(
+      '/matches/$matchId/scores',
+      body: {
+        'scores': scores.entries
+            .map(
+              (entry) => {
+                'player_id': int.tryParse(entry.key) ?? entry.key,
+                'score': entry.value,
+              },
+            )
+            .toList(growable: false),
+      },
+    );
+
+    return MatchCompletionData.fromJson(
+      payload,
+      currentUserId: currentUserId,
+    );
   }
 
   double _distanceMiles(
