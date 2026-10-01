@@ -63,6 +63,11 @@ class NotificationRepository {
     );
   }
 
+  Future<int> unreadCount() async {
+    final payload = await _apiClient.get('/notifications/unread-count');
+    return _readInt(payload['unread_count'], 0);
+  }
+
   Future<NotificationReadResult> markRead(String notificationId) async {
     final payload = await _apiClient.patch(
       '/notifications/$notificationId/read',
