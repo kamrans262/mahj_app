@@ -87,6 +87,26 @@ class NotificationRepository {
     );
   }
 
+  Future<void> registerDeviceToken({
+    required String token,
+    required String platform,
+  }) async {
+    await _apiClient.post(
+      '/device-tokens',
+      body: {
+        'token': token,
+        'platform': platform,
+      },
+    );
+  }
+
+  Future<void> unregisterDeviceToken(String token) async {
+    await _apiClient.delete(
+      '/device-tokens',
+      body: {'token': token},
+    );
+  }
+
   Future<NotificationPreferences> loadSettings() async {
     final payload = await _apiClient.get('/notification-settings');
     final raw = payload['settings'];
