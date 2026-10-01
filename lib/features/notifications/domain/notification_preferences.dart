@@ -32,8 +32,7 @@ class NotificationPreferences {
     return NotificationPreferences(
       newGamesNearby: newGamesNearby ?? this.newGamesNearby,
       gameInvitations: gameInvitations ?? this.gameInvitations,
-      playersJoiningMyGame:
-          playersJoiningMyGame ?? this.playersJoiningMyGame,
+      playersJoiningMyGame: playersJoiningMyGame ?? this.playersJoiningMyGame,
       gameConfirmations: gameConfirmations ?? this.gameConfirmations,
       gameReminders: gameReminders ?? this.gameReminders,
       scheduleChanges: scheduleChanges ?? this.scheduleChanges,
