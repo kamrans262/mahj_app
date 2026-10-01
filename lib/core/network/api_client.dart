@@ -54,9 +54,15 @@ class ApiClient {
 
   Future<Map<String, dynamic>> delete(
     String path, {
+    Map<String, dynamic>? body,
     bool authenticated = true,
   }) {
-    return _send('DELETE', path, authenticated: authenticated);
+    return _send(
+      'DELETE',
+      path,
+      body: body,
+      authenticated: authenticated,
+    );
   }
 
   Future<Map<String, dynamic>> _send(
