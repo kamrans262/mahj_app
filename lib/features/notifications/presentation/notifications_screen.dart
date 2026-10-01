@@ -9,34 +9,48 @@ import '../data/notifications_preview_data.dart';
 import '../domain/mahj_notification.dart';
 import 'widgets/notification_list_item.dart';
 
+typedef NotificationMarkReadCallback =
+    Future<MahjNotification> Function(MahjNotification notification);
+
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({
     super.key,
     this.notifications,
     this.isLoading = false,
+    this.isLoadingMore = false,
+    this.hasMore = false,
     this.errorMessage,
     this.onBack,
     this.onNotificationTap,
+    this.onMarkRead,
     this.onReadStateChanged,
     this.onRetry,
     this.onRefresh,
+    this.onLoadMore,
   });
 
   final List<MahjNotification>? notifications;
   final bool isLoading;
+  final bool isLoadingMore;
+  final bool hasMore;
   final String? errorMessage;
   final VoidCallback? onBack;
   final Future<void> Function(MahjNotification notification)? onNotificationTap;
+  final NotificationMarkReadCallback? onMarkRead;
   final ValueChanged<List<MahjNotification>>? onReadStateChanged;
   final VoidCallback? onRetry;
   final Future<void> Function()? onRefresh;
+  final Future<void> Function()? onLoadMore;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   late List<MahjNotification> _notifications;
+  bool _requestingMore = false;
 
   @override
   void initState() {
@@ -44,6 +58,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _notifications = List<MahjNotification>.of(
       widget.notifications ?? NotificationsPreviewData.create(),
     );
+    _scrollController.addListener(_handleScroll);
   }
 
   @override
@@ -55,15 +70,66 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients ||
+        _scrollController.position.extentAfter > 180 ||
+        !widget.hasMore ||
+        widget.isLoadingMore ||
+        _requestingMore ||
+        widget.onLoadMore == null) {
+      return;
+    }
+
+    _loadMore();
+  }
+
+  Future<void> _loadMore() async {
+    final callback = widget.onLoadMore;
+    if (callback == null ||
+        _requestingMore ||
+        widget.isLoadingMore ||
+        !widget.hasMore) {
+      return;
+    }
+
+    _requestingMore = true;
+    try {
+      await callback();
+    } finally {
+      _requestingMore = false;
+    }
+  }
+
   Future<void> _openNotification(int index) async {
     final current = _notifications[index];
-    final opened = current.isRead ? current : current.copyWith(isRead: true);
+    var opened = current;
 
     if (!current.isRead) {
-      setState(() => _notifications[index] = opened);
-      widget.onReadStateChanged?.call(
-        List<MahjNotification>.unmodifiable(_notifications),
-      );
+      final markRead = widget.onMarkRead;
+      if (markRead != null) {
+        try {
+          opened = await markRead(current);
+        } catch (_) {
+          opened = current;
+        }
+      } else {
+        opened = current.copyWith(isRead: true);
+      }
+
+      if (opened.isRead && mounted) {
+        setState(() => _notifications[index] = opened);
+        widget.onReadStateChanged?.call(
+          List<MahjNotification>.unmodifiable(_notifications),
+        );
+      }
     }
 
     final callback = widget.onNotificationTap;
@@ -90,13 +156,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return const _NotificationStateMessage(message: 'No notifications yet');
     }
 
+    final itemCount = _notifications.length + (widget.isLoadingMore ? 1 : 0);
     final list = ListView.separated(
       key: const ValueKey('notifications-list'),
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-      itemCount: _notifications.length,
+      itemCount: itemCount,
       separatorBuilder: (_, _) => const _NotificationSeparator(),
       itemBuilder: (context, index) {
+        if (index >= _notifications.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Center(child: AppLoader()),
+          );
+        }
+
         final notification = _notifications[index];
         return NotificationListItem(
           key: ValueKey('notification-item-${notification.id}'),
