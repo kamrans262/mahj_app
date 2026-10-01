@@ -174,9 +174,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       widget.notificationStore?.unreadCount ??
       _profileData.unreadNotificationCount;
 
-  ProfileData get _profileWithNotificationCount => _profileData.copyWith(
-    unreadNotificationCount: _unreadNotificationCount,
-  );
+  ProfileData get _profileWithNotificationCount =>
+      _profileData.copyWith(unreadNotificationCount: _unreadNotificationCount);
 
   Future<void> _applyDiscoveryFilters(MatchFilters filters) async {
     _discoveryStore.update(filters, notify: false);
