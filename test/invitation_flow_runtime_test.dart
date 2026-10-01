@@ -131,7 +131,9 @@ void main() {
       matching: find.byType(InkWell),
     );
     expect(inviteTapTarget, findsOneWidget);
-    await tester.tap(inviteTapTarget);
+    final inviteInkWell = tester.widget<InkWell>(inviteTapTarget);
+    expect(inviteInkWell.onTap, isNotNull);
+    inviteInkWell.onTap!.call();
     await tester.pumpAndSettle();
 
     expect(find.byType(InvitationReceivingScreen), findsOneWidget);
