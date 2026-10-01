@@ -19,6 +19,8 @@ class HomeMatch {
     this.venueName,
     this.hostUserId,
     this.hostName,
+    this.hostAvatarUrl,
+    this.completedAt,
     this.notes,
     this.isPublic = true,
     this.isInviteOnly = false,
@@ -26,6 +28,7 @@ class HomeMatch {
     this.isOwnedByCurrentUser = false,
     this.canLeave = false,
     this.canCancel = false,
+    this.canComplete = false,
     this.latitude,
     this.longitude,
     this.distanceMiles,
@@ -48,6 +51,8 @@ class HomeMatch {
   final String? venueName;
   final String? hostUserId;
   final String? hostName;
+  final String? hostAvatarUrl;
+  final DateTime? completedAt;
   final String? notes;
   final bool isPublic;
   final bool isInviteOnly;
@@ -55,6 +60,7 @@ class HomeMatch {
   final bool isOwnedByCurrentUser;
   final bool canLeave;
   final bool canCancel;
+  final bool canComplete;
   final double? latitude;
   final double? longitude;
   final double? distanceMiles;
@@ -97,6 +103,8 @@ class HomeMatch {
       venueName: json['venue_name']?.toString(),
       hostUserId: hostMap['id']?.toString(),
       hostName: hostMap['name']?.toString(),
+      hostAvatarUrl: hostMap['avatar_url']?.toString(),
+      completedAt: DateTime.tryParse(json['completed_at']?.toString() ?? ''),
       notes: json['notes']?.toString(),
       isPublic: json['is_public'] != false,
       isInviteOnly: json['is_invite_only'] == true,
@@ -104,6 +112,7 @@ class HomeMatch {
       isOwnedByCurrentUser: json['is_host'] == true,
       canLeave: json['can_leave'] == true,
       canCancel: json['can_cancel'] == true,
+      canComplete: json['can_complete'] == true,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       distanceMiles: (json['distance_miles'] as num?)?.toDouble(),
@@ -128,6 +137,8 @@ class HomeMatch {
     String? venueName,
     String? hostUserId,
     String? hostName,
+    String? hostAvatarUrl,
+    DateTime? completedAt,
     String? notes,
     bool? isPublic,
     bool? isInviteOnly,
@@ -135,6 +146,7 @@ class HomeMatch {
     bool? isOwnedByCurrentUser,
     bool? canLeave,
     bool? canCancel,
+    bool? canComplete,
     double? latitude,
     double? longitude,
     double? distanceMiles,
@@ -157,6 +169,8 @@ class HomeMatch {
       venueName: venueName ?? this.venueName,
       hostUserId: hostUserId ?? this.hostUserId,
       hostName: hostName ?? this.hostName,
+      hostAvatarUrl: hostAvatarUrl ?? this.hostAvatarUrl,
+      completedAt: completedAt ?? this.completedAt,
       notes: notes ?? this.notes,
       isPublic: isPublic ?? this.isPublic,
       isInviteOnly: isInviteOnly ?? this.isInviteOnly,
@@ -164,6 +178,7 @@ class HomeMatch {
       isOwnedByCurrentUser: isOwnedByCurrentUser ?? this.isOwnedByCurrentUser,
       canLeave: canLeave ?? this.canLeave,
       canCancel: canCancel ?? this.canCancel,
+      canComplete: canComplete ?? this.canComplete,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       distanceMiles: distanceMiles ?? this.distanceMiles,
