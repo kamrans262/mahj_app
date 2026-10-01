@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mahj_app/app/app_assets.dart';
+import 'package:mahj_app/app/router/app_router.dart';
 import 'package:mahj_app/core/network/api_client.dart';
 import 'package:mahj_app/core/storage/token_store.dart';
 import 'package:mahj_app/features/profile/data/player_profile_preview_data.dart';
@@ -28,6 +29,10 @@ Future<void> _scrollTo(
 }
 
 void main() {
+  test('M9 privacy safety route is registered', () {
+    expect(AppRouter.routes, contains(AppRoutes.privacySafety));
+  });
+
   test('M9 repository loads safety state and sends moderation actions', () async {
     final tokenStore = SecureTokenStore(useMemoryOnly: true);
     await tokenStore.write('m9-token');
