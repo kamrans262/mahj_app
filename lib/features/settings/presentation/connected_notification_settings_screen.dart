@@ -100,8 +100,7 @@ class _ConnectedNotificationSettingsScreenState
               ),
               child: AppCenteredPageHeader(
                 title: 'Notification Settings',
-                onBack:
-                    widget.onBack ?? () => Navigator.of(context).maybePop(),
+                onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
               ),
             ),
             Expanded(
