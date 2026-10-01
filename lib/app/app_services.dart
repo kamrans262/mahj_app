@@ -9,6 +9,7 @@ import '../features/home/data/match_discovery_store.dart';
 import '../features/matches/data/match_repository.dart';
 import '../features/notifications/data/notification_repository.dart';
 import '../features/notifications/data/notification_store.dart';
+import '../features/notifications/data/push_notification_service.dart';
 import '../features/subscription/data/subscription_repository.dart';
 
 abstract final class AppServices {
@@ -41,6 +42,12 @@ abstract final class AppServices {
   static final NotificationStore notificationStore = NotificationStore(
     repository: notificationRepository,
   );
+
+  static final PushNotificationService pushNotificationService =
+      PushNotificationService(
+        repository: notificationRepository,
+        store: notificationStore,
+      );
 
   static final LocationRepository locationRepository = LocationRepository(
     apiClient: apiClient,
