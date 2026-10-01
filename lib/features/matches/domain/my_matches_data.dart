@@ -96,9 +96,7 @@ class MyMatchesData {
       createdByMePage: tab == MyMatchesTab.createdByMe
           ? next.createdByMePage
           : createdByMePage,
-      invitesPage: tab == MyMatchesTab.invites
-          ? next.invitesPage
-          : invitesPage,
+      invitesPage: tab == MyMatchesTab.invites ? next.invitesPage : invitesPage,
       hasMoreUpcoming: tab == MyMatchesTab.upcoming
           ? next.hasMoreUpcoming
           : hasMoreUpcoming,

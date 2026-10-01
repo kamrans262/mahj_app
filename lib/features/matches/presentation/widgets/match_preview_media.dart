@@ -119,9 +119,7 @@ class _StaticLocationMap extends StatelessWidget {
             ],
           ),
           const fm.RichAttributionWidget(
-            attributions: [
-              fm.TextSourceAttribution('OpenStreetMap'),
-            ],
+            attributions: [fm.TextSourceAttribution('OpenStreetMap')],
           ),
         ],
       ),

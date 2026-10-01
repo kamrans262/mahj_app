@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/widgets/app_asset_icon.dart';
+import '../../../../core/widgets/app_avatar.dart';
 import '../../domain/chat_models.dart';
 
 class ChatPlayerItem extends StatelessWidget {
@@ -14,6 +14,11 @@ class ChatPlayerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final normalizedName = participant.displayName.trim();
+    final firstName = normalizedName.isEmpty
+        ? 'Player'
+        : normalizedName.split(RegExp(r'\s+')).first;
+
     final content = SizedBox(
       width: 64,
       child: Column(
@@ -22,11 +27,10 @@ class ChatPlayerItem extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              ClipOval(
-                child: AppAssetIcon(
-                  assetPath: participant.avatarAsset,
-                  size: 40,
-                ),
+              AppAvatar(
+                fallbackAsset: participant.avatarAsset,
+                imageUrl: participant.avatarUrl,
+                size: 40,
               ),
               if (participant.isOnline)
                 Positioned(
@@ -46,11 +50,11 @@ class ChatPlayerItem extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            participant.displayName,
+            firstName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: AppTypography.homeMeta12.copyWith(color: AppColors.heading),
+            style: AppTypography.homeMeta14.copyWith(color: AppColors.heading),
           ),
         ],
       ),
@@ -58,8 +62,7 @@ class ChatPlayerItem extends StatelessWidget {
 
     return Semantics(
       button: onTap != null,
-      label:
-          '${participant.displayName}${participant.isOnline ? ', online' : ''}',
+      label: '$firstName${participant.isOnline ? ', online' : ''}',
       child: onTap == null
           ? content
           : Material(

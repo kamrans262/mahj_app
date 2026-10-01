@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/app_scroll_behavior.dart';
@@ -247,8 +249,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       }
     }
 
-    if (_myMatchesOriginLatitude != null &&
-        _myMatchesOriginLongitude != null) {
+    if (_myMatchesOriginLatitude != null && _myMatchesOriginLongitude != null) {
       return (
         latitude: _myMatchesOriginLatitude!,
         longitude: _myMatchesOriginLongitude!,
@@ -262,10 +263,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (current != null) {
       _myMatchesOriginLatitude = current.latitude;
       _myMatchesOriginLongitude = current.longitude;
-      return (
-        latitude: current.latitude,
-        longitude: current.longitude,
-      );
+      return (latitude: current.latitude, longitude: current.longitude);
     }
 
     final searchQueries = <String>[
@@ -287,10 +285,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         _myMatchesOriginLatitude = resolved.latitude;
         _myMatchesOriginLongitude = resolved.longitude;
 
-        return (
-          latitude: resolved.latitude,
-          longitude: resolved.longitude,
-        );
+        return (latitude: resolved.latitude, longitude: resolved.longitude);
       } catch (_) {
         // Try the next available location source.
       }
@@ -301,10 +296,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       _myMatchesOriginLatitude = requested.latitude;
       _myMatchesOriginLongitude = requested.longitude;
 
-      return (
-        latitude: requested.latitude,
-        longitude: requested.longitude,
-      );
+      return (latitude: requested.latitude, longitude: requested.longitude);
     } catch (_) {
       return null;
     }
@@ -359,9 +351,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       createdByMePage: tab == MyMatchesTab.createdByMe
           ? nextPage
           : current.createdByMePage,
-      invitesPage: tab == MyMatchesTab.invites
-          ? nextPage
-          : current.invitesPage,
+      invitesPage: tab == MyMatchesTab.invites ? nextPage : current.invitesPage,
     );
 
     if (!mounted) return;
@@ -447,10 +437,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               : const <MyMatchesTab>{},
           errorMessages: myMatchesError == null
               ? const <MyMatchesTab, String>{}
-              : {
-                  for (final tab in MyMatchesTab.values)
-                    tab: myMatchesError,
-                },
+              : {for (final tab in MyMatchesTab.values) tab: myMatchesError},
           onTabChanged: _rememberMyMatchesTab,
           onMatchTap: widget.onMyMatchesMatchTap == null
               ? null
@@ -460,9 +447,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 },
           onInvitationTap: widget.onMyMatchesInvitationTap == null
               ? null
-              : (item) async {
-                  await widget.onMyMatchesInvitationTap!(item);
-                  await _refreshMyMatches();
+              : (item) {
+                  final navigation = widget.onMyMatchesInvitationTap!(item);
+                  unawaited(
+                    navigation.whenComplete(() async {
+                      if (!mounted) return;
+                      await _refreshMyMatches();
+                    }),
+                  );
                 },
           onRefresh: widget.matchRepository == null
               ? null

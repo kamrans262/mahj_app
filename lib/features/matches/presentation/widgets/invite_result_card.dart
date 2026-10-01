@@ -51,10 +51,7 @@ class InviteResultCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 124,
-          child: _InviteUserAvatar(result: result),
-        ),
+        SizedBox(height: 124, child: _InviteUserAvatar(result: result)),
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: _ResultInformation(result: result, isSelected: isSelected),
