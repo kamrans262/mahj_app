@@ -688,6 +688,18 @@ abstract final class AppRouter {
             repository: _matchRepository,
             currentUserId: currentUser.id,
             onBack: () => Navigator.of(context).maybePop(),
+            onPlayerTap: (player) {
+              final profile = PlayerProfilePreviewData.forIdentity(
+                id: player.id,
+                displayName: player.displayName,
+                avatarAsset: player.avatarAsset,
+                avatarUrl: player.avatarUrl,
+              );
+              Navigator.of(context).pushNamed(
+                AppRoutes.playerProfile,
+                arguments: PlayerProfileRouteArgs(player: profile),
+              );
+            },
           ),
         );
       }
@@ -700,6 +712,18 @@ abstract final class AppRouter {
           inviterName: MatchCompletedPreviewData.inviterName,
           inviterAvatarAsset: MatchCompletedPreviewData.inviterAvatarAsset,
           onBack: () => Navigator.of(context).maybePop(),
+          onPlayerTap: (player) {
+            final profile = PlayerProfilePreviewData.forIdentity(
+              id: player.id,
+              displayName: player.displayName,
+              avatarAsset: player.avatarAsset,
+              avatarUrl: player.avatarUrl,
+            );
+            Navigator.of(context).pushNamed(
+              AppRoutes.playerProfile,
+              arguments: PlayerProfileRouteArgs(player: profile),
+            );
+          },
         ),
       );
     }
