@@ -61,25 +61,19 @@ class _ConnectedMatchDetailsScreenState
   }
 
   Future<HomeMatch> _join(HomeMatch match) async {
-    final updated = _preserveDistance(
-      await widget.repository.join(match.id),
-    );
+    final updated = _preserveDistance(await widget.repository.join(match.id));
     if (mounted) setState(() => _match = updated);
     return updated;
   }
 
   Future<HomeMatch> _leave(HomeMatch match) async {
-    final updated = _preserveDistance(
-      await widget.repository.leave(match.id),
-    );
+    final updated = _preserveDistance(await widget.repository.leave(match.id));
     if (mounted) setState(() => _match = updated);
     return updated;
   }
 
   Future<void> _cancel(HomeMatch match) async {
-    final updated = _preserveDistance(
-      await widget.repository.cancel(match.id),
-    );
+    final updated = _preserveDistance(await widget.repository.cancel(match.id));
     if (mounted) setState(() => _match = updated);
   }
 

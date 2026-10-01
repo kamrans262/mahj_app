@@ -56,7 +56,9 @@ class ChatRepository {
         : const <ChatMessage>[];
 
     final metaRaw = payload['meta'];
-    final meta = metaRaw is Map ? _normalize(metaRaw) : const <String, dynamic>{};
+    final meta = metaRaw is Map
+        ? _normalize(metaRaw)
+        : const <String, dynamic>{};
 
     return MatchChatPage(
       participants: participants,
@@ -130,8 +132,6 @@ class ChatRepository {
   }
 
   Map<String, dynamic> _normalize(Map value) {
-    return value.map(
-      (key, item) => MapEntry(key.toString(), item),
-    );
+    return value.map((key, item) => MapEntry(key.toString(), item));
   }
 }

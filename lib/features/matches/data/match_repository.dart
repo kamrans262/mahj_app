@@ -139,31 +139,34 @@ class MatchRepository {
 
     final inviteRaw = payload['invites'];
     final invites = inviteRaw is List
-        ? inviteRaw.whereType<Map>().map((item) {
-            final json = item.map(
-              (key, value) => MapEntry(key.toString(), value),
-            );
-            final matchRaw = json['match'];
-            final matchJson = matchRaw is Map
-                ? matchRaw.map(
-                    (key, value) => MapEntry(key.toString(), value),
-                  )
-                : const <String, dynamic>{};
-            final inviterRaw = json['inviter'];
-            final inviter = inviterRaw is Map
-                ? inviterRaw.map(
-                    (key, value) => MapEntry(key.toString(), value),
-                  )
-                : const <String, dynamic>{};
+        ? inviteRaw
+              .whereType<Map>()
+              .map((item) {
+                final json = item.map(
+                  (key, value) => MapEntry(key.toString(), value),
+                );
+                final matchRaw = json['match'];
+                final matchJson = matchRaw is Map
+                    ? matchRaw.map(
+                        (key, value) => MapEntry(key.toString(), value),
+                      )
+                    : const <String, dynamic>{};
+                final inviterRaw = json['inviter'];
+                final inviter = inviterRaw is Map
+                    ? inviterRaw.map(
+                        (key, value) => MapEntry(key.toString(), value),
+                      )
+                    : const <String, dynamic>{};
 
-            return MyMatchesItem(
-              match: withFallbackDistance(HomeMatch.fromJson(matchJson)),
-              sportImageAsset: AppAssets.sportImage,
-              invitationId: json['id']?.toString(),
-              inviterName: inviter['name']?.toString(),
-              inviterAvatarUrl: inviter['avatar_url']?.toString(),
-            );
-          }).toList(growable: false)
+                return MyMatchesItem(
+                  match: withFallbackDistance(HomeMatch.fromJson(matchJson)),
+                  sportImageAsset: AppAssets.sportImage,
+                  invitationId: json['id']?.toString(),
+                  inviterName: inviter['name']?.toString(),
+                  inviterAvatarUrl: inviter['avatar_url']?.toString(),
+                );
+              })
+              .toList(growable: false)
         : const <MyMatchesItem>[];
 
     Map<String, dynamic> readMeta(String key) {
@@ -174,9 +177,7 @@ class MatchRepository {
       );
       final value = normalized[key];
       if (value is! Map) return const <String, dynamic>{};
-      return value.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
+      return value.map((key, value) => MapEntry(key.toString(), value));
     }
 
     int readPage(Map<String, dynamic> meta, int fallback) {
@@ -221,33 +222,38 @@ class MatchRepository {
     final raw = payload['data'];
     if (raw is! List) return const <InvitePlayerResult>[];
 
-    return raw.whereType<Map>().map((item) {
-      final json = item.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
-      final name = json['name']?.toString().trim() ?? '';
-      final email = json['email']?.toString().trim() ?? '';
-      final city = json['city']?.toString().trim() ?? '';
+    return raw
+        .whereType<Map>()
+        .map((item) {
+          final json = item.map(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+          final name = json['name']?.toString().trim() ?? '';
+          final email = json['email']?.toString().trim() ?? '';
+          final city = json['city']?.toString().trim() ?? '';
 
-      return InvitePlayerResult(
-        id: json['id']?.toString() ?? '',
-        searchText: [name, email, city].where((value) => value.isNotEmpty).join(' '),
-        title: name.isEmpty ? email : name,
-        startsAt: match.startsAt,
-        currentPlayers: match.currentPlayers,
-        maxPlayers: match.maxPlayers,
-        sportImageAsset: AppAssets.sportImage,
-        avatarUrl: json['avatar_url']?.toString(),
-        latitude: match.latitude,
-        longitude: match.longitude,
-      );
-    }).where((result) => result.id.isNotEmpty).toList(growable: false);
+          return InvitePlayerResult(
+            id: json['id']?.toString() ?? '',
+            searchText: [
+              name,
+              email,
+              city,
+            ].where((value) => value.isNotEmpty).join(' '),
+            title: name.isEmpty ? email : name,
+            startsAt: match.startsAt,
+            currentPlayers: match.currentPlayers,
+            maxPlayers: match.maxPlayers,
+            sportImageAsset: AppAssets.sportImage,
+            avatarUrl: json['avatar_url']?.toString(),
+            latitude: match.latitude,
+            longitude: match.longitude,
+          );
+        })
+        .where((result) => result.id.isNotEmpty)
+        .toList(growable: false);
   }
 
-  Future<void> sendInvitations(
-    String matchId,
-    Set<String> userIds,
-  ) async {
+  Future<void> sendInvitations(String matchId, Set<String> userIds) async {
     await _apiClient.post(
       '/matches/$matchId/invitations',
       body: {
@@ -260,9 +266,7 @@ class MatchRepository {
   }
 
   Future<HomeMatch> acceptInvitation(String invitationId) async {
-    final payload = await _apiClient.post(
-      '/invitations/$invitationId/accept',
-    );
+    final payload = await _apiClient.post('/invitations/$invitationId/accept');
     return _matchFromEnvelope(payload);
   }
 
@@ -320,9 +324,7 @@ class MatchRepository {
     const earthRadiusMiles = 3958.7613;
 
     final latitudeDelta = _degreesToRadians(targetLatitude - originLatitude);
-    final longitudeDelta = _degreesToRadians(
-      targetLongitude - originLongitude,
-    );
+    final longitudeDelta = _degreesToRadians(targetLongitude - originLongitude);
     final originLatitudeRadians = _degreesToRadians(originLatitude);
     final targetLatitudeRadians = _degreesToRadians(targetLatitude);
 

@@ -68,9 +68,8 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
   bool _isSending = false;
   bool _requestingOlder = false;
 
-  List<ChatMessage> get _messages => widget.onSendMessage == null
-      ? _previewMessages
-      : widget.messages;
+  List<ChatMessage> get _messages =>
+      widget.onSendMessage == null ? _previewMessages : widget.messages;
 
   @override
   void initState() {
