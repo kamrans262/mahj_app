@@ -28,7 +28,10 @@ class _ConnectedNotificationsScreenState
   @override
   void initState() {
     super.initState();
-    unawaited(widget.store.refresh());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(widget.store.refresh());
+    });
   }
 
   @override
