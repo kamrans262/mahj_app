@@ -17,7 +17,7 @@ class ChatPlayerItem extends StatelessWidget {
     final normalizedName = participant.displayName.trim();
     final firstName = normalizedName.isEmpty
         ? 'Player'
-        : normalizedName.split(RegExp(r'\\s+')).first;
+        : normalizedName.split(RegExp(r'\s+')).first;
 
     final content = SizedBox(
       width: 64,
