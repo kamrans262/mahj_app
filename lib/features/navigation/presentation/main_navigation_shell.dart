@@ -18,6 +18,7 @@ import '../../map/presentation/map_screen.dart';
 import '../../matches/data/match_repository.dart';
 import '../../matches/domain/my_matches_data.dart';
 import '../../matches/presentation/my_matches_screen.dart';
+import '../../notifications/data/notification_store.dart';
 import '../../profile/data/profile_preview_data.dart';
 import '../../profile/domain/profile_data.dart';
 import '../../profile/presentation/profile_screen.dart';
@@ -31,6 +32,7 @@ class MainNavigationShell extends StatefulWidget {
     this.matchRepository,
     this.discoveryStore,
     this.locationRepository,
+    this.notificationStore,
     this.onNearbyViewAll,
     this.onCreateMatch,
     this.onMatchTap,
@@ -50,6 +52,7 @@ class MainNavigationShell extends StatefulWidget {
   final MatchRepository? matchRepository;
   final MatchDiscoveryStore? discoveryStore;
   final LocationRepository? locationRepository;
+  final NotificationStore? notificationStore;
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
   final ValueChanged<HomeMatch>? onMatchTap;
@@ -102,6 +105,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     _discoveryStore.addListener(_handleDiscoveryFiltersChanged);
+    widget.notificationStore?.addListener(_handleNotificationChanged);
+    final notificationStore = widget.notificationStore;
+    if (notificationStore != null) {
+      unawaited(notificationStore.ensureLoaded());
+    }
 
     if (widget.matchRepository != null && preloaded == null) {
       _initializeMatches();
@@ -114,6 +122,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   @override
   void dispose() {
     _discoveryStore.removeListener(_handleDiscoveryFiltersChanged);
+    widget.notificationStore?.removeListener(_handleNotificationChanged);
     if (_ownsDiscoveryStore) {
       _discoveryStore.dispose();
     }
@@ -149,6 +158,19 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     setState(() {});
     _refreshMatches();
   }
+
+  void _handleNotificationChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  int get _unreadNotificationCount =>
+      widget.notificationStore?.unreadCount ??
+      _profileData.unreadNotificationCount;
+
+  ProfileData get _profileWithNotificationCount => _profileData.copyWith(
+    unreadNotificationCount: _unreadNotificationCount,
+  );
 
   Future<void> _applyDiscoveryFilters(MatchFilters filters) async {
     _discoveryStore.update(filters, notify: false);
@@ -211,7 +233,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ? MatchFilters.defaultLocation
                 : _profileData.addressLine)
           : _discoveryStore.filters.selectedLocation,
-      unreadNotificationCount: _profileData.unreadNotificationCount,
+      unreadNotificationCount: _unreadNotificationCount,
       unreadMessageCount: _profileData.unreadMessageCount,
       upcomingMatches: featured,
       nearbyMatches: nearby,
@@ -221,7 +243,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   MyMatchesData get _resolvedMyMatchesData {
     final data = _myMatchesData;
     return MyMatchesData(
-      unreadNotificationCount: _profileData.unreadNotificationCount,
+      unreadNotificationCount: _unreadNotificationCount,
       unreadMessageCount: _profileData.unreadMessageCount,
       upcoming: data?.upcoming ?? const <MyMatchesItem>[],
       createdByMe: data?.createdByMe ?? const <MyMatchesItem>[],
@@ -468,7 +490,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       case 3:
         return ProfileScreen(
           key: const ValueKey('main-navigation-profile'),
-          data: _profileData,
+          data: _profileWithNotificationCount,
           onNotificationTap: widget.onNotificationTap,
           onMessageTap: widget.onMessageTap,
           onSettingsTap: widget.onProfileSettingsTap,
