@@ -123,10 +123,7 @@ class _ConnectedNotificationSettingsScreenState
                           const SizedBox(height: AppSpacing.sm),
                           TextButton(
                             onPressed: _load,
-                            child: Text(
-                              'Retry',
-                              style: AppTypography.action14,
-                            ),
+                            child: Text('Retry', style: AppTypography.action14),
                           ),
                         ],
                       ),
