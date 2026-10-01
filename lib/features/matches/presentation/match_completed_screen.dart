@@ -201,7 +201,7 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                     iconAsset: AppAssets.matchDetailsCalendarIcon,
                     label: 'Date',
                     value: Text(
-                      _formatDate(widget.match.startsAt),
+                      _formatDate(widget.match.startsAt.toLocal()),
                       style: _valueStyle,
                     ),
                   ),
@@ -210,7 +210,7 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                     iconAsset: AppAssets.matchDetailsTimeIcon,
                     label: 'Time',
                     value: Text(
-                      _formatTime(widget.match.startsAt),
+                      _formatTime(widget.match.startsAt.toLocal()),
                       style: _valueStyle,
                     ),
                   ),
