@@ -280,7 +280,7 @@ class _SupportScreenState extends State<SupportScreen> {
                       },
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    const _SectionLabel(text: 'Contact Support'),
+                    const _SectionLabel(text: 'Contact Support / Report a Problem'),
                     const SizedBox(height: AppSpacing.sm),
                     _TopicField(
                       selectedTopic: _selectedTopic,
