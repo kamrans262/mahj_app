@@ -121,12 +121,15 @@ class _AvailablePlanContent extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         Flexible(
-          child: Text(
-            plan.priceLabel,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.end,
-            style: AppTypography.homeGreeting,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              plan.priceLabel,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: AppTypography.homeGreeting,
+            ),
           ),
         ),
       ],

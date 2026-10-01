@@ -295,21 +295,19 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: Text(
-                  'Chat Players',
-                  style: AppTypography.homeSectionHeading,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
+              Text('Chat Players', style: AppTypography.homeSectionHeading),
               Flexible(
-                child: Text(
-                  '${HomeDateTimeFormatter.compactDate(widget.match.startsAt)} · '
-                  '${HomeDateTimeFormatter.time(widget.match.startsAt)}',
-                  textAlign: TextAlign.end,
-                  style: AppTypography.homeMeta14,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${HomeDateTimeFormatter.compactDate(widget.match.startsAt)} · '
+                    '${HomeDateTimeFormatter.time(widget.match.startsAt)}',
+                    textAlign: TextAlign.right,
+                    style: AppTypography.homeMeta14,
+                  ),
                 ),
               ),
             ],

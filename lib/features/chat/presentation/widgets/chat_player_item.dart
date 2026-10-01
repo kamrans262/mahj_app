@@ -48,7 +48,7 @@ class ChatPlayerItem extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.micro),
           Text(
             firstName,
             maxLines: 1,
