@@ -73,7 +73,7 @@ class _IncomingMessage extends StatelessWidget {
                   senderName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.homeMeta12,
+                  style: AppTypography.homeMeta14,
                 ),
               ),
             ],
@@ -87,7 +87,7 @@ class _IncomingMessage extends StatelessWidget {
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
-              child: Text(message.text, style: AppTypography.homeMeta12),
+              child: Text(message.text, style: AppTypography.homeMeta14),
             ),
           ),
           const SizedBox(height: 6),
@@ -97,7 +97,7 @@ class _IncomingMessage extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 _formatTime(message.timestamp),
-                style: AppTypography.homeMeta12,
+                style: AppTypography.homeMeta14,
               ),
             ),
           ),
@@ -121,7 +121,7 @@ class _OutgoingMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(_formatTime(message.timestamp), style: AppTypography.homeMeta12),
+          Text(_formatTime(message.timestamp), style: AppTypography.homeMeta14),
           const SizedBox(height: 6),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -139,7 +139,7 @@ class _OutgoingMessage extends StatelessWidget {
                   ),
                   child: Text(
                     message.text,
-                    style: AppTypography.homeMeta12.copyWith(
+                    style: AppTypography.homeMeta14.copyWith(
                       color: Colors.white,
                     ),
                   ),
