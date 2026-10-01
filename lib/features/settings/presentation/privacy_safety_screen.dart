@@ -8,6 +8,7 @@ import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_asset_icon.dart';
 import '../../../core/widgets/app_avatar.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_confirmation_dialog.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_surface_container.dart';
@@ -79,22 +80,92 @@ class _PrivacySafetyScreenState extends State<PrivacySafetyScreen> {
       return;
     }
 
-    setState(() => _unblockingIds.add(player.id));
-    try {
-      final succeeded = await callback(player.id);
-      if (!mounted) return;
-      if (succeeded) {
-        setState(() {
-          _blockedUsers.removeWhere((item) => item.id == player.id);
-        });
-      } else {
-        _showMessage('Could not unblock ${player.displayName}.');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _unblockingIds.remove(player.id));
-      }
+    final confirmed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Unblock player confirmation',
+      barrierColor: AppColors.confirmationBackdrop,
+      transitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        var isLoading = false;
+
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final navigator = Navigator.of(dialogContext);
+
+            Future<void> confirm() async {
+              if (isLoading) return;
+              setDialogState(() => isLoading = true);
+
+              setState(() => _unblockingIds.add(player.id));
+              final succeeded = await callback(player.id);
+
+              if (!mounted || !navigator.mounted) return;
+
+              if (succeeded) {
+                navigator.pop(true);
+                return;
+              }
+
+              setState(() => _unblockingIds.remove(player.id));
+              setDialogState(() => isLoading = false);
+              _showMessage('Could not unblock ${player.displayName}.');
+            }
+
+            return PopScope(
+              canPop: !isLoading,
+              child: SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
+                      vertical: AppSpacing.lg,
+                    ),
+                    child: AppConfirmationDialog(
+                      title: 'Unblock ${player.displayName}?',
+                      message:
+                          'This player will be able to see your eligible matches again.',
+                      cancelLabel: 'Cancel',
+                      confirmLabel: 'Unblock',
+                      isLoading: isLoading,
+                      onCancel: isLoading ? null : () => navigator.pop(false),
+                      onConfirm: isLoading ? null : confirm,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+      transitionBuilder: _modalTransition,
+    );
+
+    if (!mounted) return;
+    setState(() => _unblockingIds.remove(player.id));
+
+    if (confirmed == true) {
+      setState(() {
+        _blockedUsers.removeWhere((item) => item.id == player.id);
+      });
+      _showMessage('${player.displayName} unblocked.');
     }
+  }
+
+  Widget _modalTransition(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+    return FadeTransition(
+      opacity: curved,
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 0.98, end: 1).animate(curved),
+        child: child,
+      ),
+    );
   }
 
   @override
