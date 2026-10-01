@@ -49,7 +49,7 @@ class ChatPlayerItem extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: AppTypography.homeMeta12.copyWith(color: AppColors.heading),
+            style: AppTypography.homeMeta14.copyWith(color: AppColors.heading),
           ),
         ],
       ),
