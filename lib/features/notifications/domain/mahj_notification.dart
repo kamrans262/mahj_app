@@ -1,10 +1,14 @@
 enum MahjNotificationType {
   nearbyMatch,
+  playerJoined,
   matchInvite,
   matchAccepted,
   matchCancelled,
   matchConfirmed,
+  scheduleChanged,
   chatMessage,
+  gameReminder,
+  subscriptionUpdate,
   matchCompleted,
   scoreSubmitted,
 }
@@ -19,6 +23,7 @@ class MahjNotification {
     this.isRead = false,
     this.relatedMatchId,
     this.relatedUserId,
+    this.relatedInvitationId,
   });
 
   final String id;
@@ -29,6 +34,7 @@ class MahjNotification {
   final bool isRead;
   final String? relatedMatchId;
   final String? relatedUserId;
+  final String? relatedInvitationId;
 
   MahjNotification copyWith({bool? isRead}) {
     return MahjNotification(
@@ -40,6 +46,7 @@ class MahjNotification {
       isRead: isRead ?? this.isRead,
       relatedMatchId: relatedMatchId,
       relatedUserId: relatedUserId,
+      relatedInvitationId: relatedInvitationId,
     );
   }
 }
