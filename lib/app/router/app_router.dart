@@ -197,8 +197,7 @@ abstract final class AppRouter {
     AppRoutes.map: (context) => _mainShell(context, initialIndex: 1),
     AppRoutes.myMatches: (context) => _mainShell(context, initialIndex: 2),
     AppRoutes.profile: (context) => _mainShell(context, initialIndex: 3),
-    AppRoutes.notifications: (context) =>
-        _authRepository.currentUser == null
+    AppRoutes.notifications: (context) => _authRepository.currentUser == null
         ? NotificationsScreen(
             onBack: () => Navigator.of(context).maybePop(),
             onNotificationTap: (notification) async {
