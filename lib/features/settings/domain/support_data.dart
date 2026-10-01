@@ -1,8 +1,15 @@
+import 'dart:typed_data';
+
 class SupportFaq {
-  const SupportFaq({required this.id, required this.question});
+  const SupportFaq({
+    required this.id,
+    required this.question,
+    required this.answer,
+  });
 
   final String id;
   final String question;
+  final String answer;
 }
 
 class SupportTopic {
@@ -13,10 +20,17 @@ class SupportTopic {
 }
 
 class SupportAttachment {
-  const SupportAttachment({required this.id, required this.displayName});
+  const SupportAttachment({
+    required this.id,
+    required this.displayName,
+    required this.bytes,
+    required this.contentType,
+  });
 
   final String id;
   final String displayName;
+  final Uint8List bytes;
+  final String contentType;
 }
 
 class SupportIssueRequest {
@@ -29,4 +43,16 @@ class SupportIssueRequest {
   final SupportTopic topic;
   final String message;
   final SupportAttachment? screenshot;
+}
+
+class SupportContentData {
+  const SupportContentData({
+    required this.faqs,
+    required this.topics,
+    required this.supportEmail,
+  });
+
+  final List<SupportFaq> faqs;
+  final List<SupportTopic> topics;
+  final String supportEmail;
 }
