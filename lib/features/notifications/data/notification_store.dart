@@ -5,7 +5,9 @@ import 'notification_repository.dart';
 
 class NotificationStore extends ChangeNotifier {
   NotificationStore({required NotificationRepository repository})
-    : this._repository = repository;
+    : this._(repository);
+
+  NotificationStore._(this._repository);
 
   final NotificationRepository _repository;
 
