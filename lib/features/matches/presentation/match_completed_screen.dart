@@ -6,6 +6,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_asset_icon.dart';
+import '../../../core/widgets/app_avatar.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_success_message.dart';
@@ -30,7 +31,9 @@ class MatchCompletedScreen extends StatefulWidget {
     this.onSubmitScores,
     this.inviterName = 'Austen Parker',
     this.inviterAvatarAsset = AppAssets.demoAvatarOne,
+    this.inviterAvatarUrl,
     this.scoresAlreadySubmitted = false,
+    this.canSubmitScores = true,
   });
 
   final HomeMatch match;
@@ -39,7 +42,9 @@ class MatchCompletedScreen extends StatefulWidget {
   final SubmitMatchScoresCallback? onSubmitScores;
   final String inviterName;
   final String inviterAvatarAsset;
+  final String? inviterAvatarUrl;
   final bool scoresAlreadySubmitted;
+  final bool canSubmitScores;
 
   @override
   State<MatchCompletedScreen> createState() => _MatchCompletedScreenState();
@@ -182,6 +187,7 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                   const SizedBox(height: AppSpacing.xl),
                   InviterUserRow(
                     avatarAsset: widget.inviterAvatarAsset,
+                    avatarUrl: widget.inviterAvatarUrl,
                     inviterName: widget.inviterName,
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -303,12 +309,14 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                   ? const AppSuccessMessage(
                       message: 'Scores Submitted Successfully!',
                     )
-                  : AppButton.primary(
+                  : widget.canSubmitScores
+                  ? AppButton.primary(
                       label: 'Submit Scores',
                       isLoading: _isSubmitting,
                       isEnabled: widget.players.isNotEmpty && !_isSubmitting,
                       onPressed: _submitScores,
-                    ),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ],
         ),
@@ -365,7 +373,11 @@ class _ScoreRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ClipOval(child: AppAssetIcon(assetPath: player.avatarAsset, size: 30)),
+        AppAvatar(
+          fallbackAsset: player.avatarAsset,
+          imageUrl: player.avatarUrl,
+          size: 30,
+        ),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
