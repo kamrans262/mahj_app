@@ -532,7 +532,9 @@ abstract final class AppRouter {
             if (resolvedMatch == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Create an open match before inviting this player.'),
+                  content: Text(
+                    'Create an open match before inviting this player.',
+                  ),
                 ),
               );
               return;
@@ -540,6 +542,39 @@ abstract final class AppRouter {
 
             await _openInvitePlayers(context, resolvedMatch);
           },
+          onSubmitReport: int.tryParse(player.id) == null
+              ? null
+              : (request) async {
+                  try {
+                    await _chatRepository.reportPlayer(
+                      playerId: request.playerId,
+                      reasonId: request.reasonId,
+                      notes: request.notes,
+                    );
+                    return true;
+                  } catch (error) {
+                    if (context.mounted) {
+                      _showApiError(context, error);
+                    }
+                    return false;
+                  }
+                },
+          onSubmitBlock: int.tryParse(player.id) == null
+              ? null
+              : (request) async {
+                  try {
+                    await _chatRepository.blockPlayer(
+                      playerId: request.playerId,
+                      reasonId: request.reasonId,
+                    );
+                    return true;
+                  } catch (error) {
+                    if (context.mounted) {
+                      _showApiError(context, error);
+                    }
+                    return false;
+                  }
+                },
         ),
       );
     }
