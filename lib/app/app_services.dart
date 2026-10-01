@@ -11,6 +11,7 @@ import '../features/notifications/data/notification_repository.dart';
 import '../features/notifications/data/notification_store.dart';
 import '../features/notifications/data/push_notification_service.dart';
 import '../features/settings/data/privacy_safety_repository.dart';
+import '../features/settings/data/support_content_repository.dart';
 import '../features/subscription/data/subscription_repository.dart';
 
 abstract final class AppServices {
@@ -56,6 +57,9 @@ abstract final class AppServices {
 
   static final PrivacySafetyRepository privacySafetyRepository =
       PrivacySafetyRepository(apiClient: apiClient);
+
+  static final SupportContentRepository supportContentRepository =
+      SupportContentRepository(apiClient: apiClient);
 
   static final MatchDiscoveryStore matchDiscoveryStore = MatchDiscoveryStore();
 
