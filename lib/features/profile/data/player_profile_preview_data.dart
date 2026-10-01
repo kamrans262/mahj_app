@@ -7,6 +7,7 @@ abstract final class PlayerProfilePreviewData {
     required String id,
     required String displayName,
     required String avatarAsset,
+    String? avatarUrl,
   }) {
     final home = HomePreviewData.create();
     final normalizedId = id.toLowerCase();
@@ -61,6 +62,7 @@ abstract final class PlayerProfilePreviewData {
       address: resolved.address,
       postCode: resolved.postCode,
       avatarAsset: avatarAsset.isEmpty ? AppAssets.demoAvatarOne : avatarAsset,
+      avatarUrl: avatarUrl,
       matchesPlayed: resolved.matchesPlayed,
       matchesHosted: resolved.matchesHosted,
       attendancePercent: resolved.attendance,
