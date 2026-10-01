@@ -762,15 +762,17 @@ abstract final class AppRouter {
     BuildContext context, {
     int initialIndex = 0,
   }) {
+    final isAuthenticated = _authRepository.currentUser != null;
+
     return MainNavigationShell(
       initialIndex: initialIndex,
-      matchRepository: _matchRepository,
+      matchRepository: isAuthenticated ? _matchRepository : null,
       discoveryStore: AppServices.matchDiscoveryStore,
-      locationRepository: AppServices.locationRepository,
+      locationRepository: isAuthenticated ? AppServices.locationRepository : null,
       initialProfileData:
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,
-      homePreloadStore: _homePreloadStore,
+      homePreloadStore: isAuthenticated ? _homePreloadStore : null,
       onNearbyViewAll: () {
         Navigator.of(context).pushNamed(AppRoutes.nearbyMatches);
       },
@@ -1012,6 +1014,26 @@ abstract final class AppRouter {
   }
 
   static Future<void> _openHeaderChat(BuildContext context) async {
+    if (_authRepository.currentUser == null) {
+      final data = MyMatchesPreviewData.create();
+      HomeMatch? chatMatch;
+
+      for (final item in [...data.upcoming, ...data.createdByMe]) {
+        final match = item.match;
+        if (match.status != MatchStatus.cancelled &&
+            match.status != MatchStatus.completed) {
+          chatMatch = match;
+          break;
+        }
+      }
+
+      if (chatMatch != null && context.mounted) {
+        Navigator.of(context)
+            .pushNamed(AppRoutes.matchChat, arguments: chatMatch);
+      }
+      return;
+    }
+
     try {
       final data = await _matchRepository.listMyMatches();
       HomeMatch? chatMatch;
