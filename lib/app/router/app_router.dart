@@ -83,6 +83,9 @@ abstract final class AppRoutes {
 }
 
 abstract final class AppRouter {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static final _authRepository = AppServices.authRepository;
   static final _matchRepository = AppServices.matchRepository;
   static final _chatRepository = AppServices.chatRepository;
@@ -239,6 +242,7 @@ abstract final class AppRouter {
       },
       onLogOut: () async {
         try {
+          await AppServices.pushNotificationService.unregisterCurrentDevice();
           await _authRepository.logout();
           _homePreloadStore.clear();
           _notificationStore.clear();
@@ -253,6 +257,7 @@ abstract final class AppRouter {
       },
       onDeleteAccount: () async {
         try {
+          await AppServices.pushNotificationService.unregisterCurrentDevice();
           await _authRepository.deleteAccount();
           _homePreloadStore.clear();
           _notificationStore.clear();
@@ -303,6 +308,7 @@ abstract final class AppRouter {
       },
       onDeleteAccount: () async {
         try {
+          await AppServices.pushNotificationService.unregisterCurrentDevice();
           await _authRepository.deleteAccount();
           _homePreloadStore.clear();
           _notificationStore.clear();
@@ -795,6 +801,9 @@ abstract final class AppRouter {
           ? AppServices.locationRepository
           : null,
       notificationStore: isAuthenticated ? _notificationStore : null,
+      onAuthenticatedReady: isAuthenticated
+          ? AppServices.pushNotificationService.activateForAuthenticatedUser
+          : null,
       initialProfileData:
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,
@@ -1099,6 +1108,62 @@ abstract final class AppRouter {
     } catch (error) {
       if (context.mounted) _showApiError(context, error);
     }
+  }
+
+  static Future<bool> handlePushData(Map<String, dynamic> data) async {
+    if (_authRepository.currentUser == null) {
+      return false;
+    }
+
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      return false;
+    }
+
+    final type = _pushNotificationType(data['type']?.toString());
+    if (type == null) {
+      await Navigator.of(context).pushNamed(AppRoutes.notifications);
+      return true;
+    }
+
+    String? nullableId(dynamic value) {
+      final text = value?.toString() ?? '';
+      return text.isEmpty ? null : text;
+    }
+
+    final notification = MahjNotification(
+      id: data['notification_id']?.toString() ?? '',
+      type: type,
+      title: data['title']?.toString() ?? 'Mahj',
+      message: data['message']?.toString() ?? '',
+      createdAt: DateTime.now(),
+      relatedMatchId: nullableId(data['related_match_id']),
+      relatedUserId: nullableId(data['related_user_id']),
+      relatedInvitationId: nullableId(data['invitation_id']),
+    );
+
+    await _notificationStore.refreshUnreadCount();
+    if (!context.mounted) {
+      return false;
+    }
+
+    await _openNotificationDestination(context, notification);
+    return true;
+  }
+
+  static MahjNotificationType? _pushNotificationType(String? value) {
+    return switch (value) {
+      'nearby_match' => MahjNotificationType.nearbyMatch,
+      'player_joined' => MahjNotificationType.playerJoined,
+      'match_invite' => MahjNotificationType.matchInvite,
+      'match_confirmed' => MahjNotificationType.matchConfirmed,
+      'match_cancelled' => MahjNotificationType.matchCancelled,
+      'schedule_changed' => MahjNotificationType.scheduleChanged,
+      'chat_message' => MahjNotificationType.chatMessage,
+      'game_reminder' => MahjNotificationType.gameReminder,
+      'subscription_update' => MahjNotificationType.subscriptionUpdate,
+      _ => null,
+    };
   }
 
   static Future<void> _openNotificationDestination(
