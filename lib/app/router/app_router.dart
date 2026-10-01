@@ -27,6 +27,7 @@ import '../../features/matches/presentation/match_completed_screen.dart';
 import '../../features/matches/presentation/match_details_screen.dart';
 import '../../features/navigation/presentation/main_navigation_shell.dart';
 import '../../features/notifications/domain/mahj_notification.dart';
+import '../../features/notifications/presentation/connected_notifications_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/data/player_profile_preview_data.dart';
 import '../../features/profile/data/profile_preview_data.dart';
@@ -40,6 +41,7 @@ import '../../features/settings/data/privacy_safety_preview_data.dart';
 import '../../features/settings/data/support_preview_data.dart';
 import '../../features/settings/domain/legal_data.dart';
 import '../../features/settings/presentation/account_settings_screen.dart';
+import '../../features/settings/presentation/connected_notification_settings_screen.dart';
 import '../../features/settings/presentation/legal_screen.dart';
 import '../../features/settings/presentation/notification_settings_screen.dart';
 import '../../features/settings/presentation/privacy_safety_screen.dart';
@@ -84,6 +86,7 @@ abstract final class AppRouter {
   static final _authRepository = AppServices.authRepository;
   static final _matchRepository = AppServices.matchRepository;
   static final _chatRepository = AppServices.chatRepository;
+  static final _notificationStore = AppServices.notificationStore;
   static final _homePreloadStore = AppServices.homePreloadStore;
 
   static Map<String, WidgetBuilder> get routes => {
@@ -92,6 +95,7 @@ abstract final class AppRouter {
         final restored = await _authRepository.restoreSession();
         if (!restored) {
           _homePreloadStore.clear();
+          _notificationStore.clear();
           return AppRoutes.login;
         }
 
@@ -193,12 +197,21 @@ abstract final class AppRouter {
     AppRoutes.map: (context) => _mainShell(context, initialIndex: 1),
     AppRoutes.myMatches: (context) => _mainShell(context, initialIndex: 2),
     AppRoutes.profile: (context) => _mainShell(context, initialIndex: 3),
-    AppRoutes.notifications: (context) => NotificationsScreen(
-      onBack: () => Navigator.of(context).maybePop(),
-      onNotificationTap: (notification) async {
-        _openNotificationDestination(context, notification);
-      },
-    ),
+    AppRoutes.notifications: (context) =>
+        _authRepository.currentUser == null
+        ? NotificationsScreen(
+            onBack: () => Navigator.of(context).maybePop(),
+            onNotificationTap: (notification) async {
+              await _openNotificationDestination(context, notification);
+            },
+          )
+        : ConnectedNotificationsScreen(
+            store: _notificationStore,
+            onBack: () => Navigator.of(context).maybePop(),
+            onNotificationTap: (notification) async {
+              await _openNotificationDestination(context, notification);
+            },
+          ),
     AppRoutes.settings: (context) => SettingsScreen(
       onBack: () => Navigator.of(context).maybePop(),
       onAccountSettingsTap: () {
@@ -229,6 +242,7 @@ abstract final class AppRouter {
         try {
           await _authRepository.logout();
           _homePreloadStore.clear();
+          _notificationStore.clear();
           if (!context.mounted) return true;
           Navigator.of(context)
               .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
@@ -242,6 +256,7 @@ abstract final class AppRouter {
         try {
           await _authRepository.deleteAccount();
           _homePreloadStore.clear();
+          _notificationStore.clear();
           if (!context.mounted) return true;
           Navigator.of(context)
               .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
@@ -291,6 +306,7 @@ abstract final class AppRouter {
         try {
           await _authRepository.deleteAccount();
           _homePreloadStore.clear();
+          _notificationStore.clear();
           if (!context.mounted) return true;
           Navigator.of(context)
               .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
@@ -301,9 +317,15 @@ abstract final class AppRouter {
         }
       },
     ),
-    AppRoutes.notificationSettings: (context) => NotificationSettingsScreen(
-      onBack: () => Navigator.of(context).maybePop(),
-    ),
+    AppRoutes.notificationSettings: (context) =>
+        _authRepository.currentUser == null
+        ? NotificationSettingsScreen(
+            onBack: () => Navigator.of(context).maybePop(),
+          )
+        : ConnectedNotificationSettingsScreen(
+            repository: AppServices.notificationRepository,
+            onBack: () => Navigator.of(context).maybePop(),
+          ),
     AppRoutes.support: (context) => SupportScreen(
       faqs: SupportPreviewData.faqs,
       topics: SupportPreviewData.topics,
@@ -502,7 +524,9 @@ abstract final class AppRouter {
         settings: settings,
         builder: (context) => PlayerProfileScreen(
           player: player,
-          notificationCount: currentProfile.unreadNotificationCount,
+          notificationCount: _authRepository.currentUser == null
+              ? currentProfile.unreadNotificationCount
+              : _notificationStore.unreadCount,
           messageCount: currentProfile.unreadMessageCount,
           onNotificationTap: () {
             Navigator.of(context).pushNamed(AppRoutes.notifications);
@@ -771,6 +795,7 @@ abstract final class AppRouter {
       locationRepository: isAuthenticated
           ? AppServices.locationRepository
           : null,
+      notificationStore: isAuthenticated ? _notificationStore : null,
       initialProfileData:
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,
@@ -1077,30 +1102,64 @@ abstract final class AppRouter {
     }
   }
 
-  static void _openNotificationDestination(
+  static Future<void> _openNotificationDestination(
     BuildContext context,
     MahjNotification notification,
-  ) {
-    final match = _resolveNotificationMatch(notification.relatedMatchId);
-    if (match == null) return;
+  ) async {
+    if (notification.type == MahjNotificationType.subscriptionUpdate) {
+      await Navigator.of(context).pushNamed(AppRoutes.manageSubscription);
+      return;
+    }
+
+    final matchId = notification.relatedMatchId;
+    HomeMatch? match;
+
+    if (_authRepository.currentUser != null &&
+        matchId != null &&
+        matchId.isNotEmpty) {
+      try {
+        match = await _matchRepository.fetch(matchId);
+      } catch (error) {
+        if (context.mounted) _showApiError(context, error);
+        return;
+      }
+    } else {
+      match = _resolveNotificationMatch(matchId);
+    }
+
+    if (match == null || !context.mounted) return;
 
     switch (notification.type) {
       case MahjNotificationType.matchInvite:
-        _openInvitationReceiving(context, match);
+        await _openInvitationReceiving(
+          context,
+          match,
+          invitationId: notification.relatedInvitationId,
+        );
         return;
       case MahjNotificationType.chatMessage:
-        Navigator.of(context).pushNamed(AppRoutes.matchChat, arguments: match);
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.matchChat, arguments: match);
         return;
       case MahjNotificationType.matchCompleted:
       case MahjNotificationType.scoreSubmitted:
-        Navigator.of(context)
-            .pushNamed(AppRoutes.matchCompleted, arguments: match);
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.matchCompleted, arguments: match);
         return;
       case MahjNotificationType.nearbyMatch:
+      case MahjNotificationType.playerJoined:
       case MahjNotificationType.matchAccepted:
       case MahjNotificationType.matchCancelled:
       case MahjNotificationType.matchConfirmed:
-        _openMatchDetails(context, match);
+      case MahjNotificationType.scheduleChanged:
+      case MahjNotificationType.gameReminder:
+        await Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.matchDetails, arguments: match);
+        return;
+      case MahjNotificationType.subscriptionUpdate:
         return;
     }
   }
