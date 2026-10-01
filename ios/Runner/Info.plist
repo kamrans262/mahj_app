@@ -30,6 +30,8 @@
 		<true/>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Mahj uses your location to find and map nearby matches.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Mahj lets you attach an optional screenshot when contacting support.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>
