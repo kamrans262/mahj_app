@@ -8,6 +8,9 @@ abstract final class PlayerProfilePreviewData {
     required String displayName,
     required String avatarAsset,
     String? avatarUrl,
+    bool canInvite = true,
+    bool canReport = true,
+    bool canBlock = true,
   }) {
     final home = HomePreviewData.create();
     final normalizedId = id.toLowerCase();
@@ -68,6 +71,9 @@ abstract final class PlayerProfilePreviewData {
       attendancePercent: resolved.attendance,
       memberSinceLabel: resolved.memberSince,
       mutualGames: List.unmodifiable(home.nearbyMatches),
+      canInvite: canInvite,
+      canReport: canReport,
+      canBlock: canBlock,
     );
   }
 
