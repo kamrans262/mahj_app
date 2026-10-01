@@ -10,7 +10,9 @@ import 'package:mahj_app/features/notifications/data/notification_store.dart';
 import 'package:mahj_app/features/notifications/domain/mahj_notification.dart';
 
 void main() {
-  test('M7 notification repository and store honor the backend contract', () async {
+  test(
+    'M7 notification repository and store honor the backend contract',
+    () async {
     final tokenStore = SecureTokenStore(useMemoryOnly: true);
     await tokenStore.write('m7-test-token');
 
@@ -224,5 +226,6 @@ void main() {
       ),
       isTrue,
     );
-  });
+    },
+  );
 }
