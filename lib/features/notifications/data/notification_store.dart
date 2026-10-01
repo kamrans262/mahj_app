@@ -68,6 +68,8 @@ class NotificationStore extends ChangeNotifier {
       _page = next.page;
       _hasMore = next.hasMore;
       _unreadCount = next.unreadCount;
+    } catch (_) {
+      // Keep already loaded notifications visible. A later scroll can retry.
     } finally {
       _isLoadingMore = false;
       notifyListeners();
