@@ -787,15 +787,13 @@ abstract final class AppRouter {
       onMyMatchesMatchTap: (item, tab) async {
         await _openMyMatchesEntry(context, item, tab);
       },
-      onMyMatchesInvitationTap: (item) async {
-        await _openInvitationReceiving(
-          context,
-          item.match,
-          invitationId: item.invitationId,
-          inviterName: item.inviterName,
-          inviterAvatarUrl: item.inviterAvatarUrl,
-        );
-      },
+      onMyMatchesInvitationTap: (item) => _openInvitationReceiving(
+        context,
+        item.match,
+        invitationId: item.invitationId,
+        inviterName: item.inviterName,
+        inviterAvatarUrl: item.inviterAvatarUrl,
+      ),
       onNotificationTap: () {
         Navigator.of(context).pushNamed(AppRoutes.notifications);
       },
@@ -913,8 +911,8 @@ abstract final class AppRouter {
     String? invitationId,
     String? inviterName,
     String? inviterAvatarUrl,
-  }) async {
-    await Navigator.of(context).push<void>(
+  }) {
+    return Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         settings: RouteSettings(
           name: AppRoutes.invitationReceiving,
