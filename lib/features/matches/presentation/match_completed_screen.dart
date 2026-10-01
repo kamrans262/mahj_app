@@ -179,122 +179,138 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
               child: ListView(
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.pageHorizontal,
-                ),
+                padding: EdgeInsets.zero,
                 children: [
                   const _MatchCompletedHero(),
-                  const SizedBox(height: AppSpacing.xl),
-                  InviterUserRow(
-                    avatarAsset: widget.inviterAvatarAsset,
-                    avatarUrl: widget.inviterAvatarUrl,
-                    inviterName: widget.inviterName,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.divider,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  MatchInfoRow(
-                    iconAsset: AppAssets.matchDetailsCalendarIcon,
-                    label: 'Date',
-                    value: Text(
-                      _formatDate(widget.match.startsAt.toLocal()),
-                      style: _valueStyle,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageHorizontal,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  MatchInfoRow(
-                    iconAsset: AppAssets.matchDetailsTimeIcon,
-                    label: 'Time',
-                    value: Text(
-                      _formatTime(widget.match.startsAt.toLocal()),
-                      style: _valueStyle,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  MatchInfoRow(
-                    iconAsset: AppAssets.matchDetailsDistanceIcon,
-                    label: 'Location',
-                    value: Text(
-                      widget.match.location,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: _valueStyle,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.divider,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  MatchInfoRow(
-                    iconAsset: AppAssets.matchDetailsPlayersIcon,
-                    label: 'Players',
-                    value: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          '${widget.match.currentPlayers}/${widget.match.maxPlayers}',
-                          style: _valueStyle,
+                        const SizedBox(height: AppSpacing.xl),
+                        InviterUserRow(
+                          avatarAsset: widget.inviterAvatarAsset,
+                          avatarUrl: widget.inviterAvatarUrl,
+                          inviterName: widget.inviterName,
                         ),
-                        const SizedBox(height: AppSpacing.micro),
-                        Text(
-                          _playerSupportingText,
-                          style: AppTypography.homeMeta12.copyWith(
-                            color: AppColors.heading,
+                        const SizedBox(height: AppSpacing.lg),
+                        const Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColors.divider,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        MatchInfoRow(
+                          iconAsset: AppAssets.matchDetailsCalendarIcon,
+                          label: 'Date',
+                          value: Text(
+                            _formatDate(widget.match.startsAt.toLocal()),
+                            style: _valueStyle,
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.lg),
+                        MatchInfoRow(
+                          iconAsset: AppAssets.matchDetailsTimeIcon,
+                          label: 'Time',
+                          value: Text(
+                            _formatTime(widget.match.startsAt.toLocal()),
+                            style: _valueStyle,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        MatchInfoRow(
+                          iconAsset: AppAssets.matchDetailsDistanceIcon,
+                          label: 'Location',
+                          value: Text(
+                            widget.match.location,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: _valueStyle,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        const Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColors.divider,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        MatchInfoRow(
+                          iconAsset: AppAssets.matchDetailsPlayersIcon,
+                          label: 'Players',
+                          value: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${widget.match.currentPlayers}/${widget.match.maxPlayers}',
+                                style: _valueStyle,
+                              ),
+                              const SizedBox(height: AppSpacing.micro),
+                              Text(
+                                _playerSupportingText,
+                                style: AppTypography.homeMeta12.copyWith(
+                                  color: AppColors.heading,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        MatchInfoRow(
+                          iconAsset: AppAssets.matchDetailsStatusIcon,
+                          label: 'Match Status',
+                          value: Text(
+                            'Completed',
+                            style: _valueStyle.copyWith(
+                              color: AppColors.matchSuccess,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        const Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppColors.divider,
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        Text(
+                          'Scores',
+                          style: AppTypography.homeSectionHeading,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        if (widget.players.isEmpty)
+                          const AppSurfaceContainer(
+                            minHeight: 80,
+                            child: Center(
+                              child: Text(
+                                'No eligible players found',
+                                style: AppTypography.body14,
+                              ),
+                            ),
+                          )
+                        else
+                          ...List.generate(
+                            widget.players.length * 2 - 1,
+                            (index) {
+                              if (index.isOdd) {
+                                return const SizedBox(
+                                  height: AppSpacing.lg,
+                                );
+                              }
+                              final player = widget.players[index ~/ 2];
+                              return _ScoreRow(
+                                player: player,
+                                controller: _scoreControllers[player.id]!,
+                                enabled: !_submitted && !_isSubmitting,
+                              );
+                            },
+                          ),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  MatchInfoRow(
-                    iconAsset: AppAssets.matchDetailsStatusIcon,
-                    label: 'Match Status',
-                    value: Text(
-                      'Completed',
-                      style: _valueStyle.copyWith(
-                        color: AppColors.matchSuccess,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.divider,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text('Scores', style: AppTypography.homeSectionHeading),
-                  const SizedBox(height: AppSpacing.lg),
-                  if (widget.players.isEmpty)
-                    const AppSurfaceContainer(
-                      minHeight: 80,
-                      child: Center(
-                        child: Text(
-                          'No eligible players found',
-                          style: AppTypography.body14,
-                        ),
-                      ),
-                    )
-                  else
-                    ...List.generate(widget.players.length * 2 - 1, (index) {
-                      if (index.isOdd) {
-                        return const SizedBox(height: AppSpacing.lg);
-                      }
-                      final player = widget.players[index ~/ 2];
-                      return _ScoreRow(
-                        player: player,
-                        controller: _scoreControllers[player.id]!,
-                        enabled: !_submitted && !_isSubmitting,
-                      );
-                    }),
-                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),
@@ -330,11 +346,10 @@ class _MatchCompletedHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurfaceContainer(
-      minHeight: 0,
-      backgroundColor: AppColors.invitationHeroSurface,
-      borderColor: Colors.transparent,
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
+      color: AppColors.invitationHeroSurface,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
