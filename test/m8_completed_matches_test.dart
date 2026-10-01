@@ -209,7 +209,17 @@ void main() {
     expect(find.text('Completed'), findsOneWidget);
     expect(find.text('Cancelled'), findsOneWidget);
 
-    await tester.tap(find.text('Completed'));
+    final tabStrip = find.byKey(
+      const ValueKey('my-matches-tabs-scroll'),
+    );
+    expect(tabStrip, findsOneWidget);
+
+    await tester.drag(tabStrip, const Offset(-280, 0));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('my-matches-tab-completed')),
+    );
     await tester.pump();
 
     expect(
