@@ -37,18 +37,16 @@ import '../../features/profile/domain/player_profile_route_args.dart';
 import '../../features/profile/domain/profile_data.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/player_profile_screen.dart';
-import '../../features/settings/data/legal_preview_data.dart';
 import '../../features/settings/data/privacy_safety_preview_data.dart';
-import '../../features/settings/data/support_preview_data.dart';
 import '../../features/settings/domain/legal_data.dart';
 import '../../features/settings/presentation/account_settings_screen.dart';
 import '../../features/settings/presentation/connected_notification_settings_screen.dart';
+import '../../features/settings/presentation/connected_legal_screen.dart';
 import '../../features/settings/presentation/connected_privacy_safety_screen.dart';
-import '../../features/settings/presentation/legal_screen.dart';
+import '../../features/settings/presentation/connected_support_screen.dart';
 import '../../features/settings/presentation/notification_settings_screen.dart';
 import '../../features/settings/presentation/privacy_safety_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
-import '../../features/settings/presentation/support_screen.dart';
 import '../../features/subscription/presentation/connected_manage_subscription_screen.dart';
 import '../../features/subscription/presentation/subscription_entry_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
@@ -92,6 +90,7 @@ abstract final class AppRouter {
   static final _matchRepository = AppServices.matchRepository;
   static final _chatRepository = AppServices.chatRepository;
   static final _privacySafetyRepository = AppServices.privacySafetyRepository;
+  static final _supportContentRepository = AppServices.supportContentRepository;
   static final _notificationStore = AppServices.notificationStore;
   static final _homePreloadStore = AppServices.homePreloadStore;
 
@@ -334,9 +333,8 @@ abstract final class AppRouter {
             repository: AppServices.notificationRepository,
             onBack: () => Navigator.of(context).maybePop(),
           ),
-    AppRoutes.support: (context) => SupportScreen(
-      faqs: SupportPreviewData.faqs,
-      topics: SupportPreviewData.topics,
+    AppRoutes.support: (context) => ConnectedSupportScreen(
+      repository: _supportContentRepository,
       onBack: () => Navigator.of(context).maybePop(),
     ),
     AppRoutes.privacySafety: (context) =>
@@ -502,9 +500,8 @@ abstract final class AppRouter {
 
       return MaterialPageRoute<void>(
         settings: settings,
-        builder: (context) => LegalScreen(
-          terms: LegalPreviewData.terms,
-          privacy: LegalPreviewData.privacy,
+        builder: (context) => ConnectedLegalScreen(
+          repository: _supportContentRepository,
           initialDocument: initialDocument,
           onBack: () => Navigator.of(context).maybePop(),
         ),
