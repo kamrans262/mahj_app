@@ -112,7 +112,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       unawaited(notificationStore.ensureLoaded());
       _notificationRefreshTimer = Timer.periodic(
         const Duration(seconds: 20),
-        (_) => unawaited(notificationStore.refresh()),
+        (_) => unawaited(notificationStore.refreshUnreadCount()),
       );
     }
 
