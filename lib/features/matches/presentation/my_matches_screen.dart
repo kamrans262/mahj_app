@@ -305,6 +305,7 @@ class _MyMatchesTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      key: const ValueKey('my-matches-tabs-scroll'),
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
