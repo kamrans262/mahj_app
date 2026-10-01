@@ -13,29 +13,29 @@ void main() {
   test(
     'M7 notification repository and store honor the backend contract',
     () async {
-    final tokenStore = SecureTokenStore(useMemoryOnly: true);
-    await tokenStore.write('m7-test-token');
-
-    final requests = <http.Request>[];
-    final client = MockClient((request) async {
-      requests.add(request);
-
-      if (request.method == 'GET' &&
-          request.url.path == '/api/notifications' &&
-          request.url.queryParameters['page'] == '1') {
-        return http.Response(
-          jsonEncode({
-            'data': [
-              {
-                'id': '10',
-                'type': 'match_invite',
-                'title': 'Game Invitation',
-                'message': 'Austen invited you.',
-                'created_at': '2026-10-01T12:00:00Z',
-                'is_read': false,
-                'related_match_id': '44',
-                'related_user_id': '7',
-                'data': {'invitation_id': '81'},
+      final tokenStore = SecureTokenStore(useMemoryOnly: true);
+      await tokenStore.write('m7-test-token');
+  
+      final requests = <http.Request>[];
+      final client = MockClient((request) async {
+        requests.add(request);
+  
+        if (request.method == 'GET' &&
+            request.url.path == '/api/notifications' &&
+            request.url.queryParameters['page'] == '1') {
+          return http.Response(
+            jsonEncode({
+              'data': [
+                {
+                  'id': '10',
+                  'type': 'match_invite',
+                  'title': 'Game Invitation',
+                  'message': 'Austen invited you.',
+                  'created_at': '2026-10-01T12:00:00Z',
+                  'is_read': false,
+                  'related_match_id': '44',
+                  'related_user_id': '7',
+                  'data': {'invitation_id': '81'},
               },
               {
                 'id': '9',
