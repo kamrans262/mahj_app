@@ -304,19 +304,22 @@ class _MyMatchesTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: MyMatchesTab.values.map((tab) {
-        return _MyMatchesTabButton(
-          tab: tab,
-          selected: tab == selectedTab,
-          onTap: () => onSelected(tab),
-        );
-      }).toList(growable: false),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var index = 0; index < MyMatchesTab.values.length; index++) ...[
+            if (index > 0) const SizedBox(width: AppSpacing.sm),
+            _MyMatchesTabButton(
+              tab: MyMatchesTab.values[index],
+              selected: MyMatchesTab.values[index] == selectedTab,
+              onTap: () => onSelected(MyMatchesTab.values[index]),
+            ),
+          ],
+        ],
+      ),
     );
   }
-
 }
 
 class _MyMatchesTabButton extends StatelessWidget {
