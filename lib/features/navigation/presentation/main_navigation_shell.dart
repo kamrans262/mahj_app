@@ -174,7 +174,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   void _handleNotificationChanged() {
     if (!mounted) return;
-    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 
   int get _unreadNotificationCount =>
