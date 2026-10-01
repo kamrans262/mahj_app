@@ -9,8 +9,9 @@ import '../data/notifications_preview_data.dart';
 import '../domain/mahj_notification.dart';
 import 'widgets/notification_list_item.dart';
 
-typedef NotificationMarkReadCallback =
-    Future<MahjNotification> Function(MahjNotification notification);
+typedef NotificationMarkReadCallback = Future<MahjNotification> Function(
+  MahjNotification notification,
+);
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({
