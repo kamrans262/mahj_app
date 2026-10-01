@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -63,6 +64,53 @@ class ApiClient {
       body: body,
       authenticated: authenticated,
     );
+  }
+
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required Map<String, String> fields,
+    String? fileField,
+    Uint8List? fileBytes,
+    String? fileName,
+    bool authenticated = true,
+  }) async {
+    final normalizedPath = path.startsWith('/') ? path : '/$path';
+    final uri = Uri.parse('$_baseUrl$normalizedPath');
+    final request = http.MultipartRequest('POST', uri);
+    request.headers['Accept'] = 'application/json';
+
+    if (authenticated) {
+      final token = await _tokenStore.read();
+      if (token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+    }
+
+    request.fields.addAll(fields);
+
+    if (fileField != null &&
+        fileBytes != null &&
+        fileBytes.isNotEmpty &&
+        fileName != null &&
+        fileName.isNotEmpty) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          fileField,
+          fileBytes,
+          filename: fileName,
+        ),
+      );
+    }
+
+    final streamed = await _httpClient.send(request);
+    final response = await http.Response.fromStream(streamed);
+    final payload = _decodeBody(response.body);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _exceptionFor(response.statusCode, payload);
+    }
+
+    return payload;
   }
 
   Future<Map<String, dynamic>> _send(
