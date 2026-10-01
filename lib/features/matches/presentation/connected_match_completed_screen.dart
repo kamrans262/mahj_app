@@ -7,6 +7,7 @@ import '../../../core/widgets/app_loader.dart';
 import '../../home/domain/home_match.dart';
 import '../data/match_repository.dart';
 import '../domain/match_completion_data.dart';
+import '../domain/match_score_player.dart';
 import 'match_completed_screen.dart';
 
 class ConnectedMatchCompletedScreen extends StatefulWidget {
@@ -16,12 +17,14 @@ class ConnectedMatchCompletedScreen extends StatefulWidget {
     required this.currentUserId,
     super.key,
     this.onBack,
+    this.onPlayerTap,
   });
 
   final HomeMatch initialMatch;
   final MatchRepository repository;
   final String currentUserId;
   final VoidCallback? onBack;
+  final ValueChanged<MatchScorePlayer>? onPlayerTap;
 
   @override
   State<ConnectedMatchCompletedScreen> createState() =>
@@ -123,6 +126,7 @@ class _ConnectedMatchCompletedScreenState
       scoresAlreadySubmitted: data.scoresSubmitted,
       canSubmitScores: data.canSubmitScores,
       onBack: widget.onBack,
+      onPlayerTap: widget.onPlayerTap,
       onSubmitScores: data.canSubmitScores ? _submitScores : null,
     );
   }
