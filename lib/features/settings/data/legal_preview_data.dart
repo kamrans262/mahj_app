@@ -58,7 +58,7 @@ abstract final class LegalPreviewData {
       LegalSectionData(
         title: 'Changes to These Terms',
         paragraphs: [
-          'We may update these demo terms as the product evolves. Material changes should be presented to users through the app or another appropriate notice.',
+          'We may update these terms as the product evolves. Material changes should be presented to users through the app or another appropriate notice.',
         ],
       ),
     ],
@@ -96,7 +96,7 @@ abstract final class LegalPreviewData {
       LegalSectionData(
         title: 'Data Retention',
         paragraphs: [
-          'Information is retained only for as long as reasonably necessary for the purposes described in this demo policy, including account administration, safety, legal, and operational needs.',
+          'Information is retained only for as long as reasonably necessary for the purposes described in this policy, including account administration, safety, legal, and operational needs.',
         ],
       ),
       LegalSectionData(
@@ -120,7 +120,7 @@ abstract final class LegalPreviewData {
       LegalSectionData(
         title: 'Contact Us',
         paragraphs: [
-          'Questions about this demo privacy policy can be submitted through the Support screen in the app.',
+          'Questions about this privacy policy can be submitted through the Support screen in the app.',
         ],
       ),
     ],
