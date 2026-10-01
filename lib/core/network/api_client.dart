@@ -44,6 +44,14 @@ class ApiClient {
     return _send('PUT', path, body: body, authenticated: authenticated);
   }
 
+  Future<Map<String, dynamic>> patch(
+    String path, {
+    Map<String, dynamic>? body,
+    bool authenticated = true,
+  }) {
+    return _send('PATCH', path, body: body, authenticated: authenticated);
+  }
+
   Future<Map<String, dynamic>> delete(
     String path, {
     bool authenticated = true,
