@@ -6,65 +6,35 @@ import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_surface_container.dart';
+import '../../notifications/domain/notification_preferences.dart';
 
-class NotificationSettingsPreferences {
+class NotificationSettingsPreferences extends NotificationPreferences {
   const NotificationSettingsPreferences({
-    this.newGamesNearby = true,
-    this.gameInvitations = true,
-    this.playersJoiningMyGame = true,
-    this.gameConfirmations = true,
-    this.gameReminders = true,
-    this.scheduleChanges = true,
-    this.newMessages = true,
-    this.subscriptionUpdates = true,
+    super.newGamesNearby = true,
+    super.gameInvitations = true,
+    super.playersJoiningMyGame = true,
+    super.gameConfirmations = true,
+    super.gameReminders = true,
+    super.scheduleChanges = true,
+    super.newMessages = true,
+    super.subscriptionUpdates = true,
   });
-
-  final bool newGamesNearby;
-  final bool gameInvitations;
-  final bool playersJoiningMyGame;
-  final bool gameConfirmations;
-  final bool gameReminders;
-  final bool scheduleChanges;
-  final bool newMessages;
-  final bool subscriptionUpdates;
-
-  NotificationSettingsPreferences copyWith({
-    bool? newGamesNearby,
-    bool? gameInvitations,
-    bool? playersJoiningMyGame,
-    bool? gameConfirmations,
-    bool? gameReminders,
-    bool? scheduleChanges,
-    bool? newMessages,
-    bool? subscriptionUpdates,
-  }) {
-    return NotificationSettingsPreferences(
-      newGamesNearby: newGamesNearby ?? this.newGamesNearby,
-      gameInvitations: gameInvitations ?? this.gameInvitations,
-      playersJoiningMyGame: playersJoiningMyGame ?? this.playersJoiningMyGame,
-      gameConfirmations: gameConfirmations ?? this.gameConfirmations,
-      gameReminders: gameReminders ?? this.gameReminders,
-      scheduleChanges: scheduleChanges ?? this.scheduleChanges,
-      newMessages: newMessages ?? this.newMessages,
-      subscriptionUpdates: subscriptionUpdates ?? this.subscriptionUpdates,
-    );
-  }
 }
 
 typedef NotificationSettingsSaveCallback = Future<bool> Function(
-  NotificationSettingsPreferences preferences,
+  NotificationPreferences preferences,
 );
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({
     super.key,
     this.onBack,
-    this.initialPreferences = const NotificationSettingsPreferences(),
+    this.initialPreferences = const NotificationPreferences(),
     this.onSave,
   });
 
   final VoidCallback? onBack;
-  final NotificationSettingsPreferences initialPreferences;
+  final NotificationPreferences initialPreferences;
   final NotificationSettingsSaveCallback? onSave;
 
   @override
@@ -74,7 +44,7 @@ class NotificationSettingsScreen extends StatefulWidget {
 
 class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
-  late NotificationSettingsPreferences _preferences;
+  late NotificationPreferences _preferences;
   bool _isSaving = false;
 
   @override
@@ -117,7 +87,7 @@ class _NotificationSettingsScreenState
     }
   }
 
-  void _update(NotificationSettingsPreferences value) {
+  void _update(NotificationPreferences value) {
     setState(() => _preferences = value);
   }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "335502441041",
+    "project_id": "mahj-development",
+    "storage_bucket": "mahj-development.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335502441041:android:a6e7b2e36b0cee29249670",
+        "android_client_info": {
+          "package_name": "com.example.mahj_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4XR2-rurqx0AP0qZQHTFgZLIEs6hlHXE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

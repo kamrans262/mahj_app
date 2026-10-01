@@ -10,6 +10,7 @@ class MahjApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: AppRouter.navigatorKey,
       title: 'Mahj Around Town',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
