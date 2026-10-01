@@ -20,6 +20,7 @@ import '../../features/matches/data/match_completed_preview_data.dart';
 import '../../features/matches/data/my_matches_preview_data.dart';
 import '../../features/matches/domain/my_matches_data.dart';
 import '../../features/matches/presentation/connected_create_match_screen.dart';
+import '../../features/matches/presentation/connected_match_completed_screen.dart';
 import '../../features/matches/presentation/connected_match_details_screen.dart';
 import '../../features/matches/presentation/invite_players_screen.dart';
 import '../../features/matches/presentation/invitation_receiving_screen.dart';
@@ -648,6 +649,12 @@ abstract final class AppRouter {
                 Navigator.of(context)
                     .pushNamed(AppRoutes.matchChat, arguments: match);
               },
+              onCompleted: (completed) {
+                Navigator.of(context).pushReplacementNamed(
+                  AppRoutes.matchCompleted,
+                  arguments: completed,
+                );
+              },
             );
           }
 
@@ -668,6 +675,19 @@ abstract final class AppRouter {
 
     if (settings.name == AppRoutes.matchCompleted) {
       if (match is! HomeMatch) return null;
+
+      final currentUser = _authRepository.currentUser;
+      if (match.isBackendMatch && currentUser != null) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (context) => ConnectedMatchCompletedScreen(
+            initialMatch: match,
+            repository: _matchRepository,
+            currentUserId: currentUser.id,
+            onBack: () => Navigator.of(context).maybePop(),
+          ),
+        );
+      }
 
       return MaterialPageRoute<void>(
         settings: settings,
@@ -880,6 +900,12 @@ abstract final class AppRouter {
               Navigator.of(detailsContext)
                   .pushNamed(AppRoutes.matchChat, arguments: match);
             },
+            onCompleted: (completed) {
+              Navigator.of(detailsContext).pushReplacementNamed(
+                AppRoutes.matchCompleted,
+                arguments: completed,
+              );
+            },
           ),
         ),
       );
@@ -1010,6 +1036,12 @@ abstract final class AppRouter {
           onChat: (_) {
             Navigator.of(joinedContext)
                 .pushNamed(AppRoutes.matchChat, arguments: match);
+          },
+          onCompleted: (completed) {
+            Navigator.of(joinedContext).pushReplacementNamed(
+              AppRoutes.matchCompleted,
+              arguments: completed,
+            );
           },
         ),
       ),
@@ -1241,6 +1273,8 @@ abstract final class AppRouter {
       ...myMatches.upcoming,
       ...myMatches.createdByMe,
       ...myMatches.invites,
+      ...myMatches.completed,
+      ...myMatches.cancelled,
     ]) {
       if (item.match.id == id) return item.match;
     }

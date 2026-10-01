@@ -40,19 +40,22 @@ abstract final class MyMatchesPreviewData {
       upcoming: [
         item(id: 'my-upcoming-1', status: MatchStatus.open),
         item(id: 'my-upcoming-2', status: MatchStatus.confirmed),
-        item(id: 'my-upcoming-3', status: MatchStatus.cancelled),
-        item(id: 'my-upcoming-4', status: MatchStatus.full, currentPlayers: 6),
-        item(id: 'my-upcoming-5', status: MatchStatus.open),
+        item(id: 'my-upcoming-3', status: MatchStatus.full, currentPlayers: 6),
+        item(id: 'my-upcoming-4', status: MatchStatus.open),
       ],
       createdByMe: [
         item(id: 'my-created-1', status: MatchStatus.open, mapPreview: true),
         item(id: 'my-created-2', status: MatchStatus.confirmed),
-        item(id: 'my-created-3', status: MatchStatus.cancelled),
-        item(id: 'my-created-completed', status: MatchStatus.completed),
       ],
       invites: [
         item(id: 'my-invite-1', status: MatchStatus.open),
         item(id: 'my-invite-2', status: MatchStatus.full, currentPlayers: 6),
+      ],
+      completed: [
+        item(id: 'my-completed-1', status: MatchStatus.completed),
+      ],
+      cancelled: [
+        item(id: 'my-cancelled-1', status: MatchStatus.cancelled),
       ],
     );
   }

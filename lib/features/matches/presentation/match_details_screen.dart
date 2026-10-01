@@ -19,6 +19,7 @@ import 'widgets/report_match_dialog.dart';
 typedef MatchJoinCallback = Future<HomeMatch> Function(HomeMatch match);
 typedef MatchLeaveCallback = Future<HomeMatch> Function(HomeMatch match);
 typedef MatchCancelCallback = Future<void> Function(HomeMatch match);
+typedef MatchCompleteCallback = Future<HomeMatch> Function(HomeMatch match);
 typedef MatchChatCallback = void Function(String matchId);
 typedef MatchReportCallback = Future<void> Function(ReportMatchRequest request);
 
@@ -33,6 +34,8 @@ class MatchDetailsScreen extends StatefulWidget {
     this.onLeaveMatch,
     this.onChat,
     this.onCancelMatch,
+    this.onCompleteMatch,
+    this.onCompleted,
     this.onSubmitReport,
     this.hostUserId,
     this.isCurrentUserJoined = false,
@@ -56,6 +59,8 @@ class MatchDetailsScreen extends StatefulWidget {
   final MatchLeaveCallback? onLeaveMatch;
   final MatchChatCallback? onChat;
   final MatchCancelCallback? onCancelMatch;
+  final MatchCompleteCallback? onCompleteMatch;
+  final ValueChanged<HomeMatch>? onCompleted;
   final MatchReportCallback? onSubmitReport;
   final String? hostUserId;
 
@@ -92,6 +97,8 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   bool _leaveRequestInFlight = false;
   bool _isCancelDialogOpen = false;
   bool _cancelRequestInFlight = false;
+  bool _isCompleteDialogOpen = false;
+  bool _completeRequestInFlight = false;
   bool _isStatusDialogOpen = false;
   bool _isReportDialogOpen = false;
   bool _reportRequestInFlight = false;
@@ -544,6 +551,105 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
     }
   }
 
+  Future<void> _showCompleteConfirmation() async {
+    if (!_match.canComplete || _isCompleteDialogOpen) return;
+
+    _isCompleteDialogOpen = true;
+
+    try {
+      final completed = await showGeneralDialog<HomeMatch>(
+        context: context,
+        barrierDismissible: false,
+        barrierLabel: 'Complete match confirmation',
+        barrierColor: AppColors.confirmationBackdrop,
+        transitionDuration: const Duration(milliseconds: 160),
+        pageBuilder: (dialogContext, animation, secondaryAnimation) {
+          var isLoading = false;
+
+          return StatefulBuilder(
+            builder: (dialogContext, setDialogState) {
+              final navigator = Navigator.of(dialogContext);
+
+              Future<void> confirmComplete() async {
+                if (isLoading) return;
+
+                setDialogState(() => isLoading = true);
+                final updated = await _submitCompleteMatch();
+
+                if (!navigator.mounted) return;
+
+                if (updated != null) {
+                  navigator.pop(updated);
+                  return;
+                }
+
+                setDialogState(() => isLoading = false);
+              }
+
+              return PopScope(
+                canPop: !isLoading,
+                child: SafeArea(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.pageHorizontal,
+                        vertical: AppSpacing.lg,
+                      ),
+                      child: AppConfirmationDialog(
+                        title: 'Complete Match?',
+                        message:
+                            'Mark this match as completed and continue to scores?',
+                        cancelLabel: 'Cancel',
+                        confirmLabel: 'Complete',
+                        isLoading: isLoading,
+                        onCancel: isLoading ? null : () => navigator.pop(),
+                        onConfirm: isLoading ? null : confirmComplete,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+        transitionBuilder: _modalTransition,
+      );
+
+      if (completed != null && mounted) {
+        widget.onCompleted?.call(completed);
+      }
+    } finally {
+      _isCompleteDialogOpen = false;
+    }
+  }
+
+  Future<HomeMatch?> _submitCompleteMatch() async {
+    if (_completeRequestInFlight) return null;
+
+    final callback = widget.onCompleteMatch;
+    if (callback == null) {
+      _showMessage('Match completion is not connected yet.');
+      return null;
+    }
+
+    _completeRequestInFlight = true;
+
+    try {
+      final completed = await callback(_match);
+      if (!mounted) return null;
+
+      setState(() => _applyBackendMatch(completed));
+      return completed;
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Could not complete the match. Please try again.');
+      }
+      return null;
+    } finally {
+      _completeRequestInFlight = false;
+    }
+  }
+
   Future<void> _showJoinedSuccessfullyStatus() {
     return _showStatusDialog(
       barrierLabel: 'Joined successfully',
@@ -745,6 +851,11 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   }
 
   Widget _buildActions() {
+    if (_match.status == MatchStatus.cancelled ||
+        _match.status == MatchStatus.completed) {
+      return const SizedBox.shrink();
+    }
+
     if (widget.canCancelMatch) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -762,6 +873,17 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               onPressed: _chatAvailable ? _openChat : null,
             ),
           ),
+          if (_match.canComplete) ...[
+            const SizedBox(height: AppSpacing.lg),
+            AppButton.primary(
+              key: const ValueKey('match-details-complete-match'),
+              label: 'Complete Match',
+              isLoading: _completeRequestInFlight,
+              isEnabled: !_cancelRequestInFlight,
+              onPressed:
+                  _completeRequestInFlight ? null : _showCompleteConfirmation,
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           AppButton.destructiveOutlined(
             label: 'Cancel Match',

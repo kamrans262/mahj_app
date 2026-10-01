@@ -16,6 +16,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
     this.onBack,
     this.onInvitePlayers,
     this.onChat,
+    this.onCompleted,
   });
 
   final HomeMatch initialMatch;
@@ -23,6 +24,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback? onInvitePlayers;
   final MatchChatCallback? onChat;
+  final ValueChanged<HomeMatch>? onCompleted;
 
   @override
   State<ConnectedMatchDetailsScreen> createState() =>
@@ -75,6 +77,14 @@ class _ConnectedMatchDetailsScreenState
   Future<void> _cancel(HomeMatch match) async {
     final updated = _preserveDistance(await widget.repository.cancel(match.id));
     if (mounted) setState(() => _match = updated);
+  }
+
+  Future<HomeMatch> _complete(HomeMatch match) async {
+    final updated = _preserveDistance(
+      await widget.repository.complete(match.id),
+    );
+    if (mounted) setState(() => _match = updated);
+    return updated;
   }
 
   HomeMatch _preserveDistance(HomeMatch updated) {
@@ -147,6 +157,8 @@ class _ConnectedMatchDetailsScreenState
       onJoinMatch: _match.isOwnedByCurrentUser ? null : _join,
       onLeaveMatch: _match.canLeave ? _leave : null,
       onCancelMatch: _match.canCancel ? _cancel : null,
+      onCompleteMatch: _match.canComplete ? _complete : null,
+      onCompleted: widget.onCompleted,
       onChat: widget.onChat,
       hostUserId: _match.hostUserId,
       isCurrentUserJoined: _match.isCurrentUserJoined,
