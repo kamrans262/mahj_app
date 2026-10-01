@@ -391,6 +391,7 @@ class _ScoreRow extends StatelessWidget {
         ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 68, maxWidth: 84),
           child: AppTextField(
+            key: ValueKey('match-score-${player.id}'),
             controller: controller,
             hintText: '',
             keyboardType: TextInputType.number,
