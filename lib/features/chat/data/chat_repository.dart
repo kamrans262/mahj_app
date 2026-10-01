@@ -3,7 +3,9 @@ import '../../../core/network/api_client.dart';
 import '../domain/chat_models.dart';
 
 class ChatRepository {
-  const ChatRepository({required ApiClient apiClient}) : _apiClient = apiClient;
+  const ChatRepository({required ApiClient apiClient}) : this._(apiClient);
+
+  const ChatRepository._(this._apiClient);
 
   final ApiClient _apiClient;
 
