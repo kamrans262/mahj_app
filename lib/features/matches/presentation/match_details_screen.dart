@@ -851,6 +851,11 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   }
 
   Widget _buildActions() {
+    if (_match.status == MatchStatus.cancelled ||
+        _match.status == MatchStatus.completed) {
+      return const SizedBox.shrink();
+    }
+
     if (widget.canCancelMatch) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
