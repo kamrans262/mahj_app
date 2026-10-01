@@ -29,7 +29,7 @@ class MatchCompletedScreen extends StatefulWidget {
     super.key,
     this.onBack,
     this.onSubmitScores,
-    this.inviterName = 'Austen Parker',
+    this.inviterName = 'Host',
     this.inviterAvatarAsset = AppAssets.demoAvatarOne,
     this.inviterAvatarUrl,
     this.scoresAlreadySubmitted = false,
