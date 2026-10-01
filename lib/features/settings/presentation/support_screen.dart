@@ -25,17 +25,19 @@ class SupportScreen extends StatefulWidget {
     required this.topics,
     super.key,
     this.onBack,
-    this.onFaqTap,
+    this.supportEmail = '',
     this.onPickScreenshot,
     this.onSubmitIssue,
+    this.onEmailSupport,
   });
 
   final List<SupportFaq> faqs;
   final List<SupportTopic> topics;
+  final String supportEmail;
   final VoidCallback? onBack;
-  final ValueChanged<SupportFaq>? onFaqTap;
   final SupportScreenshotPicker? onPickScreenshot;
   final SupportSubmitCallback? onSubmitIssue;
+  final VoidCallback? onEmailSupport;
 
   @override
   State<SupportScreen> createState() => _SupportScreenState();
@@ -45,6 +47,7 @@ class _SupportScreenState extends State<SupportScreen> {
   final TextEditingController _messageController = TextEditingController();
   SupportTopic? _selectedTopic;
   SupportAttachment? _screenshot;
+  final Set<String> _expandedFaqIds = <String>{};
   bool _topicError = false;
   bool _messageError = false;
   bool _isSubmitting = false;
@@ -215,7 +218,9 @@ class _SupportScreenState extends State<SupportScreen> {
       });
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(const SnackBar(content: Text('Issue submitted.')));
+        ..showSnackBar(
+          const SnackBar(content: Text('Support request submitted.')),
+        );
       return;
     }
 
@@ -265,13 +270,13 @@ class _SupportScreenState extends State<SupportScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     _FaqGroup(
                       faqs: widget.faqs,
-                      onTap: (faq) {
-                        final callback = widget.onFaqTap;
-                        if (callback == null) {
-                          _showUnavailable('FAQ details');
-                          return;
-                        }
-                        callback(faq);
+                      expandedIds: _expandedFaqIds,
+                      onToggle: (faq) {
+                        setState(() {
+                          if (!_expandedFaqIds.add(faq.id)) {
+                            _expandedFaqIds.remove(faq.id);
+                          }
+                        });
                       },
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -334,6 +339,23 @@ class _SupportScreenState extends State<SupportScreen> {
                       isEnabled: !_isSubmitting,
                       isLoading: _isSubmitting,
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    AppButton.outlined(
+                      key: const ValueKey('support-email-button'),
+                      label: 'Email Support',
+                      onPressed: _isSubmitting
+                          ? null
+                          : widget.onEmailSupport ??
+                                () => _showUnavailable('Email support'),
+                    ),
+                    if (widget.supportEmail.trim().isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        widget.supportEmail,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.homeMeta12,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -357,10 +379,15 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _FaqGroup extends StatelessWidget {
-  const _FaqGroup({required this.faqs, required this.onTap});
+  const _FaqGroup({
+    required this.faqs,
+    required this.expandedIds,
+    required this.onToggle,
+  });
 
   final List<SupportFaq> faqs;
-  final ValueChanged<SupportFaq> onTap;
+  final Set<String> expandedIds;
+  final ValueChanged<SupportFaq> onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -382,7 +409,11 @@ class _FaqGroup extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           for (var index = 0; index < faqs.length; index++) ...[
-            _FaqRow(faq: faqs[index], onTap: () => onTap(faqs[index])),
+            _FaqRow(
+              faq: faqs[index],
+              expanded: expandedIds.contains(faqs[index].id),
+              onTap: () => onToggle(faqs[index]),
+            ),
             if (index < faqs.length - 1)
               const Divider(height: 1, color: AppColors.divider),
           ],
@@ -393,15 +424,21 @@ class _FaqGroup extends StatelessWidget {
 }
 
 class _FaqRow extends StatelessWidget {
-  const _FaqRow({required this.faq, required this.onTap});
+  const _FaqRow({
+    required this.faq,
+    required this.expanded,
+    required this.onTap,
+  });
 
   final SupportFaq faq;
+  final bool expanded;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
+      expanded: expanded,
       label: faq.question,
       child: InkWell(
         key: ValueKey('support-faq-${faq.id}'),
@@ -411,23 +448,43 @@ class _FaqRow extends StatelessWidget {
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Text(
-                  faq.question,
-                  style: AppTypography.body16.copyWith(
-                    color: AppColors.heading,
-                    letterSpacing: -0.3,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      faq.question,
+                      style: AppTypography.body16.copyWith(
+                        color: AppColors.heading,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  AnimatedRotation(
+                    turns: expanded ? 0.25 : 0,
+                    duration: const Duration(milliseconds: 160),
+                    child: AppAssetIcon(
+                      assetPath: AppAssets.settingsForwardIcon,
+                      size: 18,
+                      color: AppColors.heading,
+                    ),
+                  ),
+                ],
+              ),
+              if (expanded) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  faq.answer,
+                  key: ValueKey('support-faq-answer-${faq.id}'),
+                  style: AppTypography.body14.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.4,
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              AppAssetIcon(
-                assetPath: AppAssets.settingsForwardIcon,
-                size: 18,
-                color: AppColors.heading,
-              ),
+              ],
             ],
           ),
         ),
