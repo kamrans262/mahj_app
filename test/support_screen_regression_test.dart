@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mahj_app/features/settings/data/support_preview_data.dart';
@@ -90,9 +92,11 @@ void main() {
         home: SupportScreen(
           faqs: SupportPreviewData.faqs,
           topics: SupportPreviewData.topics,
-          onPickScreenshot: () async => const SupportAttachment(
+          onPickScreenshot: () async => SupportAttachment(
             id: 'shot-1',
             displayName: 'support-shot.png',
+            bytes: Uint8List.fromList(const [1, 2, 3]),
+            contentType: 'image/png',
           ),
           onSubmitIssue: (value) async {
             request = value;
