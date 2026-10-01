@@ -52,6 +52,17 @@ class NotificationStore extends ChangeNotifier {
     }
   }
 
+  Future<void> refreshUnreadCount() async {
+    try {
+      final count = await _repository.unreadCount();
+      if (count == _unreadCount) return;
+      _unreadCount = count;
+      notifyListeners();
+    } catch (_) {
+      // Keep the last known badge count and retry on the next poll.
+    }
+  }
+
   Future<void> loadMore() async {
     if (_isLoadingMore || _isLoading || !_hasMore) return;
     _isLoadingMore = true;
