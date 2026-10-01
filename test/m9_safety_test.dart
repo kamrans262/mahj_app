@@ -8,6 +8,9 @@ import 'package:mahj_app/app/app_assets.dart';
 import 'package:mahj_app/app/router/app_router.dart';
 import 'package:mahj_app/core/network/api_client.dart';
 import 'package:mahj_app/core/storage/token_store.dart';
+import 'package:mahj_app/features/home/domain/home_match.dart';
+import 'package:mahj_app/features/matches/domain/match_score_player.dart';
+import 'package:mahj_app/features/matches/presentation/match_completed_screen.dart';
 import 'package:mahj_app/features/profile/data/player_profile_preview_data.dart';
 import 'package:mahj_app/features/profile/presentation/player_profile_screen.dart';
 import 'package:mahj_app/features/settings/data/privacy_safety_repository.dart';
@@ -188,6 +191,54 @@ void main() {
 
     expect(unblockedId, '12');
     expect(find.text('No blocked users'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('M9 completed match player opens the safety profile flow', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    String? tappedPlayerId;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchCompletedScreen(
+          match: HomeMatch(
+            id: '77',
+            sportName: 'Basketball',
+            location: 'Multan, Punjab, Pakistan',
+            startsAt: DateTime(2026, 10, 1, 18),
+            currentPlayers: 2,
+            maxPlayers: 4,
+            status: MatchStatus.completed,
+          ),
+          players: const [
+            MatchScorePlayer(
+              id: '10',
+              displayName: 'You',
+              isCurrentUser: true,
+            ),
+            MatchScorePlayer(
+              id: '11',
+              displayName: 'Other Player',
+            ),
+          ],
+          canSubmitScores: false,
+          onPlayerTap: (player) => tappedPlayerId = player.id,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final otherPlayer = find.text('Other Player');
+    await tester.ensureVisible(otherPlayer);
+    await tester.tap(otherPlayer);
+    await tester.pump();
+
+    expect(tappedPlayerId, '11');
     expect(tester.takeException(), isNull);
   });
 
