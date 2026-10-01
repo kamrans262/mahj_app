@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/notification_store.dart';
@@ -26,7 +28,7 @@ class _ConnectedNotificationsScreenState
   @override
   void initState() {
     super.initState();
-    widget.store.ensureLoaded();
+    unawaited(widget.store.refresh());
   }
 
   @override
@@ -43,7 +45,9 @@ class _ConnectedNotificationsScreenState
           onBack: widget.onBack,
           onMarkRead: widget.store.markRead,
           onNotificationTap: widget.onNotificationTap,
-          onRetry: widget.store.refresh,
+          onRetry: () {
+            unawaited(widget.store.refresh());
+          },
           onRefresh: widget.store.refresh,
           onLoadMore: widget.store.loadMore,
         );
