@@ -80,6 +80,30 @@ class ChatRepository {
     return _messageFromJson(_normalize(raw));
   }
 
+  Future<void> reportPlayer({
+    required String playerId,
+    required String reasonId,
+    required String notes,
+  }) async {
+    await _apiClient.post(
+      '/users/$playerId/report',
+      body: {
+        'reason_id': reasonId,
+        'notes': notes.trim().isEmpty ? null : notes.trim(),
+      },
+    );
+  }
+
+  Future<void> blockPlayer({
+    required String playerId,
+    required String reasonId,
+  }) async {
+    await _apiClient.post(
+      '/users/$playerId/block',
+      body: {'reason_id': reasonId},
+    );
+  }
+
   ChatMessage _messageFromJson(Map<String, dynamic> json) {
     final senderRaw = json['sender'];
     final sender = senderRaw is Map
