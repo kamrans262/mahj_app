@@ -33,6 +33,7 @@ class MainNavigationShell extends StatefulWidget {
     this.discoveryStore,
     this.locationRepository,
     this.notificationStore,
+    this.onAuthenticatedReady,
     this.onNearbyViewAll,
     this.onCreateMatch,
     this.onMatchTap,
@@ -53,6 +54,7 @@ class MainNavigationShell extends StatefulWidget {
   final MatchDiscoveryStore? discoveryStore;
   final LocationRepository? locationRepository;
   final NotificationStore? notificationStore;
+  final Future<void> Function()? onAuthenticatedReady;
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
   final ValueChanged<HomeMatch>? onMatchTap;
@@ -107,6 +109,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     _discoveryStore.addListener(_handleDiscoveryFiltersChanged);
     widget.notificationStore?.addListener(_handleNotificationChanged);
+    final authenticatedReady = widget.onAuthenticatedReady;
+    if (authenticatedReady != null) {
+      unawaited(authenticatedReady());
+    }
+
     final notificationStore = widget.notificationStore;
     if (notificationStore != null) {
       unawaited(notificationStore.ensureLoaded());
