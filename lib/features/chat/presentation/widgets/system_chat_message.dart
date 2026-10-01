@@ -22,7 +22,7 @@ class SystemChatMessage extends StatelessWidget {
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: AppTypography.homeMeta12,
+          style: AppTypography.homeMeta14,
         ),
       ),
     );
