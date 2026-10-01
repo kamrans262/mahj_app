@@ -14,6 +14,11 @@ class ChatPlayerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final normalizedName = participant.displayName.trim();
+    final firstName = normalizedName.isEmpty
+        ? 'Player'
+        : normalizedName.split(RegExp(r'\\s+')).first;
+
     final content = SizedBox(
       width: 64,
       child: Column(
@@ -45,7 +50,7 @@ class ChatPlayerItem extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            participant.displayName,
+            firstName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
@@ -57,8 +62,7 @@ class ChatPlayerItem extends StatelessWidget {
 
     return Semantics(
       button: onTap != null,
-      label:
-          '${participant.displayName}${participant.isOnline ? ', online' : ''}',
+      label: '$firstName${participant.isOnline ? ', online' : ''}',
       child: onTap == null
           ? content
           : Material(
