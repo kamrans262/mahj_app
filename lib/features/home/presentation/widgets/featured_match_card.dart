@@ -104,12 +104,7 @@ class FeaturedMatchCard extends StatelessWidget {
                           SizedBox(
                             height: 36,
                             child: FilledButton(
-                              onPressed:
-                                  match.isJoinable &&
-                                      !match.isFull &&
-                                      !isJoining
-                                  ? onJoin
-                                  : null,
+                              onPressed: !isJoining ? onJoin : null,
                               style: FilledButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
