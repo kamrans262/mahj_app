@@ -183,17 +183,57 @@ class _LegalSection extends StatelessWidget {
         Text(section.title, style: AppTypography.homeMatchTitle18),
         const SizedBox(height: AppSpacing.md),
         for (var index = 0; index < section.paragraphs.length; index++) ...[
-          Text(
-            section.paragraphs[index],
-            style: AppTypography.body14.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
-          ),
+          _formattedParagraph(section.paragraphs[index]),
           if (index < section.paragraphs.length - 1)
             const SizedBox(height: AppSpacing.sm),
         ],
       ],
     );
+  }
+
+  Widget _formattedParagraph(String value) {
+    final style = AppTypography.body14.copyWith(
+      color: AppColors.textSecondary,
+      height: 1.4,
+    );
+
+    if (!value.contains('*')) {
+      return Text(value, style: style);
+    }
+
+    final spans = <InlineSpan>[];
+    final pattern = RegExp(r'(\*\*[^*]+\*\*|\*[^*]+\*)');
+    var offset = 0;
+
+    for (final match in pattern.allMatches(value)) {
+      if (match.start > offset) {
+        spans.add(TextSpan(text: value.substring(offset, match.start)));
+      }
+
+      final token = match.group(0)!;
+      if (token.startsWith('**')) {
+        spans.add(
+          TextSpan(
+            text: token.substring(2, token.length - 2),
+            style: style.copyWith(fontWeight: FontWeight.w700),
+          ),
+        );
+      } else {
+        spans.add(
+          TextSpan(
+            text: token.substring(1, token.length - 1),
+            style: style.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
+      }
+
+      offset = match.end;
+    }
+
+    if (offset < value.length) {
+      spans.add(TextSpan(text: value.substring(offset)));
+    }
+
+    return Text.rich(TextSpan(style: style, children: spans));
   }
 }
