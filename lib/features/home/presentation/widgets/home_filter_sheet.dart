@@ -281,6 +281,7 @@ class _DateFilterField extends StatelessWidget {
         child: DropdownButton<MatchDateFilter>(
           value: value,
           isExpanded: true,
+          isDense: true,
           icon: const Icon(
             Icons.keyboard_arrow_down,
             size: 18,
