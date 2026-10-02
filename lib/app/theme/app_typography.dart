@@ -153,7 +153,7 @@ abstract final class AppTypography {
 
   static const TextStyle homeGreeting = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: FontWeight.w600,
     height: 1,
     color: AppColors.heading,
