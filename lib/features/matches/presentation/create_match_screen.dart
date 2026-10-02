@@ -545,7 +545,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           ? 'Choose match location'
           : 'Selected match location: ${selected.label}',
       leadingIcon: Icons.location_on_outlined,
-      trailingIcon: Icons.arrow_forward_ios_rounded,
+      trailingIcon: Icons.keyboard_arrow_down_rounded,
       isPlaceholder: selected == null,
       onTap: _isSubmitting ? null : _pickLocation,
     );
