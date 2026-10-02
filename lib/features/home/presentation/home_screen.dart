@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/widgets/app_confirmation_dialog.dart';
 import '../data/home_preview_data.dart';
 import '../domain/discovery_location.dart';
 import '../domain/home_data.dart';
@@ -124,8 +125,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _join(HomeMatch match) async {
+    if (_joiningMatchId != null) return;
+
+    if (match.isCurrentUserJoined || match.isOwnedByCurrentUser) {
+      await _showAlreadyJoinedDialog(match);
+      return;
+    }
+
     final callback = widget.onJoinMatch;
-    if (callback == null || _joiningMatchId != null) return;
+    if (callback == null) return;
 
     setState(() => _joiningMatchId = match.id);
     try {
@@ -134,6 +142,57 @@ class _HomeScreenState extends State<HomeScreen>
       if (mounted) {
         setState(() => _joiningMatchId = null);
       }
+    }
+  }
+
+  Future<void> _showAlreadyJoinedDialog(HomeMatch match) async {
+    final viewDetails = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Already joined',
+      barrierColor: AppColors.confirmationBackdrop,
+      transitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        final navigator = Navigator.of(dialogContext);
+
+        return SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pageHorizontal,
+                vertical: AppSpacing.lg,
+              ),
+              child: AppConfirmationDialog(
+                title: 'Already Joined',
+                message: 'You have already joined this match.',
+                cancelLabel: 'Go Back',
+                confirmLabel: 'View Details',
+                onCancel: () => navigator.pop(false),
+                onConfirm: () => navigator.pop(true),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.985, end: 1).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+
+    if (viewDetails == true && mounted) {
+      widget.onMatchTap?.call(match);
     }
   }
 
