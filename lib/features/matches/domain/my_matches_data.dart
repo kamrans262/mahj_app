@@ -96,23 +96,33 @@ class MyMatchesData {
   }
 
   MyMatchesData appendPage(MyMatchesData next, MyMatchesTab tab) {
+    List<MyMatchesItem> mergeUnique(
+      List<MyMatchesItem> current,
+      List<MyMatchesItem> incoming,
+    ) {
+      final seenMatchIds = <String>{};
+      return [...current, ...incoming]
+          .where((item) => seenMatchIds.add(item.match.id))
+          .toList(growable: false);
+    }
+
     return MyMatchesData(
       unreadNotificationCount: next.unreadNotificationCount,
       unreadMessageCount: next.unreadMessageCount,
       upcoming: tab == MyMatchesTab.upcoming
-          ? [...upcoming, ...next.upcoming]
+          ? mergeUnique(upcoming, next.upcoming)
           : upcoming,
       createdByMe: tab == MyMatchesTab.createdByMe
-          ? [...createdByMe, ...next.createdByMe]
+          ? mergeUnique(createdByMe, next.createdByMe)
           : createdByMe,
       invites: tab == MyMatchesTab.invites
-          ? [...invites, ...next.invites]
+          ? mergeUnique(invites, next.invites)
           : invites,
       completed: tab == MyMatchesTab.completed
-          ? [...completed, ...next.completed]
+          ? mergeUnique(completed, next.completed)
           : completed,
       cancelled: tab == MyMatchesTab.cancelled
-          ? [...cancelled, ...next.cancelled]
+          ? mergeUnique(cancelled, next.cancelled)
           : cancelled,
       upcomingPage: tab == MyMatchesTab.upcoming
           ? next.upcomingPage
