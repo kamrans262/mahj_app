@@ -576,6 +576,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
               onPressed: widget.onCreateMatch,
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
+              shape: const CircleBorder(),
               tooltip: 'Create match',
               child: const Icon(Icons.add, size: 30),
             )
