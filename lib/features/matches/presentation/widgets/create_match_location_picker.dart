@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart' as ll;
 
+import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -413,13 +414,15 @@ class _CreateMatchLocationPickerState
                                         selected.latitude,
                                         selected.longitude,
                                       ),
-                                      width: 52,
-                                      height: 52,
+                                      width: 58,
+                                      height: 66,
                                       alignment: Alignment.topCenter,
-                                      child: const Icon(
-                                        Icons.location_on_rounded,
-                                        size: 46,
-                                        color: AppColors.primary,
+                                      child: Image.asset(
+                                        AppAssets.mapMatchMarkerPng,
+                                        width: 54,
+                                        height: 61,
+                                        fit: BoxFit.contain,
+                                        filterQuality: FilterQuality.high,
                                       ),
                                     ),
                                   ],
