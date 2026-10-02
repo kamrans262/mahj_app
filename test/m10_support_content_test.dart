@@ -167,7 +167,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Home Join Match uses Mahj orange', (tester) async {
+  testWidgets('Home Join Match uses Mahj green', (tester) async {
     final match = HomePreviewData.create().upcomingMatches.first;
 
     await tester.pumpWidget(
@@ -186,7 +186,7 @@ void main() {
     );
     expect(
       button.style?.backgroundColor?.resolve(<WidgetState>{}),
-      AppColors.primary,
+      AppColors.matchSuccess,
     );
   });
 }
