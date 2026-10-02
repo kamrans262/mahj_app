@@ -111,10 +111,10 @@ class FeaturedMatchCard extends StatelessWidget {
                                   ? onJoin
                                   : null,
                               style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.matchSuccess,
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 disabledBackgroundColor: isJoining
-                                    ? AppColors.matchSuccess
+                                    ? AppColors.primary
                                     : AppColors.disabled,
                                 disabledForegroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
