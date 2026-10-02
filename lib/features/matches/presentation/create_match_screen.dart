@@ -9,11 +9,13 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_surface_container.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../home/domain/discovery_location.dart';
 import '../../home/domain/home_match.dart';
 import '../../home/presentation/widgets/compact_switch.dart';
 import '../../home/presentation/widgets/sport_icon.dart';
 import '../domain/create_match_form_state.dart';
 import '../domain/sport_option.dart';
+import 'widgets/create_match_location_picker.dart';
 import 'widgets/match_created_overlay.dart';
 
 class CreateMatchScreen extends StatefulWidget {
@@ -22,6 +24,8 @@ class CreateMatchScreen extends StatefulWidget {
     this.onBack,
     this.onCancel,
     this.onSubmit,
+    this.onLocationSearch,
+    this.onCurrentLocation,
     this.onInvitePlayers,
     this.onBackHome,
     this.onViewMatch,
@@ -31,6 +35,8 @@ class CreateMatchScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback? onCancel;
   final Future<HomeMatch> Function(CreateMatchRequest request)? onSubmit;
+  final Future<List<DiscoveryLocation>> Function(String query)? onLocationSearch;
+  final Future<DiscoveryLocation> Function()? onCurrentLocation;
   final ValueChanged<HomeMatch>? onInvitePlayers;
   final ValueChanged<HomeMatch>? onBackHome;
   final ValueChanged<HomeMatch>? onViewMatch;
@@ -49,6 +55,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   final _notesController = TextEditingController();
 
   CreateMatchFormState _formState = const CreateMatchFormState();
+  DiscoveryLocation? _selectedLocation;
   bool _isSubmitting = false;
   HomeMatch? _createdMatch;
 
@@ -179,10 +186,19 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       return;
     }
 
-    final request = _formState.toRequest();
+    var request = _formState.toRequest();
     if (request == null) {
       _showMessage('Please complete the required match details.');
       return;
+    }
+
+    final selectedLocation = _selectedLocation;
+    if (selectedLocation != null) {
+      request = request.withCoordinates(
+        latitude: selectedLocation.latitude,
+        longitude: selectedLocation.longitude,
+        resolvedAddress: selectedLocation.label,
+      );
     }
 
     final callback = widget.onSubmit;
@@ -343,18 +359,104 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     );
   }
 
+  Future<void> _pickLocation() async {
+    final onSearch = widget.onLocationSearch;
+    final onCurrentLocation = widget.onCurrentLocation;
+    if (onSearch == null || onCurrentLocation == null || _isSubmitting) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final selected = await showCreateMatchLocationPicker(
+      context: context,
+      initialLocation: _selectedLocation,
+      onSearch: onSearch,
+      onCurrentLocation: onCurrentLocation,
+    );
+
+    if (!mounted || selected == null) return;
+
+    setState(() {
+      _selectedLocation = selected;
+      _formState = _formState.copyWith(locationAddress: selected.label);
+    });
+  }
+
   Widget _buildLocationField() {
-    return AppTextField(
-      controller: _locationController,
-      hintText: 'Location/Address',
-      leadingIcon: Icons.location_on_outlined,
-      enabled: !_isSubmitting,
-      keyboardType: TextInputType.streetAddress,
-      textInputAction: TextInputAction.next,
-      autofillHints: const [AutofillHints.fullStreetAddress],
-      onChanged: (value) {
-        _formState = _formState.copyWith(locationAddress: value);
-      },
+    final supportsPicker =
+        widget.onLocationSearch != null && widget.onCurrentLocation != null;
+
+    if (!supportsPicker) {
+      return AppTextField(
+        controller: _locationController,
+        hintText: 'Location/Address',
+        leadingIcon: Icons.location_on_outlined,
+        enabled: !_isSubmitting,
+        keyboardType: TextInputType.streetAddress,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [AutofillHints.fullStreetAddress],
+        onChanged: (value) {
+          _formState = _formState.copyWith(locationAddress: value);
+        },
+      );
+    }
+
+    final selected = _selectedLocation;
+
+    return AppSurfaceContainer(
+      onTap: _isSubmitting ? null : _pickLocation,
+      semanticsLabel: selected == null
+          ? 'Choose match location'
+          : 'Selected match location: ${selected.label}',
+      minHeight: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.10),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.location_on_rounded,
+              size: 22,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Location', style: AppTypography.homeMeta12),
+                const SizedBox(height: 3),
+                Text(
+                  selected?.label ?? 'Choose match location',
+                  maxLines: selected == null ? 1 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.homeMeta14.copyWith(
+                    color: selected == null
+                        ? AppColors.textSecondary
+                        : AppColors.heading,
+                    fontWeight: selected == null
+                        ? FontWeight.w400
+                        : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 15,
+            color: AppColors.textSecondary,
+          ),
+        ],
+      ),
     );
   }
 
