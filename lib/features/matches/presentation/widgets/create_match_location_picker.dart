@@ -300,16 +300,25 @@ class _CreateMatchLocationPickerState
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal,
-                    0,
-                    AppSpacing.pageHorizontal,
-                    AppSpacing.lg,
-                  ),
-                  child: Column(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final reservedHeight = selected == null ? 268.0 : 336.0;
+                    final responsiveMapHeight =
+                        (constraints.maxHeight - reservedHeight).clamp(
+                          220.0,
+                          420.0,
+                        );
+
+                    return SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pageHorizontal,
+                        0,
+                        AppSpacing.pageHorizontal,
+                        AppSpacing.lg,
+                      ),
+                      child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AppTextField(
@@ -374,7 +383,7 @@ class _CreateMatchLocationPickerState
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       SizedBox(
-                        height: 220,
+                        height: responsiveMapHeight,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(AppRadius.card),
                           child: fm.FlutterMap(
@@ -478,8 +487,10 @@ class _CreateMatchLocationPickerState
                         onPressed: selected == null ? null : _confirm,
                         isEnabled: selected != null,
                       ),
-                    ],
-                  ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
