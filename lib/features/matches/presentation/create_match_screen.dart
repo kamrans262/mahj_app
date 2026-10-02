@@ -7,7 +7,6 @@ import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_asset_icon.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
-import '../../../core/widgets/app_surface_container.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../home/domain/discovery_location.dart';
 import '../../home/domain/home_match.dart';
@@ -595,6 +594,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       label: _dateLabel(),
       semanticLabel: 'Select match date',
       leadingIcon: Icons.calendar_today_outlined,
+      isPlaceholder: _formState.selectedDate == null,
       onTap: _isSubmitting ? null : _selectDate,
     );
 
@@ -602,6 +602,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       label: _timeLabel(),
       semanticLabel: 'Select match time',
       leadingIcon: Icons.access_time_rounded,
+      isPlaceholder: _formState.selectedTimeMinutes == null,
       onTap: _isSubmitting ? null : _selectTime,
     );
 
