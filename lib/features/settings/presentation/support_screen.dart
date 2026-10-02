@@ -438,7 +438,6 @@ class _FaqRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      expanded: expanded,
       label: faq.question,
       child: InkWell(
         key: ValueKey('support-faq-${faq.id}'),
