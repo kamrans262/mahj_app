@@ -57,7 +57,7 @@ class MainNavigationShell extends StatefulWidget {
   final Future<void> Function()? onAuthenticatedReady;
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
-  final ValueChanged<HomeMatch>? onMatchTap;
+  final Future<void> Function(HomeMatch)? onMatchTap;
   final Future<void> Function(MyMatchesItem item, MyMatchesTab tab)?
   onMyMatchesMatchTap;
   final Future<void> Function(MyMatchesItem item)? onMyMatchesInvitationTap;
@@ -232,7 +232,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     final featured = _liveMatches
-        .where((match) => match.isFeatured && match.isJoinable && !match.isFull)
+        .where((match) => match.isFeatured)
         .toList()
       ..sort((a, b) {
         final order = a.featuredOrder.compareTo(b.featuredOrder);
@@ -438,12 +438,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
   }
 
-  Future<void> _joinHomeMatch(HomeMatch match) async {
-    final repository = widget.matchRepository;
-    if (repository == null) return;
+  Future<void> _openHomeMatchDetails(HomeMatch match) async {
+    final callback = widget.onMatchTap;
+    if (callback == null) return;
 
-    await repository.join(match.id);
-    if (!mounted) return;
+    await callback(match);
+    if (!mounted || widget.matchRepository == null) return;
+
     await _refreshMatches();
   }
 
@@ -472,7 +473,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           markers: markers,
           filters: _discoveryStore.filters,
           onBack: () => _selectTab(0),
-          onViewDetails: widget.onMatchTap,
+          onViewDetails: widget.onMatchTap == null
+              ? null
+              : (match) => unawaited(widget.onMatchTap!(match)),
           onFiltersChanged: _applyDiscoveryFilters,
           isLoading: _matchesLoading,
           useLiveMap: widget.matchRepository != null,
@@ -532,8 +535,13 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           key: const ValueKey('main-navigation-home'),
           data: _homeData,
           onNearbyViewAll: widget.onNearbyViewAll,
-          onMatchTap: widget.onMatchTap,
-          onJoinMatch: widget.matchRepository == null ? null : _joinHomeMatch,
+          onMatchTap: widget.onMatchTap == null
+              ? null
+              : (match) => unawaited(_openHomeMatchDetails(match)),
+          onJoinMatch:
+              widget.matchRepository == null || widget.onMatchTap == null
+              ? null
+              : _openHomeMatchDetails,
           onCreateMatch: widget.onCreateMatch,
           onRefresh: widget.matchRepository == null ? null : _refreshMatches,
           onFiltersApplied: widget.matchRepository == null
