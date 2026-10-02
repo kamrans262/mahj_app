@@ -231,7 +231,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       return HomePreviewData.create();
     }
 
-    final featured = _liveMatches.where((match) => match.isFeatured).toList()
+    final featured = _liveMatches
+        .where((match) => match.isFeatured && match.isJoinable && !match.isFull)
+        .toList()
       ..sort((a, b) {
         final order = a.featuredOrder.compareTo(b.featuredOrder);
         if (order != 0) return order;
