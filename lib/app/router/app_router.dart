@@ -877,8 +877,8 @@ abstract final class AppRouter {
       onCreateMatch: () {
         Navigator.of(context).pushNamed(AppRoutes.createMatch);
       },
-      onMatchTap: (match) {
-        _openMatchDetails(context, match);
+      onMatchTap: (match) async {
+        await _openMatchDetails(context, match);
       },
       onMyMatchesMatchTap: (item, tab) async {
         await _openMyMatchesEntry(context, item, tab);
