@@ -315,16 +315,22 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _SectionLabel('Delete Account'),
-                    const SizedBox(height: AppSpacing.xs),
-                    AppButton.destructiveOutlined(
-                      key: const ValueKey('account-settings-delete'),
-                      label: 'Delete Account',
-                      onPressed: _showDeleteAccountDialog,
-                    ),
+
                   ],
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.lg,
+                AppSpacing.pageHorizontal,
+                20,
+              ),
+              child: AppButton.destructiveOutlined(
+                key: const ValueKey('account-settings-delete'),
+                label: 'Delete Account',
+                onPressed: _showDeleteAccountDialog,
               ),
             ),
           ],
