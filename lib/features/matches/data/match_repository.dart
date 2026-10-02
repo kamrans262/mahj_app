@@ -128,6 +128,8 @@ class MatchRepository {
     List<MyMatchesItem> mapMatches(dynamic raw) {
       if (raw is! List) return const <MyMatchesItem>[];
 
+      final seenMatchIds = <String>{};
+
       return raw
           .whereType<Map>()
           .map((item) {
@@ -139,10 +141,21 @@ class MatchRepository {
               sportImageAsset: AppAssets.sportImage,
             );
           })
+          .where((item) => seenMatchIds.add(item.match.id))
           .toList(growable: false);
     }
 
+    final upcoming = mapMatches(payload['upcoming']);
+    final createdByMe = mapMatches(payload['created_by_me']);
+    final completed = mapMatches(payload['completed']);
+    final cancelled = mapMatches(payload['cancelled']);
+    final alreadyOwnedOrJoinedIds = <String>{
+      ...upcoming.map((item) => item.match.id),
+      ...createdByMe.map((item) => item.match.id),
+    };
+
     final inviteRaw = payload['invites'];
+    final seenInviteMatchIds = <String>{};
     final invites = inviteRaw is List
         ? inviteRaw
               .whereType<Map>()
@@ -171,6 +184,11 @@ class MatchRepository {
                   inviterAvatarUrl: inviter['avatar_url']?.toString(),
                 );
               })
+              .where(
+                (item) =>
+                    !alreadyOwnedOrJoinedIds.contains(item.match.id) &&
+                    seenInviteMatchIds.add(item.match.id),
+              )
               .toList(growable: false)
         : const <MyMatchesItem>[];
 
@@ -202,11 +220,11 @@ class MatchRepository {
     return MyMatchesData(
       unreadNotificationCount: 0,
       unreadMessageCount: 0,
-      upcoming: mapMatches(payload['upcoming']),
-      createdByMe: mapMatches(payload['created_by_me']),
+      upcoming: upcoming,
+      createdByMe: createdByMe,
       invites: invites,
-      completed: mapMatches(payload['completed']),
-      cancelled: mapMatches(payload['cancelled']),
+      completed: completed,
+      cancelled: cancelled,
       upcomingPage: readPage(upcomingMeta, upcomingPage),
       createdByMePage: readPage(createdMeta, createdByMePage),
       invitesPage: readPage(invitesMeta, invitesPage),
