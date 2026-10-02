@@ -385,8 +385,8 @@ abstract final class AppRouter {
       onBack: () {
         Navigator.of(context).maybePop();
       },
-      onMatchTap: (match) {
-        _openMatchDetails(context, match);
+      onMatchTap: (match) async {
+        await _openMatchDetails(context, match);
       },
       onCreateMatch: () {
         Navigator.of(context).pushNamed(AppRoutes.createMatch);
@@ -1325,7 +1325,12 @@ abstract final class AppRouter {
     return null;
   }
 
-  static void _openMatchDetails(BuildContext context, HomeMatch match) {
-    Navigator.of(context).pushNamed(AppRoutes.matchDetails, arguments: match);
+  static Future<void> _openMatchDetails(
+    BuildContext context,
+    HomeMatch match,
+  ) async {
+    await Navigator.of(
+      context,
+    ).pushNamed<void>(AppRoutes.matchDetails, arguments: match);
   }
 }
