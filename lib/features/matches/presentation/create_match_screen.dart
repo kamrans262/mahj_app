@@ -101,6 +101,80 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       firstDate: DateTime(now.year, now.month, now.day),
       lastDate: DateTime(now.year + 2, 12, 31),
       helpText: 'Select match date',
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+
+        final base = Theme.of(context);
+        final scheme = base.colorScheme.copyWith(
+          primary: AppColors.primary,
+          onPrimary: Colors.white,
+          secondary: AppColors.primary,
+          onSecondary: Colors.white,
+          surface: AppColors.background,
+          onSurface: AppColors.heading,
+        );
+
+        return Theme(
+          data: base.copyWith(
+            colorScheme: scheme,
+            dialogTheme: base.dialogTheme.copyWith(
+              backgroundColor: AppColors.background,
+              surfaceTintColor: Colors.transparent,
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: AppColors.background,
+              surfaceTintColor: Colors.transparent,
+              headerBackgroundColor: AppColors.background,
+              headerForegroundColor: AppColors.heading,
+              weekdayStyle: AppTypography.homeMeta12.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Colors.white;
+                }
+                if (states.contains(WidgetState.disabled)) {
+                  return AppColors.textMuted;
+                }
+                return AppColors.heading;
+              }),
+              dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? AppColors.primary
+                    : Colors.transparent;
+              }),
+              todayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? Colors.white
+                    : AppColors.primary;
+              }),
+              todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? AppColors.primary
+                    : Colors.transparent;
+              }),
+              todayBorder: const BorderSide(color: AppColors.primary),
+              yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? Colors.white
+                    : AppColors.heading;
+              }),
+              yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? AppColors.primary
+                    : Colors.transparent;
+              }),
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
+            ),
+          ),
+          child: child,
+        );
+      },
     );
 
     if (!mounted || selected == null) return;
@@ -122,6 +196,70 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       context: context,
       initialTime: initialTime,
       helpText: 'Select match time',
+      builder: (context, child) {
+        if (child == null) return const SizedBox.shrink();
+
+        final base = Theme.of(context);
+        final scheme = base.colorScheme.copyWith(
+          primary: AppColors.primary,
+          onPrimary: Colors.white,
+          secondary: AppColors.primary,
+          onSecondary: Colors.white,
+          surface: AppColors.background,
+          onSurface: AppColors.heading,
+        );
+
+        return Theme(
+          data: base.copyWith(
+            colorScheme: scheme,
+            dialogTheme: base.dialogTheme.copyWith(
+              backgroundColor: AppColors.background,
+              surfaceTintColor: Colors.transparent,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: AppColors.background,
+              dialBackgroundColor: AppColors.background,
+              dialHandColor: AppColors.primary,
+              dialTextColor: WidgetStateColor.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? Colors.white
+                    : AppColors.heading;
+              }),
+              hourMinuteColor: WidgetStateColor.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? AppColors.primary.withValues(alpha: 0.12)
+                    : AppColors.background;
+              }),
+              hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? AppColors.primary
+                    : AppColors.heading;
+              }),
+              dayPeriodColor: WidgetStateColor.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? AppColors.primary.withValues(alpha: 0.12)
+                    : AppColors.background;
+              }),
+              dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+                return states.contains(WidgetState.selected)
+                    ? AppColors.primary
+                    : AppColors.heading;
+              }),
+              entryModeIconColor: AppColors.textSecondary,
+              helpTextStyle: AppTypography.homeMeta12.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
+            ),
+          ),
+          child: child,
+        );
+      },
     );
 
     if (!mounted || selected == null) return;
@@ -402,61 +540,15 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
     final selected = _selectedLocation;
 
-    return AppSurfaceContainer(
-      onTap: _isSubmitting ? null : _pickLocation,
-      semanticsLabel: selected == null
+    return _CreateMatchPickerField(
+      label: selected?.label ?? 'Choose match location',
+      semanticLabel: selected == null
           ? 'Choose match location'
           : 'Selected match location: ${selected.label}',
-      minHeight: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.location_on_rounded,
-              size: 22,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Location', style: AppTypography.homeMeta12),
-                const SizedBox(height: 3),
-                Text(
-                  selected?.label ?? 'Choose match location',
-                  maxLines: selected == null ? 1 : 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.homeMeta14.copyWith(
-                    color: selected == null
-                        ? AppColors.textSecondary
-                        : AppColors.heading,
-                    fontWeight: selected == null
-                        ? FontWeight.w400
-                        : FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 15,
-            color: AppColors.textSecondary,
-          ),
-        ],
-      ),
+      leadingIcon: Icons.location_on_outlined,
+      trailingIcon: Icons.arrow_forward_ios_rounded,
+      isPlaceholder: selected == null,
+      onTap: _isSubmitting ? null : _pickLocation,
     );
   }
 
@@ -499,14 +591,14 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     final shouldStack =
         textScale > 1.35 || MediaQuery.sizeOf(context).width < 340;
 
-    final dateField = _PickerSurfaceField(
+    final dateField = _CreateMatchPickerField(
       label: _dateLabel(),
       semanticLabel: 'Select match date',
       leadingIcon: Icons.calendar_today_outlined,
       onTap: _isSubmitting ? null : _selectDate,
     );
 
-    final timeField = _PickerSurfaceField(
+    final timeField = _CreateMatchPickerField(
       label: _timeLabel(),
       semanticLabel: 'Select match time',
       leadingIcon: Icons.access_time_rounded,
@@ -704,48 +796,82 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   }
 }
 
-class _PickerSurfaceField extends StatelessWidget {
-  const _PickerSurfaceField({
+class _CreateMatchPickerField extends StatelessWidget {
+  const _CreateMatchPickerField({
     required this.label,
     required this.semanticLabel,
     required this.leadingIcon,
     required this.onTap,
+    this.trailingIcon = Icons.keyboard_arrow_down_rounded,
+    this.isPlaceholder = false,
   });
 
   final String label;
   final String semanticLabel;
   final IconData leadingIcon;
+  final IconData trailingIcon;
+  final bool isPlaceholder;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AppSurfaceContainer(
-      onTap: onTap,
-      semanticsLabel: semanticLabel,
-      minHeight: 50,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pageHorizontal,
-        vertical: AppSpacing.md,
-      ),
-      child: Row(
-        children: [
-          Icon(leadingIcon, size: 20, color: AppColors.textSecondary),
-          const SizedBox(width: AppSpacing.micro),
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.homeMeta14,
+    final radius = BorderRadius.circular(AppRadius.control);
+
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: semanticLabel,
+      child: Material(
+        color: AppColors.subtleSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: const BorderSide(color: AppColors.controlBorder),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.pressed)
+                ? AppColors.controlPressedOverlay
+                : Colors.transparent;
+          }),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 50),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+              child: Row(
+                children: [
+                  Icon(
+                    leadingIcon,
+                    size: 22,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: isPlaceholder
+                          ? AppTypography.fieldHint
+                          : AppTypography.field,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    trailingIcon,
+                    size: trailingIcon == Icons.arrow_forward_ios_rounded
+                        ? 14
+                        : 20,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: AppSpacing.micro),
-          const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            size: 20,
-            color: AppColors.textSecondary,
-          ),
-        ],
+        ),
       ),
     );
   }
