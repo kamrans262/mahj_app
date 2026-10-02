@@ -304,10 +304,9 @@ class _CreateMatchLocationPickerState
                   builder: (context, constraints) {
                     final reservedHeight = selected == null ? 268.0 : 336.0;
                     final responsiveMapHeight =
-                        (constraints.maxHeight - reservedHeight).clamp(
-                          220.0,
-                          420.0,
-                        );
+                        (constraints.maxHeight - reservedHeight)
+                            .clamp(220.0, 420.0)
+                            .toDouble();
 
                     return SingleChildScrollView(
                       keyboardDismissBehavior:
