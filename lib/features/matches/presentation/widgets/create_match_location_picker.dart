@@ -9,6 +9,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/maps/mahj_google_map_style.dart';
 import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_surface_container.dart';
@@ -551,6 +552,7 @@ class _CreateMatchLocationPickerState
           onMapCreated: (controller) {
             _googleMapController = controller;
             _mapReady = true;
+            MahjGoogleMapStyle.apply(controller);
           },
           onTap: (point) {
             unawaited(_placePin(point));
