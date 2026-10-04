@@ -25,6 +25,7 @@ class CreateMatchScreen extends StatefulWidget {
     this.onSubmit,
     this.onLocationSearch,
     this.onCurrentLocation,
+    this.onResolveLocation,
     this.onInvitePlayers,
     this.onBackHome,
     this.onViewMatch,
@@ -36,6 +37,10 @@ class CreateMatchScreen extends StatefulWidget {
   final Future<HomeMatch> Function(CreateMatchRequest request)? onSubmit;
   final Future<List<DiscoveryLocation>> Function(String query)? onLocationSearch;
   final Future<DiscoveryLocation> Function()? onCurrentLocation;
+  final Future<DiscoveryLocation?> Function({
+    required double latitude,
+    required double longitude,
+  })? onResolveLocation;
   final ValueChanged<HomeMatch>? onInvitePlayers;
   final ValueChanged<HomeMatch>? onBackHome;
   final ValueChanged<HomeMatch>? onViewMatch;
@@ -499,7 +504,13 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   Future<void> _pickLocation() async {
     final onSearch = widget.onLocationSearch;
     final onCurrentLocation = widget.onCurrentLocation;
-    if (onSearch == null || onCurrentLocation == null || _isSubmitting) return;
+    final onResolveLocation = widget.onResolveLocation;
+    if (onSearch == null ||
+        onCurrentLocation == null ||
+        onResolveLocation == null ||
+        _isSubmitting) {
+      return;
+    }
 
     FocusManager.instance.primaryFocus?.unfocus();
 
@@ -508,6 +519,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       initialLocation: _selectedLocation,
       onSearch: onSearch,
       onCurrentLocation: onCurrentLocation,
+      onResolveLocation: onResolveLocation,
     );
 
     if (!mounted || selected == null) return;
@@ -520,7 +532,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
 
   Widget _buildLocationField() {
     final supportsPicker =
-        widget.onLocationSearch != null && widget.onCurrentLocation != null;
+        widget.onLocationSearch != null &&
+        widget.onCurrentLocation != null &&
+        widget.onResolveLocation != null;
 
     if (!supportsPicker) {
       return AppTextField(
