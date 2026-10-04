@@ -4,8 +4,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../../app/app_assets.dart';
+import '../../../../app/map/app_map_config.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../../core/widgets/app_surface_container.dart';
 import '../../../home/presentation/home_date_time_formatter.dart';
 import '../../domain/map_match_marker.dart';
@@ -21,11 +23,6 @@ class LiveMatchMap extends StatelessWidget {
     this.currentLocationLatitude,
     this.currentLocationLongitude,
   });
-
-  static const String _mapProvider = String.fromEnvironment(
-    'MAP_PROVIDER',
-    defaultValue: 'osm',
-  );
 
   final List<MapMatchMarker> markers;
   final String? selectedMatchId;
@@ -51,11 +48,11 @@ class LiveMatchMap extends StatelessWidget {
     return (latitude: 30.1575, longitude: 71.5249);
   }
 
-  bool get _useGoogleMaps => _mapProvider.toLowerCase() == 'google';
-
   @override
   Widget build(BuildContext context) {
-    return _useGoogleMaps ? _buildGoogleMap() : _buildOpenStreetMap();
+    return AppMapConfig.useGoogleMaps
+        ? _buildGoogleMap()
+        : _buildOpenStreetMap();
   }
 
   Widget _buildOpenStreetMap() {
@@ -164,69 +161,77 @@ class LiveMatchMap extends StatelessWidget {
 
   Widget _buildGoogleMap() {
     final center = _initialCenter;
-    final googleMarkers = <gm.Marker>{};
 
-    if (currentLocationLatitude != null && currentLocationLongitude != null) {
-      googleMarkers.add(
-        gm.Marker(
-          markerId: const gm.MarkerId('current-location'),
-          position: gm.LatLng(
-            currentLocationLatitude!,
-            currentLocationLongitude!,
-          ),
-          zIndexInt: 3,
-          icon: gm.BitmapDescriptor.defaultMarkerWithHue(
-            gm.BitmapDescriptor.hueAzure,
-          ),
-          infoWindow: const gm.InfoWindow(title: 'Current Location'),
-        ),
-      );
-    }
+    return FutureBuilder<gm.BitmapDescriptor>(
+      future: MahjGoogleMarker.load(width: 50, height: 57),
+      builder: (context, snapshot) {
+        final matchIcon =
+            snapshot.data ??
+            gm.BitmapDescriptor.defaultMarkerWithHue(
+              gm.BitmapDescriptor.hueOrange,
+            );
+        final googleMarkers = <gm.Marker>{};
 
-    for (final marker in markers) {
-      final latitude = marker.match.latitude;
-      final longitude = marker.match.longitude;
-      if (latitude == null || longitude == null) continue;
+        if (currentLocationLatitude != null &&
+            currentLocationLongitude != null) {
+          googleMarkers.add(
+            gm.Marker(
+              markerId: const gm.MarkerId('current-location'),
+              position: gm.LatLng(
+                currentLocationLatitude!,
+                currentLocationLongitude!,
+              ),
+              zIndexInt: 3,
+              icon: gm.BitmapDescriptor.defaultMarkerWithHue(
+                gm.BitmapDescriptor.hueAzure,
+              ),
+              infoWindow: const gm.InfoWindow(title: 'Current Location'),
+            ),
+          );
+        }
 
-      final selected = marker.match.id == selectedMatchId;
-      googleMarkers.add(
-        gm.Marker(
-          markerId: gm.MarkerId('match-${marker.match.id}'),
-          position: gm.LatLng(latitude, longitude),
-          zIndexInt: selected ? 2 : 1,
-          icon: gm.BitmapDescriptor.defaultMarkerWithHue(
-            selected
-                ? gm.BitmapDescriptor.hueOrange
-                : gm.BitmapDescriptor.hueRed,
-          ),
-          infoWindow: gm.InfoWindow(
-            title: marker.match.sportName,
-            snippet: marker.match.location,
-          ),
-          onTap: () => onMarkerTap(marker),
-        ),
-      );
-    }
+        for (final marker in markers) {
+          final latitude = marker.match.latitude;
+          final longitude = marker.match.longitude;
+          if (latitude == null || longitude == null) continue;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: gm.GoogleMap(
-        key: ValueKey(
-          'google-map-${center.latitude.toStringAsFixed(5)}-'
-          '${center.longitude.toStringAsFixed(5)}-${markers.length}',
-        ),
-        initialCameraPosition: gm.CameraPosition(
-          target: gm.LatLng(center.latitude, center.longitude),
-          zoom: 13,
-        ),
-        markers: googleMarkers,
-        mapType: gm.MapType.normal,
-        minMaxZoomPreference: const gm.MinMaxZoomPreference(3, 18),
-        mapToolbarEnabled: false,
-        zoomControlsEnabled: false,
-        myLocationButtonEnabled: false,
-        compassEnabled: true,
-      ),
+          final selected = marker.match.id == selectedMatchId;
+          googleMarkers.add(
+            gm.Marker(
+              markerId: gm.MarkerId('match-${marker.match.id}'),
+              position: gm.LatLng(latitude, longitude),
+              zIndexInt: selected ? 2 : 1,
+              icon: matchIcon,
+              infoWindow: gm.InfoWindow(
+                title: marker.match.sportName,
+                snippet: marker.match.location,
+              ),
+              onTap: () => onMarkerTap(marker),
+            ),
+          );
+        }
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: gm.GoogleMap(
+            key: ValueKey(
+              'google-map-${center.latitude.toStringAsFixed(5)}-'
+              '${center.longitude.toStringAsFixed(5)}-${markers.length}',
+            ),
+            initialCameraPosition: gm.CameraPosition(
+              target: gm.LatLng(center.latitude, center.longitude),
+              zoom: 13,
+            ),
+            markers: googleMarkers,
+            mapType: gm.MapType.normal,
+            minMaxZoomPreference: const gm.MinMaxZoomPreference(3, 18),
+            mapToolbarEnabled: false,
+            zoomControlsEnabled: false,
+            myLocationButtonEnabled: false,
+            compassEnabled: true,
+          ),
+        );
+      },
     );
   }
 }
