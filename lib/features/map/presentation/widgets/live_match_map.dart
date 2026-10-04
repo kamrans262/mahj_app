@@ -138,6 +138,9 @@ class LiveMatchMap extends StatelessWidget {
             minMaxZoomPreference: const gm.MinMaxZoomPreference(3, 18),
             mapToolbarEnabled: false,
             zoomControlsEnabled: false,
+            myLocationEnabled:
+                currentLocationLatitude != null &&
+                currentLocationLongitude != null,
             myLocationButtonEnabled: false,
             compassEnabled: true,
             scrollGesturesEnabled: true,
