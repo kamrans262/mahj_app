@@ -2,13 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../../app/app_assets.dart';
+import '../../../../app/map/app_map_config.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_surface_container.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -56,6 +59,7 @@ class _CreateMatchLocationPickerState
 
   final _searchController = TextEditingController();
   final _mapController = fm.MapController();
+  gm.GoogleMapController? _googleMapController;
 
   Timer? _searchDebounce;
   List<DiscoveryLocation> _results = const [];
@@ -139,10 +143,24 @@ class _CreateMatchLocationPickerState
     });
 
     if (_mapReady) {
-      _mapController.move(
-        ll.LatLng(location.latitude, location.longitude),
-        15,
-      );
+      if (AppMapConfig.useGoogleMaps) {
+        final controller = _googleMapController;
+        if (controller != null) {
+          unawaited(
+            controller.animateCamera(
+              gm.CameraUpdate.newLatLngZoom(
+                gm.LatLng(location.latitude, location.longitude),
+                15,
+              ),
+            ),
+          );
+        }
+      } else {
+        _mapController.move(
+          ll.LatLng(location.latitude, location.longitude),
+          15,
+        );
+      }
     }
   }
 
@@ -386,56 +404,9 @@ class _CreateMatchLocationPickerState
                         height: responsiveMapHeight,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(AppRadius.card),
-                          child: fm.FlutterMap(
-                            mapController: _mapController,
-                            options: fm.MapOptions(
-                              initialCenter: initialCenter,
-                              initialZoom: selected == null ? 12 : 15,
-                              minZoom: 3,
-                              maxZoom: 18,
-                              backgroundColor: const Color(0xFFFFFCF8),
-                              onMapReady: () => _mapReady = true,
-                              onTap: (tapPosition, point) {
-                                unawaited(_placePin(point));
-                              },
-                            ),
-                            children: [
-                              fm.TileLayer(
-                                urlTemplate:
-                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                userAgentPackageName: 'com.example.mahj_app',
-                                tileBuilder: _styledOsmTile,
-                              ),
-                              if (selected != null)
-                                fm.MarkerLayer(
-                                  markers: [
-                                    fm.Marker(
-                                      point: ll.LatLng(
-                                        selected.latitude,
-                                        selected.longitude,
-                                      ),
-                                      width: 58,
-                                      height: 66,
-                                      alignment: Alignment.topCenter,
-                                      child: Image.asset(
-                                        AppAssets.mapMatchMarkerPng,
-                                        width: 54,
-                                        height: 61,
-                                        fit: BoxFit.contain,
-                                        filterQuality: FilterQuality.high,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              const fm.RichAttributionWidget(
-                                attributions: [
-                                  fm.TextSourceAttribution(
-                                    'OpenStreetMap contributors',
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                          child: AppMapConfig.useGoogleMaps
+                              ? _buildGoogleMap(initialCenter, selected)
+                              : _buildOpenStreetMap(initialCenter, selected),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
@@ -499,6 +470,112 @@ class _CreateMatchLocationPickerState
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildGoogleMap(
+    ll.LatLng initialCenter,
+    DiscoveryLocation? selected,
+  ) {
+    return FutureBuilder<gm.BitmapDescriptor>(
+      future: MahjGoogleMarker.load(width: 54, height: 61),
+      builder: (context, snapshot) {
+        final markerIcon =
+            snapshot.data ??
+            gm.BitmapDescriptor.defaultMarkerWithHue(
+              gm.BitmapDescriptor.hueOrange,
+            );
+
+        return gm.GoogleMap(
+          initialCameraPosition: gm.CameraPosition(
+            target: gm.LatLng(
+              initialCenter.latitude,
+              initialCenter.longitude,
+            ),
+            zoom: selected == null ? 12 : 15,
+          ),
+          minMaxZoomPreference: const gm.MinMaxZoomPreference(3, 18),
+          mapType: gm.MapType.normal,
+          mapToolbarEnabled: false,
+          zoomControlsEnabled: false,
+          myLocationButtonEnabled: false,
+          compassEnabled: true,
+          markers: selected == null
+              ? const <gm.Marker>{}
+              : {
+                  gm.Marker(
+                    markerId: const gm.MarkerId('create-match-location'),
+                    position: gm.LatLng(
+                      selected.latitude,
+                      selected.longitude,
+                    ),
+                    icon: markerIcon,
+                  ),
+                },
+          onMapCreated: (controller) {
+            _googleMapController = controller;
+            _mapReady = true;
+          },
+          onTap: (point) {
+            unawaited(
+              _placePin(ll.LatLng(point.latitude, point.longitude)),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildOpenStreetMap(
+    ll.LatLng initialCenter,
+    DiscoveryLocation? selected,
+  ) {
+    return fm.FlutterMap(
+      mapController: _mapController,
+      options: fm.MapOptions(
+        initialCenter: initialCenter,
+        initialZoom: selected == null ? 12 : 15,
+        minZoom: 3,
+        maxZoom: 18,
+        backgroundColor: const Color(0xFFFFFCF8),
+        onMapReady: () => _mapReady = true,
+        onTap: (tapPosition, point) {
+          unawaited(_placePin(point));
+        },
+      ),
+      children: [
+        fm.TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.example.mahj_app',
+          tileBuilder: _styledOsmTile,
+        ),
+        if (selected != null)
+          fm.MarkerLayer(
+            markers: [
+              fm.Marker(
+                point: ll.LatLng(
+                  selected.latitude,
+                  selected.longitude,
+                ),
+                width: 58,
+                height: 66,
+                alignment: Alignment.topCenter,
+                child: Image.asset(
+                  AppAssets.mapMatchMarkerPng,
+                  width: 54,
+                  height: 61,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
+            ],
+          ),
+        const fm.RichAttributionWidget(
+          attributions: [
+            fm.TextSourceAttribution('OpenStreetMap contributors'),
+          ],
+        ),
+      ],
     );
   }
 
