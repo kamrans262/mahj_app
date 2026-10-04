@@ -4,21 +4,16 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../../app/app_assets.dart';
+import '../../../../app/map/app_map_config.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../home/domain/home_match.dart';
 
 class MatchLocationMap extends StatelessWidget {
   const MatchLocationMap({required this.match, super.key});
 
-  static const String _mapProvider = String.fromEnvironment(
-    'MAP_PROVIDER',
-    defaultValue: 'osm',
-  );
-
   final HomeMatch match;
-
-  bool get _useGoogleMaps => _mapProvider.toLowerCase() == 'google';
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +37,7 @@ class MatchLocationMap extends StatelessWidget {
       return const _MissingMatchLocation();
     }
 
-    if (_useGoogleMaps) {
+    if (AppMapConfig.useGoogleMaps) {
       return _buildGoogleMap(latitude, longitude);
     }
 
@@ -134,29 +129,38 @@ class MatchLocationMap extends StatelessWidget {
   Widget _buildGoogleMap(double latitude, double longitude) {
     final position = gm.LatLng(latitude, longitude);
 
-    return gm.GoogleMap(
-      key: ValueKey('match-details-google-map-${match.id}'),
-      initialCameraPosition: gm.CameraPosition(target: position, zoom: 15),
-      markers: {
-        gm.Marker(
-          markerId: gm.MarkerId('match-details-${match.id}'),
-          position: position,
-          infoWindow: gm.InfoWindow(
-            title: match.venueName?.trim().isNotEmpty == true
-                ? match.venueName
-                : match.sportName,
-            snippet: match.location,
-          ),
-          icon: gm.BitmapDescriptor.defaultMarkerWithHue(
-            gm.BitmapDescriptor.hueOrange,
-          ),
-        ),
+    return FutureBuilder<gm.BitmapDescriptor>(
+      future: MahjGoogleMarker.load(width: 68, height: 78),
+      builder: (context, snapshot) {
+        final markerIcon =
+            snapshot.data ??
+            gm.BitmapDescriptor.defaultMarkerWithHue(
+              gm.BitmapDescriptor.hueOrange,
+            );
+
+        return gm.GoogleMap(
+          key: ValueKey('match-details-google-map-${match.id}'),
+          initialCameraPosition: gm.CameraPosition(target: position, zoom: 15),
+          markers: {
+            gm.Marker(
+              markerId: gm.MarkerId('match-details-${match.id}'),
+              position: position,
+              infoWindow: gm.InfoWindow(
+                title: match.venueName?.trim().isNotEmpty == true
+                    ? match.venueName
+                    : match.sportName,
+                snippet: match.location,
+              ),
+              icon: markerIcon,
+            ),
+          },
+          mapType: gm.MapType.normal,
+          mapToolbarEnabled: false,
+          zoomControlsEnabled: false,
+          myLocationButtonEnabled: false,
+          compassEnabled: true,
+        );
       },
-      mapType: gm.MapType.normal,
-      mapToolbarEnabled: false,
-      zoomControlsEnabled: false,
-      myLocationButtonEnabled: false,
-      compassEnabled: true,
     );
   }
 }
