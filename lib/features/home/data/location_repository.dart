@@ -75,6 +75,57 @@ class LocationRepository {
     }
   }
 
+  Future<DiscoveryLocation?> resolveMapTap({
+    required double latitude,
+    required double longitude,
+  }) async {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        final raw = await _placesChannel.invokeMethod<Map<dynamic, dynamic>>(
+          'resolveLocation',
+          <String, dynamic>{
+            'latitude': latitude,
+            'longitude': longitude,
+          },
+        );
+
+        if (raw != null) {
+          final normalized = raw.map(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+          final location = DiscoveryLocation.fromJson(normalized);
+          if (location.label.isNotEmpty) {
+            return location;
+          }
+        }
+      } on PlatformException {
+        // Fall through to the backend reverse-geocoding fallback.
+      } on MissingPluginException {
+        // Fall through to the backend reverse-geocoding fallback.
+      }
+    }
+
+    try {
+      final results = await search(
+        '${latitude.toStringAsFixed(6)},'
+        '${longitude.toStringAsFixed(6)}',
+      );
+      if (results.isEmpty) return null;
+
+      final first = results.first;
+      return DiscoveryLocation(
+        label: first.label,
+        latitude: latitude,
+        longitude: longitude,
+        city: first.city,
+        state: first.state,
+        zipCode: first.zipCode,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<List<DiscoveryLocation>> _searchNativeGooglePlaces(
     String query,
   ) async {
