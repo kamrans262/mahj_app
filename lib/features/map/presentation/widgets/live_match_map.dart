@@ -112,6 +112,10 @@ class LiveMatchMap extends StatelessWidget {
             zoomControlsEnabled: false,
             myLocationButtonEnabled: false,
             compassEnabled: true,
+            scrollGesturesEnabled: true,
+            zoomGesturesEnabled: true,
+            rotateGesturesEnabled: true,
+            tiltGesturesEnabled: true,
             gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
               Factory<OneSequenceGestureRecognizer>(
                 () => EagerGestureRecognizer(),
