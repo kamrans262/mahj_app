@@ -56,7 +56,7 @@ class _LocationSelectionDialogState extends State<_LocationSelectionDialog> {
     final query = _controller.text.trim();
     if (query.length < 2 || _loading) {
       if (query.length < 2) {
-        setState(() => _error = 'Enter a city or ZIP code.');
+        setState(() => _error = 'Enter an area, address, venue, city or ZIP code.');
       }
       return;
     }
@@ -125,7 +125,7 @@ class _LocationSelectionDialogState extends State<_LocationSelectionDialog> {
             children: [
               AppTextField(
                 controller: _controller,
-                hintText: 'Enter city or ZIP code',
+                hintText: 'Search area, address or venue',
                 leadingIcon: Icons.search,
                 textInputAction: TextInputAction.search,
                 enabled: !_loading,
