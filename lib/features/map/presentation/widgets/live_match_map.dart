@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 
 import '../../../../core/maps/mahj_google_marker.dart';
+import '../../../home/presentation/home_date_time_formatter.dart';
 import '../../domain/map_match_marker.dart';
 
 class LiveMatchMap extends StatelessWidget {
@@ -50,14 +51,32 @@ class LiveMatchMap extends StatelessWidget {
   Widget _buildGoogleMap() {
     final center = _initialCenter;
 
-    return FutureBuilder<gm.BitmapDescriptor>(
-      future: MahjGoogleMarker.load(width: 50, height: 57),
+    final selectedMarker = markers
+        .where((marker) => marker.match.id == selectedMatchId)
+        .cast<MapMatchMarker?>()
+        .firstOrNull;
+
+    final selectedIconFuture = selectedMarker == null
+        ? MahjGoogleMarker.load(width: 50, height: 57)
+        : MahjGoogleMarker.loadSelected(
+            title: selectedMarker.match.sportName,
+            subtitle: HomeDateTimeFormatter.compactDate(
+              selectedMarker.match.startsAt,
+            ),
+          );
+
+    return FutureBuilder<List<gm.BitmapDescriptor>>(
+      future: Future.wait<gm.BitmapDescriptor>([
+        MahjGoogleMarker.load(width: 50, height: 57),
+        selectedIconFuture,
+      ]),
       builder: (context, snapshot) {
         final matchIcon =
-            snapshot.data ??
+            snapshot.data?.first ??
             gm.BitmapDescriptor.defaultMarkerWithHue(
               gm.BitmapDescriptor.hueOrange,
             );
+        final selectedIcon = snapshot.data?.last ?? matchIcon;
         final googleMarkers = <gm.Marker>{};
 
         if (currentLocationLatitude != null &&
@@ -88,7 +107,11 @@ class LiveMatchMap extends StatelessWidget {
               markerId: gm.MarkerId('match-${marker.match.id}'),
               position: gm.LatLng(latitude, longitude),
               zIndexInt: selected ? 2 : 1,
-              icon: matchIcon,
+              icon: selected ? selectedIcon : matchIcon,
+              anchor: selected
+                  ? const Offset(0.5, 57 / 113)
+                  : const Offset(0.5, 1),
+              consumeTapEvents: true,
               onTap: () => onMarkerTap(marker),
             ),
           );
@@ -103,7 +126,9 @@ class LiveMatchMap extends StatelessWidget {
             ),
             initialCameraPosition: gm.CameraPosition(
               target: gm.LatLng(center.latitude, center.longitude),
-              zoom: 13,
+              zoom: centerLatitude != null && centerLongitude != null
+                  ? 15
+                  : 13,
             ),
             markers: googleMarkers,
             mapType: gm.MapType.normal,
