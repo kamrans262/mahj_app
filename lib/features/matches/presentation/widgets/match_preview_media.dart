@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../app/app_assets.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/maps/mahj_google_map_style.dart';
 import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../../core/widgets/app_asset_icon.dart';
 
@@ -127,6 +128,7 @@ class _StaticLocationMap extends StatelessWidget {
             zoomGesturesEnabled: false,
             rotateGesturesEnabled: false,
             tiltGesturesEnabled: false,
+            onMapCreated: MahjGoogleMapStyle.apply,
           ),
         );
       },
