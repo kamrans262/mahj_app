@@ -496,7 +496,6 @@ class _CreateMatchLocationPickerState
                       selected.longitude,
                     ),
                     icon: markerIcon,
-                    anchor: const Offset(0.5, 0.5),
                   ),
                 },
           onMapCreated: (controller) {
