@@ -63,7 +63,7 @@ abstract final class MahjGoogleMarker {
     canvas.scale(pixelRatio, pixelRatio);
 
     final markerImage = await _loadMarkerImage();
-    final markerLeft = (logicalWidth - markerWidth) / 2;
+    const markerLeft = (logicalWidth - markerWidth) / 2;
     canvas.drawImageRect(
       markerImage,
       Rect.fromLTWH(
