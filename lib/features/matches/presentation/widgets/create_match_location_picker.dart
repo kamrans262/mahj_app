@@ -1,12 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
-import 'package:latlong2/latlong.dart' as ll;
 
-import '../../../../app/app_assets.dart';
-import '../../../../app/map/app_map_config.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -55,10 +51,9 @@ class _CreateMatchLocationPicker extends StatefulWidget {
 
 class _CreateMatchLocationPickerState
     extends State<_CreateMatchLocationPicker> {
-  static const _fallbackCenter = ll.LatLng(30.1575, 71.5249);
+  static const _fallbackCenter = gm.LatLng(30.1575, 71.5249);
 
   final _searchController = TextEditingController();
-  final _mapController = fm.MapController();
   gm.GoogleMapController? _googleMapController;
 
   Timer? _searchDebounce;
@@ -79,7 +74,7 @@ class _CreateMatchLocationPickerState
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
-    _mapController.dispose();
+    _googleMapController?.dispose();
     super.dispose();
   }
 
@@ -143,22 +138,15 @@ class _CreateMatchLocationPickerState
     });
 
     if (_mapReady) {
-      if (AppMapConfig.useGoogleMaps) {
-        final controller = _googleMapController;
-        if (controller != null) {
-          unawaited(
-            controller.animateCamera(
-              gm.CameraUpdate.newLatLngZoom(
-                gm.LatLng(location.latitude, location.longitude),
-                15,
-              ),
+      final controller = _googleMapController;
+      if (controller != null) {
+        unawaited(
+          controller.animateCamera(
+            gm.CameraUpdate.newLatLngZoom(
+              gm.LatLng(location.latitude, location.longitude),
+              15,
             ),
-          );
-        }
-      } else {
-        _mapController.move(
-          ll.LatLng(location.latitude, location.longitude),
-          15,
+          ),
         );
       }
     }
@@ -208,7 +196,7 @@ class _CreateMatchLocationPickerState
     }
   }
 
-  Future<void> _placePin(ll.LatLng point) async {
+  Future<void> _placePin(gm.LatLng point) async {
     final provisional = DiscoveryLocation(
       label: 'Pinned location',
       latitude: point.latitude,
@@ -270,7 +258,7 @@ class _CreateMatchLocationPickerState
     final selected = _selectedLocation;
     final initialCenter = selected == null
         ? _fallbackCenter
-        : ll.LatLng(selected.latitude, selected.longitude);
+        : gm.LatLng(selected.latitude, selected.longitude);
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 180),
@@ -404,9 +392,7 @@ class _CreateMatchLocationPickerState
                         height: responsiveMapHeight,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(AppRadius.card),
-                          child: AppMapConfig.useGoogleMaps
-                              ? _buildGoogleMap(initialCenter, selected)
-                              : _buildOpenStreetMap(initialCenter, selected),
+                          child: _buildGoogleMap(initialCenter, selected),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
@@ -474,7 +460,7 @@ class _CreateMatchLocationPickerState
   }
 
   Widget _buildGoogleMap(
-    ll.LatLng initialCenter,
+    gm.LatLng initialCenter,
     DiscoveryLocation? selected,
   ) {
     return FutureBuilder<gm.BitmapDescriptor>(
@@ -510,6 +496,7 @@ class _CreateMatchLocationPickerState
                       selected.longitude,
                     ),
                     icon: markerIcon,
+                    anchor: const Offset(0.5, 0.5),
                   ),
                 },
           onMapCreated: (controller) {
@@ -517,105 +504,13 @@ class _CreateMatchLocationPickerState
             _mapReady = true;
           },
           onTap: (point) {
-            unawaited(
-              _placePin(ll.LatLng(point.latitude, point.longitude)),
-            );
+            unawaited(_placePin(point));
           },
         );
       },
     );
   }
 
-  Widget _buildOpenStreetMap(
-    ll.LatLng initialCenter,
-    DiscoveryLocation? selected,
-  ) {
-    return fm.FlutterMap(
-      mapController: _mapController,
-      options: fm.MapOptions(
-        initialCenter: initialCenter,
-        initialZoom: selected == null ? 12 : 15,
-        minZoom: 3,
-        maxZoom: 18,
-        backgroundColor: const Color(0xFFFFFCF8),
-        onMapReady: () => _mapReady = true,
-        onTap: (tapPosition, point) {
-          unawaited(_placePin(point));
-        },
-      ),
-      children: [
-        fm.TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.example.mahj_app',
-          tileBuilder: _styledOsmTile,
-        ),
-        if (selected != null)
-          fm.MarkerLayer(
-            markers: [
-              fm.Marker(
-                point: ll.LatLng(
-                  selected.latitude,
-                  selected.longitude,
-                ),
-                width: 58,
-                height: 66,
-                alignment: Alignment.topCenter,
-                child: Image.asset(
-                  AppAssets.mapMatchMarkerPng,
-                  width: 54,
-                  height: 61,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-            ],
-          ),
-        const fm.RichAttributionWidget(
-          attributions: [
-            fm.TextSourceAttribution('OpenStreetMap contributors'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  static Widget _styledOsmTile(
-    BuildContext context,
-    Widget tileWidget,
-    fm.TileImage tile,
-  ) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ColorFiltered(
-          colorFilter: const ColorFilter.matrix(<double>[
-            0.72,
-            0,
-            0,
-            0,
-            64,
-            0,
-            0.72,
-            0,
-            0,
-            62,
-            0,
-            0,
-            0.72,
-            0,
-            58,
-            0,
-            0,
-            0,
-            1,
-            0,
-          ]),
-          child: tileWidget,
-        ),
-        const ColoredBox(color: Color(0x0DEC5D01)),
-      ],
-    );
-  }
 }
 
 class _CurrentLocationRow extends StatelessWidget {
