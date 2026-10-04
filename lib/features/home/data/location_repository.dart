@@ -27,30 +27,52 @@ class LocationRepository {
     final trimmed = query.trim();
     if (trimmed.length < 2) return const [];
 
+    PlatformException? nativeError;
+
     if (!_looksLikeCoordinates(trimmed)) {
-      final nativeResults = await _searchNativeGooglePlaces(trimmed);
-      if (nativeResults.isNotEmpty) {
-        return nativeResults;
+      try {
+        final nativeResults = await _searchNativeGooglePlaces(trimmed);
+        if (nativeResults.isNotEmpty) {
+          return nativeResults;
+        }
+      } on PlatformException catch (error) {
+        nativeError = error;
       }
     }
 
-    final path = Uri(
-      path: '/locations/search',
-      queryParameters: {'q': trimmed},
-    ).toString();
-    final payload = await _apiClient.get(path);
-    final raw = payload['data'];
-    if (raw is! List) return const [];
+    try {
+      final path = Uri(
+        path: '/locations/search',
+        queryParameters: {'q': trimmed},
+      ).toString();
+      final payload = await _apiClient.get(path);
+      final raw = payload['data'];
+      if (raw is! List) {
+        if (nativeError != null) throw _placesConfigurationException();
+        return const [];
+      }
 
-    return raw
-        .whereType<Map>()
-        .map(
-          (item) => DiscoveryLocation.fromJson(
-            item.map((key, value) => MapEntry(key.toString(), value)),
-          ),
-        )
-        .where((location) => location.label.isNotEmpty)
-        .toList(growable: false);
+      final results = raw
+          .whereType<Map>()
+          .map(
+            (item) => DiscoveryLocation.fromJson(
+              item.map((key, value) => MapEntry(key.toString(), value)),
+            ),
+          )
+          .where((location) => location.label.isNotEmpty)
+          .toList(growable: false);
+
+      if (results.isEmpty && nativeError != null) {
+        throw _placesConfigurationException();
+      }
+
+      return results;
+    } catch (_) {
+      if (nativeError != null) {
+        throw _placesConfigurationException();
+      }
+      rethrow;
+    }
   }
 
   Future<List<DiscoveryLocation>> _searchNativeGooglePlaces(
@@ -77,11 +99,15 @@ class LocationRepository {
           )
           .where((location) => location.label.isNotEmpty)
           .toList(growable: false);
-    } on PlatformException {
-      return const [];
     } on MissingPluginException {
       return const [];
     }
+  }
+
+  LocationAccessException _placesConfigurationException() {
+    return const LocationAccessException(
+      'Google Places search is unavailable. Enable Places API (New) for the Android Google Maps API key.',
+    );
   }
 
   bool _looksLikeCoordinates(String value) {
