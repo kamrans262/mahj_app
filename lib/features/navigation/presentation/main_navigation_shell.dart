@@ -126,6 +126,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (widget.matchRepository != null && preloaded == null) {
       _initializeMatches();
     }
+    if (_currentIndex == 1) {
+      unawaited(_ensureCurrentMapLocation());
+    }
     if (widget.matchRepository != null && _currentIndex == 2) {
       _refreshMyMatches();
     }
@@ -166,6 +169,36 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     await _refreshMatches();
   }
 
+  Future<void> _ensureCurrentMapLocation() async {
+    var filters = _discoveryStore.filters;
+    final locations = widget.locationRepository;
+
+    if (locations == null ||
+        !filters.usesCurrentLocation ||
+        filters.hasCoordinates) {
+      return;
+    }
+
+    try {
+      final current =
+          await locations.currentLocationIfGranted() ??
+          await locations.currentLocation();
+
+      if (!mounted) return;
+
+      filters = filters.copyWith(
+        selectedLocation: MatchFilters.defaultLocation,
+        latitude: current.latitude,
+        longitude: current.longitude,
+      );
+      _discoveryStore.update(filters, notify: false);
+      setState(() {});
+      await _refreshMatches();
+    } catch (_) {
+      // Keep the map usable even if device location is unavailable.
+    }
+  }
+
   void _handleDiscoveryFiltersChanged() {
     if (!mounted) return;
     setState(() {});
@@ -204,6 +237,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         _homeOverlayOpen = false;
       }
     });
+
+    if (index == 1) {
+      unawaited(_ensureCurrentMapLocation());
+    }
 
     if (index == 2 && widget.matchRepository != null) {
       _refreshMyMatches();
