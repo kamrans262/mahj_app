@@ -19,6 +19,10 @@ Future<DiscoveryLocation?> showCreateMatchLocationPicker({
   required BuildContext context,
   required Future<List<DiscoveryLocation>> Function(String query) onSearch,
   required Future<DiscoveryLocation> Function() onCurrentLocation,
+  required Future<DiscoveryLocation?> Function({
+    required double latitude,
+    required double longitude,
+  }) onResolveLocation,
   DiscoveryLocation? initialLocation,
 }) {
   return showModalBottomSheet<DiscoveryLocation>(
@@ -31,6 +35,7 @@ Future<DiscoveryLocation?> showCreateMatchLocationPicker({
       initialLocation: initialLocation,
       onSearch: onSearch,
       onCurrentLocation: onCurrentLocation,
+      onResolveLocation: onResolveLocation,
     ),
   );
 }
@@ -39,12 +44,17 @@ class _CreateMatchLocationPicker extends StatefulWidget {
   const _CreateMatchLocationPicker({
     required this.onSearch,
     required this.onCurrentLocation,
+    required this.onResolveLocation,
     this.initialLocation,
   });
 
   final DiscoveryLocation? initialLocation;
   final Future<List<DiscoveryLocation>> Function(String query) onSearch;
   final Future<DiscoveryLocation> Function() onCurrentLocation;
+  final Future<DiscoveryLocation?> Function({
+    required double latitude,
+    required double longitude,
+  }) onResolveLocation;
 
   @override
   State<_CreateMatchLocationPicker> createState() =>
@@ -199,8 +209,10 @@ class _CreateMatchLocationPickerState
   }
 
   Future<void> _placePin(gm.LatLng point) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+
     final provisional = DiscoveryLocation(
-      label: 'Pinned location',
+      label: 'Finding location...',
       latitude: point.latitude,
       longitude: point.longitude,
     );
@@ -209,38 +221,65 @@ class _CreateMatchLocationPickerState
       _selectedLocation = provisional;
       _results = const [];
       _error = null;
-      _searchController.text = 'Pinned location';
+      _searchController.text = 'Finding location...';
       _searchController.selection = TextSelection.collapsed(
         offset: _searchController.text.length,
       );
     });
 
     try {
-      final reverseResults = await widget.onSearch(
-        '${point.latitude.toStringAsFixed(6)},'
-        '${point.longitude.toStringAsFixed(6)}',
-      );
-      if (!mounted || reverseResults.isEmpty) return;
-
-      final first = reverseResults.first;
-      final resolved = DiscoveryLocation(
-        label: first.label,
+      final resolved = await widget.onResolveLocation(
         latitude: point.latitude,
         longitude: point.longitude,
-        city: first.city,
-        state: first.state,
-        zipCode: first.zipCode,
       );
+      if (!mounted) return;
+
+      final selected =
+          resolved ??
+          DiscoveryLocation(
+            label:
+                '${point.latitude.toStringAsFixed(5)}, '
+                '${point.longitude.toStringAsFixed(5)}',
+            latitude: point.latitude,
+            longitude: point.longitude,
+          );
 
       setState(() {
-        _selectedLocation = resolved;
-        _searchController.text = resolved.label;
+        _selectedLocation = selected;
+        _searchController.text = selected.label;
         _searchController.selection = TextSelection.collapsed(
           offset: _searchController.text.length,
         );
       });
+
+      final controller = _googleMapController;
+      if (controller != null) {
+        unawaited(
+          controller.animateCamera(
+            gm.CameraUpdate.newLatLngZoom(
+              gm.LatLng(selected.latitude, selected.longitude),
+              17,
+            ),
+          ),
+        );
+      }
     } catch (_) {
-      // Keep the valid manually selected coordinates if reverse lookup fails.
+      if (!mounted) return;
+      final fallback = DiscoveryLocation(
+        label:
+            '${point.latitude.toStringAsFixed(5)}, '
+            '${point.longitude.toStringAsFixed(5)}',
+        latitude: point.latitude,
+        longitude: point.longitude,
+      );
+
+      setState(() {
+        _selectedLocation = fallback;
+        _searchController.text = fallback.label;
+        _searchController.selection = TextSelection.collapsed(
+          offset: _searchController.text.length,
+        );
+      });
     }
   }
 
