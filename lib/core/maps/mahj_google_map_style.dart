@@ -1,7 +1,3 @@
-import 'dart:async';
-
-import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
-
 abstract final class MahjGoogleMapStyle {
   static const String json = r'''
 [
@@ -193,7 +189,4 @@ abstract final class MahjGoogleMapStyle {
 ]
 ''';
 
-  static void apply(gm.GoogleMapController controller) {
-    unawaited(controller.setMapStyle(json));
-  }
 }
