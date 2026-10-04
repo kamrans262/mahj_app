@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../../app/app_assets.dart';
+import '../../../../app/map/app_map_config.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../../core/widgets/app_asset_icon.dart';
 
 class MatchPreviewMedia extends StatelessWidget {
@@ -82,6 +85,59 @@ class _StaticLocationMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AppMapConfig.useGoogleMaps
+        ? _buildGoogleMap()
+        : _buildOpenStreetMap();
+  }
+
+  Widget _buildGoogleMap() {
+    final position = gm.LatLng(latitude, longitude);
+
+    return FutureBuilder<gm.BitmapDescriptor>(
+      future: MahjGoogleMarker.load(
+        width: markerSize,
+        height: markerSize,
+      ),
+      builder: (context, snapshot) {
+        final markerIcon =
+            snapshot.data ??
+            gm.BitmapDescriptor.defaultMarkerWithHue(
+              gm.BitmapDescriptor.hueOrange,
+            );
+
+        return IgnorePointer(
+          child: gm.GoogleMap(
+            initialCameraPosition: gm.CameraPosition(
+              target: position,
+              zoom: 16.5,
+            ),
+            markers: {
+              gm.Marker(
+                markerId: gm.MarkerId(
+                  'my-match-preview-${latitude.toStringAsFixed(6)}-'
+                  '${longitude.toStringAsFixed(6)}',
+                ),
+                position: position,
+                icon: markerIcon,
+              ),
+            },
+            mapType: gm.MapType.normal,
+            liteModeEnabled: true,
+            mapToolbarEnabled: false,
+            zoomControlsEnabled: false,
+            myLocationButtonEnabled: false,
+            compassEnabled: false,
+            scrollGesturesEnabled: false,
+            zoomGesturesEnabled: false,
+            rotateGesturesEnabled: false,
+            tiltGesturesEnabled: false,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOpenStreetMap() {
     final position = ll.LatLng(latitude, longitude);
 
     return IgnorePointer(
