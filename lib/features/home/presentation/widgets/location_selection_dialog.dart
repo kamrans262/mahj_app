@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -42,52 +44,82 @@ class _LocationSelectionDialog extends StatefulWidget {
 
 class _LocationSelectionDialogState extends State<_LocationSelectionDialog> {
   final _controller = TextEditingController();
+  Timer? _searchDebounce;
   List<DiscoveryLocation> _results = const [];
-  bool _loading = false;
+  bool _searching = false;
+  bool _findingCurrentLocation = false;
+  int _searchRequest = 0;
   String? _error;
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _search() async {
-    final query = _controller.text.trim();
-    if (query.length < 2 || _loading) {
-      if (query.length < 2) {
-        setState(() => _error = 'Enter an area, address, venue, city or ZIP code.');
-      }
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    final query = value.trim();
+
+    if (query.length < 2) {
+      setState(() {
+        _results = const [];
+        _error = null;
+        _searching = false;
+      });
       return;
     }
 
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 350),
+      () => unawaited(_search(query)),
+    );
+  }
+
+  Future<void> _search([String? submittedQuery]) async {
+    final query = (submittedQuery ?? _controller.text).trim();
+    if (query.length < 2) {
+      setState(
+        () => _error =
+            'Enter an area, address, venue, city or ZIP code.',
+      );
+      return;
+    }
+
+    final request = ++_searchRequest;
     setState(() {
-      _loading = true;
+      _searching = true;
       _error = null;
     });
 
     try {
       final results = await widget.onSearch(query);
-      if (!mounted) return;
+      if (!mounted ||
+          request != _searchRequest ||
+          _controller.text.trim() != query) {
+        return;
+      }
+
       setState(() {
         _results = results;
-        if (results.isEmpty) {
-          _error = 'No matching locations found.';
-        }
+        _error = results.isEmpty ? 'No matching locations found.' : null;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || request != _searchRequest) return;
       setState(() => _error = error.toString());
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && request == _searchRequest) {
+        setState(() => _searching = false);
+      }
     }
   }
 
   Future<void> _useCurrentLocation() async {
-    if (_loading) return;
+    if (_findingCurrentLocation) return;
 
     setState(() {
-      _loading = true;
+      _findingCurrentLocation = true;
       _error = null;
     });
 
@@ -99,7 +131,7 @@ class _LocationSelectionDialogState extends State<_LocationSelectionDialog> {
       if (!mounted) return;
       setState(() => _error = error.toString());
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _findingCurrentLocation = false);
     }
   }
 
@@ -128,18 +160,24 @@ class _LocationSelectionDialogState extends State<_LocationSelectionDialog> {
                 hintText: 'Search area, address or venue',
                 leadingIcon: Icons.search,
                 textInputAction: TextInputAction.search,
-                enabled: !_loading,
-                onFieldSubmitted: (_) => _search(),
+                enabled: !_findingCurrentLocation,
+                onChanged: _onSearchChanged,
+                onFieldSubmitted: (value) {
+                  _searchDebounce?.cancel();
+                  unawaited(_search(value));
+                },
               ),
               const SizedBox(height: AppSpacing.sm),
               SizedBox(
                 width: double.infinity,
                 child: AppButton.secondary(
-                  label: _loading
+                  label: _findingCurrentLocation
                       ? 'Finding Location...'
                       : 'Use Current Location',
-                  onPressed: _loading ? null : _useCurrentLocation,
-                  isEnabled: !_loading,
+                  onPressed: _findingCurrentLocation
+                      ? null
+                      : _useCurrentLocation,
+                  isEnabled: !_findingCurrentLocation,
                 ),
               ),
               if (_error != null) ...[
@@ -193,11 +231,21 @@ class _LocationSelectionDialogState extends State<_LocationSelectionDialog> {
                     },
                   ),
                 ),
-              ] else if (!_loading) ...[
+              ] else if (!_searching) ...[
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
                   width: double.infinity,
-                  child: AppButton.primary(label: 'Search', onPressed: _search),
+                  child: AppButton.primary(
+                    label: 'Search',
+                    onPressed: () => unawaited(_search()),
+                  ),
+                ),
+              ],
+              if (_searching) ...[
+                const SizedBox(height: AppSpacing.sm),
+                const LinearProgressIndicator(
+                  minHeight: 2,
+                  color: AppColors.primary,
                 ),
               ],
             ],
