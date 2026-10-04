@@ -119,6 +119,7 @@ class _StaticLocationMap extends StatelessWidget {
               ),
             },
             mapType: gm.MapType.normal,
+            style: MahjGoogleMapStyle.json,
             liteModeEnabled: true,
             mapToolbarEnabled: false,
             zoomControlsEnabled: false,
@@ -128,7 +129,6 @@ class _StaticLocationMap extends StatelessWidget {
             zoomGesturesEnabled: false,
             rotateGesturesEnabled: false,
             tiltGesturesEnabled: false,
-            onMapCreated: MahjGoogleMapStyle.apply,
           ),
         );
       },
