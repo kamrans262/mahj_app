@@ -51,10 +51,13 @@ class LiveMatchMap extends StatelessWidget {
   Widget _buildGoogleMap() {
     final center = _initialCenter;
 
-    final selectedMarker = markers
-        .where((marker) => marker.match.id == selectedMatchId)
-        .cast<MapMatchMarker?>()
-        .firstOrNull;
+    MapMatchMarker? selectedMarker;
+    for (final marker in markers) {
+      if (marker.match.id == selectedMatchId) {
+        selectedMarker = marker;
+        break;
+      }
+    }
 
     final selectedIconFuture = selectedMarker == null
         ? MahjGoogleMarker.load(width: 50, height: 57)
