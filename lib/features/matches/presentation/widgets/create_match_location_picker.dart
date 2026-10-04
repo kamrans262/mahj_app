@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 
@@ -486,6 +488,15 @@ class _CreateMatchLocationPickerState
           zoomControlsEnabled: false,
           myLocationButtonEnabled: false,
           compassEnabled: true,
+          scrollGesturesEnabled: true,
+          zoomGesturesEnabled: true,
+          rotateGesturesEnabled: true,
+          tiltGesturesEnabled: true,
+          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+            Factory<OneSequenceGestureRecognizer>(
+              () => EagerGestureRecognizer(),
+            ),
+          },
           markers: selected == null
               ? const <gm.Marker>{}
               : {
