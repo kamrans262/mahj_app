@@ -60,11 +60,11 @@ class MatchLocationMap extends StatelessWidget {
             ),
           },
           mapType: gm.MapType.normal,
+          style: MahjGoogleMapStyle.json,
           mapToolbarEnabled: false,
           zoomControlsEnabled: false,
           myLocationButtonEnabled: false,
           compassEnabled: true,
-          onMapCreated: MahjGoogleMapStyle.apply,
         );
       },
     );
