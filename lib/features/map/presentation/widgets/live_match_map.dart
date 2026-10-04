@@ -136,6 +136,7 @@ class LiveMatchMap extends StatelessWidget {
             ),
             markers: googleMarkers,
             mapType: gm.MapType.normal,
+            style: MahjGoogleMapStyle.json,
             minMaxZoomPreference: const gm.MinMaxZoomPreference(3, 18),
             mapToolbarEnabled: false,
             zoomControlsEnabled: false,
@@ -153,7 +154,6 @@ class LiveMatchMap extends StatelessWidget {
                 () => EagerGestureRecognizer(),
               ),
             },
-            onMapCreated: MahjGoogleMapStyle.apply,
           ),
         );
       },
