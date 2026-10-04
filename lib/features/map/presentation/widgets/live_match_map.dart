@@ -1,10 +1,8 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 
-import '../../../../app/app_assets.dart';
-import '../../../../app/theme/app_colors.dart';
 import '../../../../core/maps/mahj_google_marker.dart';
 import '../../domain/map_match_marker.dart';
 
@@ -75,7 +73,6 @@ class LiveMatchMap extends StatelessWidget {
               icon: gm.BitmapDescriptor.defaultMarkerWithHue(
                 gm.BitmapDescriptor.hueAzure,
               ),
-              infoWindow: gm.InfoWindow.noText,
             ),
           );
         }
@@ -92,7 +89,6 @@ class LiveMatchMap extends StatelessWidget {
               position: gm.LatLng(latitude, longitude),
               zIndexInt: selected ? 2 : 1,
               icon: matchIcon,
-              infoWindow: gm.InfoWindow.noText,
               onTap: () => onMarkerTap(marker),
             ),
           );
@@ -126,6 +122,4 @@ class LiveMatchMap extends StatelessWidget {
       },
     );
   }
-}
-
 }
