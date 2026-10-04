@@ -2,8 +2,9 @@ package com.example.mahj_app
 
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.google.android.libraries.places.api.net.SearchByTextRequest
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -39,7 +40,7 @@ class MainActivity : FlutterActivity() {
                     if (query.length < 2) {
                         result.success(emptyList<Map<String, Any?>>())
                     } else {
-                        searchPlaces(query, result)
+                        autocompletePlaces(query, result)
                     }
                 }
                 else -> result.notImplemented()
@@ -47,7 +48,7 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun searchPlaces(
+    private fun autocompletePlaces(
         query: String,
         result: MethodChannel.Result,
     ) {
@@ -61,61 +62,115 @@ class MainActivity : FlutterActivity() {
             return
         }
 
-        val fields = listOf(
-            Place.Field.DISPLAY_NAME,
-            Place.Field.FORMATTED_ADDRESS,
-            Place.Field.LOCATION,
-            Place.Field.ADDRESS_COMPONENTS,
-        )
-
-        val request = SearchByTextRequest.builder(query, fields)
-            .setMaxResultCount(6)
+        val request = FindAutocompletePredictionsRequest.builder()
+            .setQuery(query)
             .build()
 
-        client.searchByText(request)
+        client.findAutocompletePredictions(request)
             .addOnSuccessListener { response ->
-                val locations = response.places.mapNotNull { place ->
-                    val location = place.location ?: return@mapNotNull null
-                    val name = place.displayName?.trim().orEmpty()
-                    val address = place.formattedAddress?.trim().orEmpty()
-                    val label = when {
-                        name.isNotEmpty() &&
-                            address.isNotEmpty() &&
-                            !address.contains(name, ignoreCase = true) ->
-                            "$name, $address"
-                        address.isNotEmpty() -> address
-                        name.isNotEmpty() -> name
-                        else -> return@mapNotNull null
-                    }
-
-                    val components =
-                        place.addressComponents?.asList().orEmpty()
-
-                    fun component(vararg wantedTypes: String): String {
-                        for (component in components) {
-                            if (wantedTypes.any { component.types.contains(it) }) {
-                                return component.name
-                            }
-                        }
-                        return ""
-                    }
-
-                    mapOf(
-                        "label" to label,
-                        "latitude" to location.latitude,
-                        "longitude" to location.longitude,
-                        "city" to component("locality", "postal_town"),
-                        "state" to component("administrative_area_level_1"),
-                        "zip_code" to component("postal_code"),
-                    )
+                val predictions = response.autocompletePredictions.take(5)
+                if (predictions.isEmpty()) {
+                    result.success(emptyList<Map<String, Any?>>())
+                    return@addOnSuccessListener
                 }
 
-                result.success(locations)
+                val rows = arrayOfNulls<Map<String, Any?>>(predictions.size)
+                var remaining = predictions.size
+
+                fun finishOne() {
+                    remaining -= 1
+                    if (remaining == 0) {
+                        result.success(rows.filterNotNull())
+                    }
+                }
+
+                predictions.forEachIndexed { index, prediction ->
+                    val fields = listOf(
+                        Place.Field.DISPLAY_NAME,
+                        Place.Field.FORMATTED_ADDRESS,
+                        Place.Field.LOCATION,
+                        Place.Field.ADDRESS_COMPONENTS,
+                    )
+
+                    val fetchRequest = FetchPlaceRequest.builder(
+                        prediction.placeId,
+                        fields,
+                    ).build()
+
+                    client.fetchPlace(fetchRequest)
+                        .addOnSuccessListener { fetchResponse ->
+                            val place = fetchResponse.place
+                            val location = place.location
+                            if (location != null) {
+                                val name = place.displayName?.trim().orEmpty()
+                                val address =
+                                    place.formattedAddress?.trim().orEmpty()
+                                val predictionLabel =
+                                    prediction.getFullText(null).toString().trim()
+
+                                val label = when {
+                                    name.isNotEmpty() &&
+                                        address.isNotEmpty() &&
+                                        !address.contains(
+                                            name,
+                                            ignoreCase = true,
+                                        ) -> "$name, $address"
+                                    address.isNotEmpty() -> address
+                                    name.isNotEmpty() -> name
+                                    predictionLabel.isNotEmpty() ->
+                                        predictionLabel
+                                    else -> ""
+                                }
+
+                                if (label.isNotEmpty()) {
+                                    val components =
+                                        place.addressComponents
+                                            ?.asList()
+                                            .orEmpty()
+
+                                    fun component(
+                                        vararg wantedTypes: String,
+                                    ): String {
+                                        for (component in components) {
+                                            if (
+                                                wantedTypes.any {
+                                                    component.types.contains(it)
+                                                }
+                                            ) {
+                                                return component.name
+                                            }
+                                        }
+                                        return ""
+                                    }
+
+                                    rows[index] = mapOf(
+                                        "label" to label,
+                                        "latitude" to location.latitude,
+                                        "longitude" to location.longitude,
+                                        "city" to component(
+                                            "locality",
+                                            "postal_town",
+                                        ),
+                                        "state" to component(
+                                            "administrative_area_level_1",
+                                        ),
+                                        "zip_code" to component(
+                                            "postal_code",
+                                        ),
+                                    )
+                                }
+                            }
+                            finishOne()
+                        }
+                        .addOnFailureListener {
+                            finishOne()
+                        }
+                }
             }
             .addOnFailureListener { error ->
                 result.error(
-                    "places_search_failed",
-                    error.message ?: "Google Places search failed.",
+                    "places_autocomplete_failed",
+                    error.message ?: "Google Places autocomplete failed.",
                     null,
                 )
             }
