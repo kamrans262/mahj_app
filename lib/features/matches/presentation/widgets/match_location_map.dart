@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../core/maps/mahj_google_map_style.dart';
 import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../home/domain/home_match.dart';
 
@@ -63,6 +64,7 @@ class MatchLocationMap extends StatelessWidget {
           zoomControlsEnabled: false,
           myLocationButtonEnabled: false,
           compassEnabled: true,
+          onMapCreated: MahjGoogleMapStyle.apply,
         );
       },
     );
