@@ -356,11 +356,9 @@ class _SelectedMatchDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final match = marker.match;
 
-    return AppSurfaceContainer(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -448,8 +446,7 @@ class _SelectedMatchDetails extends StatelessWidget {
             );
           },
         ),
-        ],
-      ),
+      ],
     );
   }
 }
