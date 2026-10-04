@@ -113,6 +113,7 @@ class _ConnectedCreateMatchScreenState
         onSubmit: _createMatch,
         onLocationSearch: widget.locationRepository?.search,
         onCurrentLocation: widget.locationRepository?.currentLocation,
+        onResolveLocation: widget.locationRepository?.resolveMapTap,
         onInvitePlayers: widget.onInvitePlayers,
         onBackHome: widget.onBackHome,
         onViewMatch: widget.onViewMatch,
