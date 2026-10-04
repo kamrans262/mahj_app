@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 
+import '../../../../core/maps/mahj_google_map_style.dart';
 import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../home/presentation/home_date_time_formatter.dart';
 import '../../domain/map_match_marker.dart';
@@ -152,6 +153,7 @@ class LiveMatchMap extends StatelessWidget {
                 () => EagerGestureRecognizer(),
               ),
             },
+            onMapCreated: MahjGoogleMapStyle.apply,
           ),
         );
       },
