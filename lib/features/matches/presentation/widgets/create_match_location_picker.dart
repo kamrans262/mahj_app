@@ -524,6 +524,7 @@ class _CreateMatchLocationPickerState
           ),
           minMaxZoomPreference: const gm.MinMaxZoomPreference(3, 18),
           mapType: gm.MapType.normal,
+          style: MahjGoogleMapStyle.json,
           mapToolbarEnabled: false,
           zoomControlsEnabled: false,
           myLocationButtonEnabled: false,
@@ -552,7 +553,6 @@ class _CreateMatchLocationPickerState
           onMapCreated: (controller) {
             _googleMapController = controller;
             _mapReady = true;
-            MahjGoogleMapStyle.apply(controller);
           },
           onTap: (point) {
             unawaited(_placePin(point));
