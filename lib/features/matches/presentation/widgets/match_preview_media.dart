@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../../app/app_assets.dart';
-import '../../../../app/map/app_map_config.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../../core/widgets/app_asset_icon.dart';
@@ -85,9 +82,7 @@ class _StaticLocationMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppMapConfig.useGoogleMaps
-        ? _buildGoogleMap()
-        : _buildOpenStreetMap();
+    return _buildGoogleMap();
   }
 
   Widget _buildGoogleMap() {
@@ -119,6 +114,7 @@ class _StaticLocationMap extends StatelessWidget {
                 ),
                 position: position,
                 icon: markerIcon,
+                anchor: const Offset(0.5, 0.5),
               ),
             },
             mapType: gm.MapType.normal,
@@ -137,50 +133,6 @@ class _StaticLocationMap extends StatelessWidget {
     );
   }
 
-  Widget _buildOpenStreetMap() {
-    final position = ll.LatLng(latitude, longitude);
-
-    return IgnorePointer(
-      child: fm.FlutterMap(
-        options: fm.MapOptions(
-          initialCenter: position,
-          initialZoom: 16.5,
-          minZoom: 16.5,
-          maxZoom: 16.5,
-          interactionOptions: const fm.InteractionOptions(
-            flags: fm.InteractiveFlag.none,
-          ),
-          backgroundColor: AppColors.subtleSurface,
-        ),
-        children: [
-          fm.TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.mahj_app',
-          ),
-          fm.MarkerLayer(
-            markers: [
-              fm.Marker(
-                point: position,
-                width: markerSize,
-                height: markerSize,
-                alignment: Alignment.center,
-                child: Image.asset(
-                  AppAssets.mapMatchMarkerPng,
-                  width: markerSize,
-                  height: markerSize,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-            ],
-          ),
-          const fm.RichAttributionWidget(
-            attributions: [fm.TextSourceAttribution('OpenStreetMap')],
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _SportImage extends StatelessWidget {
