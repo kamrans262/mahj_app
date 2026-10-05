@@ -17,6 +17,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
     required this.repository,
     super.key,
     this.onBack,
+    this.onPlayerTap,
     this.onInvitePlayers,
     this.onChat,
     this.onCompleted,
@@ -25,6 +26,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
   final HomeMatch initialMatch;
   final MatchRepository repository;
   final VoidCallback? onBack;
+  final MatchPersonTapCallback? onPlayerTap;
   final Future<void> Function()? onInvitePlayers;
   final MatchChatCallback? onChat;
   final ValueChanged<HomeMatch>? onCompleted;
@@ -209,6 +211,7 @@ class _ConnectedMatchDetailsScreenState
     return MatchDetailsScreen(
       match: _match,
       onBack: widget.onBack,
+      onPlayerTap: widget.onPlayerTap,
       isFavorite: _match.isFavorite,
       onFavoriteChanged: _setFavorite,
       onInvitePlayers: widget.onInvitePlayers == null
