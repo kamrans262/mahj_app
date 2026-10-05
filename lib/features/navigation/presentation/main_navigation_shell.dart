@@ -129,7 +129,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (_currentIndex == 1) {
       unawaited(_ensureCurrentMapLocation());
     }
-    if (widget.matchRepository != null && _currentIndex == 2) {
+    if (widget.matchRepository != null &&
+        (_currentIndex == 2 || _currentIndex == 3)) {
       _refreshMyMatches();
     }
   }
@@ -217,8 +218,16 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       widget.notificationStore?.unreadCount ??
       _profileData.unreadNotificationCount;
 
-  ProfileData get _profileWithNotificationCount =>
-      _profileData.copyWith(unreadNotificationCount: _unreadNotificationCount);
+  ProfileData get _profileWithNotificationCount {
+    final matches = _myMatchesData;
+    return _profileData.copyWith(
+      upcomingMatchCount:
+          matches?.upcoming.length ?? _profileData.upcomingMatchCount,
+      completedMatchCount:
+          matches?.completed.length ?? _profileData.completedMatchCount,
+      unreadNotificationCount: _unreadNotificationCount,
+    );
+  }
 
   Future<void> _applyDiscoveryFilters(MatchFilters filters) async {
     _discoveryStore.update(filters, notify: false);
@@ -242,7 +251,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       unawaited(_ensureCurrentMapLocation());
     }
 
-    if (index == 2 && widget.matchRepository != null) {
+    if ((index == 2 || index == 3) && widget.matchRepository != null) {
       _refreshMyMatches();
     }
   }
