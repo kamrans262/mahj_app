@@ -28,6 +28,7 @@ class PrivacySafetyRule {
 const List<PrivacySafetyRule> privacySafetyRules = [
   PrivacySafetyRule(id: 'respect', label: 'Be respectful to all players'),
   PrivacySafetyRule(id: 'punctual', label: 'Arrive on time'),
+  PrivacySafetyRule(id: 'late-cancellation', label: 'No late cancellations'),
   PrivacySafetyRule(id: 'harassment', label: 'No hate speech or harassment'),
   PrivacySafetyRule(id: 'suspicious', label: 'Report suspicious behavior'),
   PrivacySafetyRule(id: 'community', label: 'Follow community rules'),
