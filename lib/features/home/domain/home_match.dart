@@ -15,6 +15,7 @@ class HomeMatch {
     this.bannerImageUrl = '',
     this.isFeatured = false,
     this.featuredOrder = 0,
+    this.isFavorite = false,
     this.isJoinable = true,
     this.venueName,
     this.hostUserId,
@@ -47,6 +48,7 @@ class HomeMatch {
   final String bannerImageUrl;
   final bool isFeatured;
   final int featuredOrder;
+  final bool isFavorite;
   final bool isJoinable;
   final String? venueName;
   final String? hostUserId;
@@ -100,6 +102,7 @@ class HomeMatch {
       bannerImageUrl: json['banner_image_url']?.toString() ?? '',
       isFeatured: json['is_featured'] == true,
       featuredOrder: (json['featured_order'] as num?)?.toInt() ?? 0,
+      isFavorite: json['is_favorite'] == true,
       venueName: json['venue_name']?.toString(),
       hostUserId: hostMap['id']?.toString(),
       hostName: hostMap['name']?.toString(),
@@ -133,6 +136,7 @@ class HomeMatch {
     String? bannerImageUrl,
     bool? isFeatured,
     int? featuredOrder,
+    bool? isFavorite,
     bool? isJoinable,
     String? venueName,
     String? hostUserId,
@@ -165,6 +169,7 @@ class HomeMatch {
       bannerImageUrl: bannerImageUrl ?? this.bannerImageUrl,
       isFeatured: isFeatured ?? this.isFeatured,
       featuredOrder: featuredOrder ?? this.featuredOrder,
+      isFavorite: isFavorite ?? this.isFavorite,
       isJoinable: isJoinable ?? this.isJoinable,
       venueName: venueName ?? this.venueName,
       hostUserId: hostUserId ?? this.hostUserId,
