@@ -14,6 +14,7 @@ class MatchCard extends StatelessWidget {
     this.onTap,
     this.showStatus = true,
     this.showPlayerCount = true,
+    this.trailing,
     this.subtitle,
     this.surfaceColor,
     this.titleStyle,
@@ -25,6 +26,7 @@ class MatchCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool showStatus;
   final bool showPlayerCount;
+  final Widget? trailing;
   final String? subtitle;
   final Color? surfaceColor;
   final TextStyle? titleStyle;
@@ -103,7 +105,10 @@ class MatchCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        if (showStatus) ...[
+                        if (trailing != null) ...[
+                          const SizedBox(width: 10),
+                          trailing!,
+                        ] else if (showStatus) ...[
                           const SizedBox(width: 10),
                           MatchStatusBadge(status: match.status),
                         ],
