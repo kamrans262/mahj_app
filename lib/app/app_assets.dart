@@ -24,7 +24,8 @@ abstract final class AppAssets {
   static const String pickleballIcon = 'assets/icons/pickleball.svg';
   static const String golfIcon = 'assets/icons/golf.svg';
   static const String lacrosseIcon = 'assets/icons/lacrosse.svg';
-  static const String genericSportIcon = 'assets/icons/sport_generic.svg';
+  static const String mahJonggIcon = 'assets/mahjonggbuilder.svg';
+  static const String genericSportIcon = mahJonggIcon;
   static const String homeBannerImage = 'assets/banner1.png';
   static const String homeFootballImage = 'assets/football.png';
   static const String notificationPlayersIcon = 'assets/icons/players.svg';
