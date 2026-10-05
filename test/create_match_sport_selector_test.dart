@@ -4,19 +4,13 @@ import 'package:mahj_app/features/matches/domain/sport_option.dart';
 import 'package:mahj_app/features/matches/presentation/create_match_screen.dart';
 
 void main() {
-  testWidgets('Other reveals custom sport name field', (tester) async {
+  testWidgets('Mah Jongg is preselected with no sport dropdown', (tester) async {
     const sports = [
       SportOption(
         id: 1,
-        name: 'American Football',
-        slug: 'american-football',
-        iconKey: 'football',
-      ),
-      SportOption(
-        id: 2,
-        name: 'Basketball',
-        slug: 'basketball',
-        iconKey: 'basketball',
+        name: 'Mah Jongg',
+        slug: 'mah-jongg',
+        iconKey: 'generic',
       ),
     ];
 
@@ -24,15 +18,9 @@ void main() {
       const MaterialApp(home: CreateMatchScreen(sports: sports)),
     );
 
-    expect(find.text('Select Sport'), findsOneWidget);
+    expect(find.text('Mah Jongg'), findsOneWidget);
+    expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+    expect(find.text('Other'), findsNothing);
     expect(find.text('Enter Sport Name'), findsNothing);
-
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Other').last);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Enter Sport Name'), findsOneWidget);
   });
 }
