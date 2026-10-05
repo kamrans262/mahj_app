@@ -63,7 +63,7 @@ class _ConnectedCreateMatchScreenState
       setState(() {
         _sports = sports;
         if (sports.isEmpty) {
-          _error = 'No sports are available right now.';
+          _error = 'Mah Jongg is not available right now.';
         }
       });
     } catch (error) {
@@ -71,7 +71,7 @@ class _ConnectedCreateMatchScreenState
       setState(() {
         _error = error is ApiException
             ? error.message
-            : 'Could not load sports. Please try again.';
+            : 'Could not load Mah Jongg. Please try again.';
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -147,7 +147,7 @@ class _ConnectedCreateMatchScreenState
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              _error ?? 'Could not load sports.',
+                              _error ?? 'Could not load Mah Jongg.',
                               textAlign: TextAlign.center,
                               style: AppTypography.body14,
                             ),
