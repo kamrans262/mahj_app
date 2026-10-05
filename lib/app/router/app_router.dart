@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-
 import '../../core/network/api_exception.dart';
 import '../app_services.dart';
 import '../../features/auth/domain/auth_flow_args.dart';
@@ -38,6 +36,7 @@ import '../../features/profile/domain/player_profile_data.dart';
 import '../../features/profile/domain/player_profile_route_args.dart';
 import '../../features/profile/domain/profile_data.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/favorites_screen.dart';
 import '../../features/profile/presentation/player_profile_screen.dart';
 import '../../features/settings/data/legal_preview_data.dart';
 import '../../features/settings/data/privacy_safety_preview_data.dart';
@@ -48,7 +47,9 @@ import '../../features/settings/presentation/connected_notification_settings_scr
 import '../../features/settings/presentation/connected_legal_screen.dart';
 import '../../features/settings/presentation/connected_privacy_safety_screen.dart';
 import '../../features/settings/presentation/connected_support_screen.dart';
+import '../../features/settings/presentation/faq_screen.dart';
 import '../../features/settings/presentation/legal_screen.dart';
+import '../../features/settings/presentation/location_settings_screen.dart';
 import '../../features/settings/presentation/support_screen.dart';
 import '../../features/settings/presentation/notification_settings_screen.dart';
 import '../../features/settings/presentation/privacy_safety_screen.dart';
@@ -72,6 +73,9 @@ abstract final class AppRoutes {
   static const String editProfile = '/edit-profile';
   static const String playerProfile = '/player-profile';
   static const String settings = '/settings';
+  static const String favorites = '/favorites';
+  static const String faq = '/faqs';
+  static const String locationSettings = '/location-settings';
   static const String accountSettings = '/account-settings';
   static const String notificationSettings = '/notification-settings';
   static const String manageSubscription = '/manage-subscription';
@@ -222,6 +226,22 @@ abstract final class AppRouter {
               await _openNotificationDestination(context, notification);
             },
           ),
+    AppRoutes.favorites: (context) => FavoritesScreen(
+      repository: _matchRepository,
+      onBack: () => Navigator.of(context).maybePop(),
+      onMatchTap: (match) => _openMatchDetails(context, match),
+    ),
+    AppRoutes.faq: (context) => FaqScreen(
+      repository: _supportContentRepository,
+      onBack: () => Navigator.of(context).maybePop(),
+      onSupportTap: () {
+        Navigator.of(context).pushNamed(AppRoutes.support);
+      },
+    ),
+    AppRoutes.locationSettings: (context) => LocationSettingsScreen(
+      repository: AppServices.locationRepository,
+      onBack: () => Navigator.of(context).maybePop(),
+    ),
     AppRoutes.settings: (context) => SettingsScreen(
       onBack: () => Navigator.of(context).maybePop(),
       onAccountSettingsTap: () {
@@ -231,7 +251,7 @@ abstract final class AppRouter {
         Navigator.of(context).pushNamed(AppRoutes.notificationSettings);
       },
       onLocationSettingsTap: () {
-        Geolocator.openLocationSettings();
+        Navigator.of(context).pushNamed(AppRoutes.locationSettings);
       },
       onSubscriptionTap: () {
         Navigator.of(context).pushNamed(AppRoutes.manageSubscription);
@@ -240,7 +260,7 @@ abstract final class AppRouter {
         Navigator.of(context).pushNamed(AppRoutes.privacySafety);
       },
       onFaqTap: () {
-        Navigator.of(context).pushNamed(AppRoutes.support);
+        Navigator.of(context).pushNamed(AppRoutes.faq);
       },
       onSupportTap: () {
         Navigator.of(context).pushNamed(AppRoutes.support);
@@ -903,6 +923,9 @@ abstract final class AppRouter {
       },
       onProfileSettingsTap: () {
         Navigator.of(context).pushNamed(AppRoutes.settings);
+      },
+      onProfileFavoritesTap: () {
+        Navigator.of(context).pushNamed(AppRoutes.favorites);
       },
       onEditProfileRequest: (profile) {
         return Navigator.of(context)
