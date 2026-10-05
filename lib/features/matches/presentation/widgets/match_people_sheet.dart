@@ -13,6 +13,7 @@ Future<void> showMatchPeopleSheet({
   required String title,
   required List<MatchPerson> people,
   bool showInvitationStatus = false,
+  Future<void> Function(MatchPerson person)? onPersonTap,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -21,16 +22,16 @@ Future<void> showMatchPeopleSheet({
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.45),
     builder: (sheetContext) {
-      final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.68;
+      final maxListHeight = MediaQuery.sizeOf(sheetContext).height * 0.52;
 
-      return ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Material(
-          color: AppColors.background,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppRadius.sheetTop),
-          ),
-          clipBehavior: Clip.antiAlias,
+      return Material(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.sheetTop),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -64,11 +65,13 @@ Future<void> showMatchPeopleSheet({
                 ),
               ),
               const Divider(height: 1, color: AppColors.controlBorder),
-              Flexible(
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxListHeight),
                 child: ListView.separated(
+                  shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.pageHorizontal,
-                    vertical: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
                   itemCount: people.length,
                   separatorBuilder: (_, _) =>
@@ -78,6 +81,12 @@ Future<void> showMatchPeopleSheet({
                     return _MatchPersonRow(
                       person: person,
                       showInvitationStatus: showInvitationStatus,
+                      onTap: onPersonTap == null
+                          ? null
+                          : () async {
+                              Navigator.of(sheetContext).pop();
+                              await onPersonTap(person);
+                            },
                     );
                   },
                 ),
@@ -94,35 +103,53 @@ class _MatchPersonRow extends StatelessWidget {
   const _MatchPersonRow({
     required this.person,
     required this.showInvitationStatus,
+    this.onTap,
   });
 
   final MatchPerson person;
   final bool showInvitationStatus;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          _PlayerAvatar(avatarUrl: person.avatarUrl),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              person.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.homeMeta14.copyWith(
-                color: AppColors.heading,
-                fontWeight: FontWeight.w600,
+    return Semantics(
+      button: onTap != null,
+      label: onTap == null ? person.name : 'Open ${person.name} profile',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.control),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              _PlayerAvatar(avatarUrl: person.avatarUrl),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  person.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.homeMeta14.copyWith(
+                    color: AppColors.heading,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
+              if (showInvitationStatus && person.invitationStatus != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                _InvitationStatusBadge(status: person.invitationStatus!),
+              ],
+              if (onTap != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ],
           ),
-          if (showInvitationStatus && person.invitationStatus != null) ...[
-            const SizedBox(width: AppSpacing.sm),
-            _InvitationStatusBadge(status: person.invitationStatus!),
-          ],
-        ],
+        ),
       ),
     );
   }
