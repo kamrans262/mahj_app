@@ -24,12 +24,14 @@ typedef MatchCancelCallback = Future<void> Function(HomeMatch match);
 typedef MatchCompleteCallback = Future<HomeMatch> Function(HomeMatch match);
 typedef MatchChatCallback = void Function(String matchId);
 typedef MatchReportCallback = Future<void> Function(ReportMatchRequest request);
+typedef MatchFavoriteCallback = Future<bool> Function(bool favorite);
 
 class MatchDetailsScreen extends StatefulWidget {
   const MatchDetailsScreen({
     required this.match,
     super.key,
     this.onBack,
+    this.onFavoriteChanged,
     this.onInvitePlayers,
     this.onReport,
     this.onJoinMatch,
@@ -42,6 +44,7 @@ class MatchDetailsScreen extends StatefulWidget {
     this.hostUserId,
     this.isCurrentUserJoined = false,
     this.canCancelMatch = false,
+    this.isFavorite = false,
     this.venueName = 'Central Park View',
     this.proximityLabel = '0.8 miles away',
     this.dateLabel = 'Tomorrow, May 25',
@@ -57,6 +60,7 @@ class MatchDetailsScreen extends StatefulWidget {
 
   final HomeMatch match;
   final VoidCallback? onBack;
+  final MatchFavoriteCallback? onFavoriteChanged;
   final VoidCallback? onInvitePlayers;
   final VoidCallback? onReport;
   final MatchJoinCallback? onJoinMatch;
@@ -74,6 +78,7 @@ class MatchDetailsScreen extends StatefulWidget {
   /// Backend/domain permission flag. Joined players are not assumed to be able
   /// to cancel the entire match.
   final bool canCancelMatch;
+  final bool isFavorite;
 
   final String venueName;
   final String proximityLabel;
@@ -96,7 +101,9 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
   late String _playersLabel;
   late String _playersSupportingText;
   late bool _isCurrentUserJoined;
+  late bool _isFavorite;
 
+  bool _favoriteRequestInFlight = false;
   bool _isJoinDialogOpen = false;
   bool _joinRequestInFlight = false;
   bool _isLeaveDialogOpen = false;
@@ -116,6 +123,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
     _playersLabel = widget.playersLabel;
     _playersSupportingText = widget.playersSupportingText;
     _isCurrentUserJoined = widget.isCurrentUserJoined;
+    _isFavorite = widget.isFavorite;
   }
 
   @override
@@ -152,6 +160,11 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
         !_joinRequestInFlight &&
         !_leaveRequestInFlight) {
       _isCurrentUserJoined = widget.isCurrentUserJoined;
+    }
+
+    if (oldWidget.isFavorite != widget.isFavorite &&
+        !_favoriteRequestInFlight) {
+      _isFavorite = widget.isFavorite;
     }
   }
 
@@ -194,6 +207,27 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       color: AppColors.heading,
       fontWeight: FontWeight.w500,
     );
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_favoriteRequestInFlight) return;
+    final callback = widget.onFavoriteChanged;
+    if (callback == null) return;
+
+    final next = !_isFavorite;
+    setState(() => _favoriteRequestInFlight = true);
+
+    final succeeded = await callback(next);
+    if (!mounted) return;
+
+    setState(() {
+      _favoriteRequestInFlight = false;
+      if (succeeded) _isFavorite = next;
+    });
+
+    if (!succeeded) {
+      _showMessage('Could not update favorite. Please try again.');
+    }
   }
 
   Future<void> _handleJoinTap() async {
@@ -998,6 +1032,13 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               child: AppCenteredPageHeader(
                 title: 'Match Details',
                 onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+                trailing: _MatchFavoriteButton(
+                  isFavorite: _isFavorite,
+                  isLoading: _favoriteRequestInFlight,
+                  onTap: widget.onFavoriteChanged == null
+                      ? null
+                      : _toggleFavorite,
+                ),
               ),
             ),
             Expanded(
@@ -1136,6 +1177,62 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class _MatchFavoriteButton extends StatelessWidget {
+  const _MatchFavoriteButton({
+    required this.isFavorite,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  final bool isFavorite;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      toggled: isFavorite,
+      label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
+      child: SizedBox.square(
+        dimension: 40,
+        child: Material(
+          color: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(
+              color: AppColors.border.withValues(alpha: 0.65),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: isLoading ? null : onTap,
+            child: Center(
+              child: isLoading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Icon(
+                      isFavorite
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      size: 25,
+                      color: AppColors.primary,
+                    ),
+            ),
+          ),
         ),
       ),
     );
