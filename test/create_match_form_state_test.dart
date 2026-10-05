@@ -3,16 +3,16 @@ import 'package:mahj_app/features/matches/domain/create_match_form_state.dart';
 import 'package:mahj_app/features/matches/domain/sport_option.dart';
 
 void main() {
-  const basketball = SportOption(
-    id: 2,
-    name: 'Basketball',
-    slug: 'basketball',
-    iconKey: 'basketball',
+  const mahJongg = SportOption(
+    id: 1,
+    name: 'Mah Jongg',
+    slug: 'mah-jongg',
+    iconKey: 'generic',
   );
 
   test('Create Match required fields exclude optional venue', () {
     const state = CreateMatchFormState(
-      selectedSport: basketball,
+      selectedSport: mahJongg,
       locationAddress: '1001, New York, NY',
       selectedDate: null,
       selectedTimeMinutes: null,
@@ -21,9 +21,9 @@ void main() {
     expect(state.hasRequiredFields, isFalse);
   });
 
-  test('Create Match request combines sport, date and time', () {
+  test('Create Match request uses Mah Jongg with date and time', () {
     final state = CreateMatchFormState(
-      selectedSport: basketball,
+      selectedSport: mahJongg,
       locationAddress: '1001, New York, NY',
       venueName: 'Central Park Courts',
       selectedDate: DateTime(2026, 9, 28),
@@ -35,10 +35,10 @@ void main() {
     final request = state.toRequest();
 
     expect(request, isNotNull);
-    expect(request!.sportId, 2);
-    expect(request.sportName, 'Basketball');
-    expect(request.sportSlug, 'basketball');
-    expect(request.sportIconKey, 'basketball');
+    expect(request!.sportId, 1);
+    expect(request.sportName, 'Mah Jongg');
+    expect(request.sportSlug, 'mah-jongg');
+    expect(request.sportIconKey, 'generic');
     expect(request.customSportName, isNull);
     expect(request.venueName, 'Central Park Courts');
     expect(request.startsAt, DateTime(2026, 9, 28, 18, 30));
@@ -46,31 +46,9 @@ void main() {
     expect(request.isInviteOnly, isFalse);
   });
 
-  test('Other requires a custom sport name', () {
-    final missingName = CreateMatchFormState(
-      selectedSport: SportOption.other,
-      customSportName: '   ',
-      locationAddress: 'Current Location',
-      selectedDate: DateTime(2026, 9, 28),
-      selectedTimeMinutes: 9 * 60,
-    );
-
-    expect(missingName.hasRequiredFields, isFalse);
-    expect(missingName.toRequest(), isNull);
-
-    final valid = missingName.copyWith(customSportName: 'Ultimate Frisbee');
-    final request = valid.toRequest();
-
-    expect(request, isNotNull);
-    expect(request!.sportId, isNull);
-    expect(request.customSportName, 'Ultimate Frisbee');
-    expect(request.sportName, 'Ultimate Frisbee');
-    expect(request.sportIconKey, 'generic');
-  });
-
   test('blank optional venue maps to null in backend request', () {
     final state = CreateMatchFormState(
-      selectedSport: basketball,
+      selectedSport: mahJongg,
       locationAddress: 'Current Location',
       venueName: '   ',
       selectedDate: DateTime(2026, 9, 28),
