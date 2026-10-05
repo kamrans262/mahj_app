@@ -65,7 +65,6 @@ class SportIcon extends StatelessWidget {
     return AppAssetIcon(
       assetPath: SportIconResolver.assetFor(match),
       size: size,
-      color: AppColors.primary,
     );
   }
 }
