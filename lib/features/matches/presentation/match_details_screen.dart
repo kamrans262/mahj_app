@@ -25,6 +25,7 @@ typedef MatchCompleteCallback = Future<HomeMatch> Function(HomeMatch match);
 typedef MatchChatCallback = void Function(String matchId);
 typedef MatchReportCallback = Future<void> Function(ReportMatchRequest request);
 typedef MatchFavoriteCallback = Future<bool> Function(bool favorite);
+typedef MatchPersonTapCallback = Future<void> Function(MatchPerson person);
 
 class MatchDetailsScreen extends StatefulWidget {
   const MatchDetailsScreen({
@@ -32,6 +33,7 @@ class MatchDetailsScreen extends StatefulWidget {
     super.key,
     this.onBack,
     this.onFavoriteChanged,
+    this.onPlayerTap,
     this.onInvitePlayers,
     this.onReport,
     this.onJoinMatch,
@@ -61,6 +63,7 @@ class MatchDetailsScreen extends StatefulWidget {
   final HomeMatch match;
   final VoidCallback? onBack;
   final MatchFavoriteCallback? onFavoriteChanged;
+  final MatchPersonTapCallback? onPlayerTap;
   final VoidCallback? onInvitePlayers;
   final VoidCallback? onReport;
   final MatchJoinCallback? onJoinMatch;
@@ -885,6 +888,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       context: context,
       title: 'Players',
       people: widget.players,
+      onPersonTap: widget.onPlayerTap,
     );
   }
 
@@ -894,6 +898,7 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       title: 'Invited Players',
       people: widget.invitedPlayers,
       showInvitationStatus: true,
+      onPersonTap: widget.onPlayerTap,
     );
   }
 
