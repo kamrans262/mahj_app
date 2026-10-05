@@ -239,7 +239,7 @@ class _MatchChatScreenState extends State<MatchChatScreen> {
                   0,
                 ),
                 child: AppCenteredPageHeader(
-                  title: 'Match Chat',
+                  title: 'Chat',
                   onBack:
                       widget.onBack ?? () => Navigator.of(context).maybePop(),
                 ),
