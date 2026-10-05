@@ -63,7 +63,7 @@ class MatchFilters {
     return const MatchFilters(
       selectedLocation: defaultLocation,
       radiusMiles: defaultRadiusMiles,
-      showOpenOnly: true,
+      showOpenOnly: false,
       sortOption: MatchSortOption.distance,
       dateFilter: MatchDateFilter.any,
     );
