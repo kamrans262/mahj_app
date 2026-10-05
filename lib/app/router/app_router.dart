@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../core/network/api_exception.dart';
 import '../app_services.dart';
@@ -228,6 +229,9 @@ abstract final class AppRouter {
       },
       onNotificationSettingsTap: () {
         Navigator.of(context).pushNamed(AppRoutes.notificationSettings);
+      },
+      onLocationSettingsTap: () {
+        Geolocator.openLocationSettings();
       },
       onSubscriptionTap: () {
         Navigator.of(context).pushNamed(AppRoutes.manageSubscription);
