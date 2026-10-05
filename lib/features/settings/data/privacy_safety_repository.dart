@@ -27,6 +27,18 @@ class PrivacySafetyRepository {
     );
   }
 
+  Future<List<PrivacySafetyUser>> searchUsers(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.length < 2) return const <PrivacySafetyUser>[];
+
+    final path = Uri(
+      path: '/users/search',
+      queryParameters: {'q': trimmed},
+    ).toString();
+    final payload = await _apiClient.get(path);
+    return _parseUsers(payload['data']);
+  }
+
   Future<void> reportPlayer({
     required String playerId,
     required String reasonId,
