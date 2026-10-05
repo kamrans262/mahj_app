@@ -64,8 +64,12 @@ class _ConnectedMatchDetailsScreenState
       }
 
       if (!mounted) return;
+      final refreshedMatch = _match.distanceMiles == null ||
+              match.distanceMiles != null
+          ? match
+          : match.copyWith(distanceMiles: _match.distanceMiles);
       setState(() {
-        _match = _preserveDistance(match);
+        _match = refreshedMatch;
         _people = people;
       });
     } catch (error) {
@@ -113,6 +117,17 @@ class _ConnectedMatchDetailsScreenState
     return updated;
   }
 
+  Future<bool> _setFavorite(bool favorite) async {
+    try {
+      await widget.repository.setFavorite(_match.id, favorite);
+      if (!mounted) return false;
+      setState(() => _match = _match.copyWith(isFavorite: favorite));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _cancel(HomeMatch match) async {
     final updated = _preserveDistance(await widget.repository.cancel(match.id));
     if (mounted) setState(() => _match = updated);
@@ -128,8 +143,10 @@ class _ConnectedMatchDetailsScreenState
 
   HomeMatch _preserveDistance(HomeMatch updated) {
     final distance = updated.distanceMiles ?? _match.distanceMiles;
-    if (distance == null) return updated;
-    return updated.copyWith(distanceMiles: distance);
+    return updated.copyWith(
+      distanceMiles: distance,
+      isFavorite: _match.isFavorite,
+    );
   }
 
   String _distanceLabel(HomeMatch match) {
@@ -192,6 +209,8 @@ class _ConnectedMatchDetailsScreenState
     return MatchDetailsScreen(
       match: _match,
       onBack: widget.onBack,
+      isFavorite: _match.isFavorite,
+      onFavoriteChanged: _setFavorite,
       onInvitePlayers: widget.onInvitePlayers == null
           ? null
           : () => unawaited(_openInvitePlayers()),
