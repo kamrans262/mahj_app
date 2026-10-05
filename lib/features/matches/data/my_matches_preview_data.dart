@@ -18,13 +18,13 @@ abstract final class MyMatchesPreviewData {
       return MyMatchesItem(
         match: HomeMatch(
           id: id,
-          sportName: 'Football',
+          sportName: 'Mah Jongg',
           location: 'Central Park View',
           startsAt: tomorrow.add(Duration(hours: hourOffset)),
           currentPlayers: currentPlayers,
           maxPlayers: maxPlayers,
           status: status,
-          sportIconAsset: AppAssets.homeFootballIcon,
+          sportIconAsset: AppAssets.genericSportIcon,
           bannerAsset: AppAssets.sportImage,
           isJoinable: status == MatchStatus.open,
         ),
