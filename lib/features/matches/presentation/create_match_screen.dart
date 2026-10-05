@@ -449,7 +449,6 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
               selectedSport?.iconKey ?? 'generic',
             ),
             size: 20,
-            color: AppColors.primary,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
