@@ -1143,6 +1143,7 @@ abstract final class AppRouter {
       displayName: person.name,
       avatarAsset: AppAssets.bottomProfileIcon,
       avatarUrl: person.avatarUrl,
+      canInvite: false,
     );
 
     await Navigator.of(context).pushNamed(
@@ -1161,6 +1162,7 @@ abstract final class AppRouter {
       displayName: participant.displayName,
       avatarAsset: participant.avatarAsset,
       avatarUrl: participant.avatarUrl,
+      canInvite: false,
     );
 
     Navigator.of(context).pushNamed(
