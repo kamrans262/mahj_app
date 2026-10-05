@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       return SizedBox(
                                         width: width,
                                         child: AspectRatio(
-                                          aspectRatio: 175 / 116,
+                                          aspectRatio: 1,
                                           child: Image.asset(
                                             AppAssets.loginImage,
                                             key: const ValueKey('login-image'),
