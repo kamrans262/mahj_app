@@ -16,7 +16,7 @@ abstract final class MahjGoogleMapStyle {
   {
     "elementType": "labels.icon",
     "stylers": [
-      { "visibility": "off" }
+      { "visibility": "on" }
     ]
   },
   {
@@ -76,9 +76,23 @@ abstract final class MahjGoogleMapStyle {
   },
   {
     "featureType": "poi",
+    "elementType": "labels",
+    "stylers": [
+      { "visibility": "on" }
+    ]
+  },
+  {
+    "featureType": "poi",
     "elementType": "labels.text.fill",
     "stylers": [
       { "color": "#363433" }
+    ]
+  },
+  {
+    "featureType": "poi.business",
+    "elementType": "labels",
+    "stylers": [
+      { "visibility": "on" }
     ]
   },
   {
