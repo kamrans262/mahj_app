@@ -18,7 +18,7 @@ abstract final class SupportPreviewData {
       id: 'safety',
       question: 'How do I report or block another player?',
       answer:
-          'Open that player’s profile and use Report User or Block User in the safety actions.',
+          'Open Privacy and Safety to search for any registered player and block them directly, or use Report User / Block User from a player profile.',
     ),
   ];
 
