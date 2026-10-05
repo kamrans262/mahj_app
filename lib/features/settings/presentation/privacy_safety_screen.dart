@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/app_assets.dart';
@@ -12,9 +14,14 @@ import '../../../core/widgets/app_confirmation_dialog.dart';
 import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_surface_container.dart';
+import '../../../core/widgets/app_text_field.dart';
 import '../domain/privacy_safety_data.dart';
 
 typedef PrivacySafetyUnblockCallback = Future<bool> Function(String playerId);
+typedef PrivacySafetySearchCallback = Future<List<PrivacySafetyUser>> Function(
+  String query,
+);
+typedef PrivacySafetyBlockCallback = Future<bool> Function(String playerId);
 typedef PrivacySafetyPlayerTapCallback = void Function(
   PrivacySafetyUser player,
 );
@@ -27,6 +34,8 @@ class PrivacySafetyScreen extends StatefulWidget {
     super.key,
     this.onBack,
     this.onUnblock,
+    this.onSearchUsers,
+    this.onBlockUser,
     this.onPlayerTap,
     this.onRetry,
     this.isLoading = false,
@@ -38,6 +47,8 @@ class PrivacySafetyScreen extends StatefulWidget {
   final List<PrivacyReportHistoryEntry> reportHistory;
   final VoidCallback? onBack;
   final PrivacySafetyUnblockCallback? onUnblock;
+  final PrivacySafetySearchCallback? onSearchUsers;
+  final PrivacySafetyBlockCallback? onBlockUser;
   final PrivacySafetyPlayerTapCallback? onPlayerTap;
   final VoidCallback? onRetry;
   final bool isLoading;
@@ -49,12 +60,24 @@ class PrivacySafetyScreen extends StatefulWidget {
 
 class _PrivacySafetyScreenState extends State<PrivacySafetyScreen> {
   late List<PrivacySafetyUser> _blockedUsers;
+  final TextEditingController _searchController = TextEditingController();
   final Set<String> _unblockingIds = <String>{};
+  final Set<String> _blockingIds = <String>{};
+  List<PrivacySafetyUser> _searchResults = const <PrivacySafetyUser>[];
+  Timer? _searchDebounce;
+  bool _searching = false;
 
   @override
   void initState() {
     super.initState();
     _blockedUsers = List<PrivacySafetyUser>.of(widget.blockedUsers);
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -70,6 +93,100 @@ class _PrivacySafetyScreenState extends State<PrivacySafetyScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    final query = value.trim();
+
+    if (query.length < 2) {
+      setState(() {
+        _searchResults = const <PrivacySafetyUser>[];
+        _searching = false;
+      });
+      return;
+    }
+
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      unawaited(_runSearch(query));
+    });
+  }
+
+  Future<void> _runSearch(String query) async {
+    final callback = widget.onSearchUsers;
+    if (callback == null) return;
+
+    setState(() => _searching = true);
+    try {
+      final results = await callback(query);
+      if (!mounted || _searchController.text.trim() != query) return;
+      setState(() => _searchResults = results);
+    } catch (_) {
+      if (mounted) _showMessage('Could not search players. Please try again.');
+    } finally {
+      if (mounted && _searchController.text.trim() == query) {
+        setState(() => _searching = false);
+      }
+    }
+  }
+
+  Future<void> _handleBlock(PrivacySafetyUser player) async {
+    if (_blockingIds.contains(player.id)) return;
+    final callback = widget.onBlockUser;
+    if (callback == null) return;
+
+    final confirmed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'Block player confirmation',
+      barrierColor: AppColors.confirmationBackdrop,
+      transitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        final navigator = Navigator.of(dialogContext);
+        return SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pageHorizontal,
+                vertical: AppSpacing.lg,
+              ),
+              child: AppConfirmationDialog(
+                title: 'Block ${player.displayName}?',
+                message:
+                    'They will no longer be able to interact with you in eligible matches.',
+                cancelLabel: 'Cancel',
+                confirmLabel: 'Block',
+                confirmVariant: AppConfirmationVariant.destructive,
+                onCancel: () => navigator.pop(false),
+                onConfirm: () => navigator.pop(true),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: _modalTransition,
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _blockingIds.add(player.id));
+    final success = await callback(player.id);
+    if (!mounted) return;
+
+    setState(() {
+      _blockingIds.remove(player.id);
+      if (success) {
+        _searchResults = _searchResults
+            .where((item) => item.id != player.id)
+            .toList(growable: false);
+        _blockedUsers = [
+          player,
+          ..._blockedUsers.where((item) => item.id != player.id),
+        ];
+      }
+    });
+
+    if (success) _showMessage('${player.displayName} blocked.');
   }
 
   Future<void> _handleUnblock(PrivacySafetyUser player) async {
@@ -237,6 +354,36 @@ class _PrivacySafetyScreenState extends State<PrivacySafetyScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _SectionLabel(text: 'Find a Player to Block'),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            controller: _searchController,
+            hintText: 'Search by name, email or city',
+            leadingIcon: Icons.search_rounded,
+            textInputAction: TextInputAction.search,
+            onChanged: _onSearchChanged,
+            onFieldSubmitted: (value) {
+              final query = value.trim();
+              if (query.length >= 2) unawaited(_runSearch(query));
+            },
+          ),
+          if (_searching) ...[
+            const SizedBox(height: AppSpacing.sm),
+            const Center(child: AppLoader(size: 20, strokeWidth: 2)),
+          ] else if (_searchResults.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _UserGroup(
+              users: _searchResults,
+              actionBuilder: (player) => _OutlineStatusAction(
+                key: ValueKey('privacy-block-${player.id}'),
+                label: 'Block',
+                isLoading: _blockingIds.contains(player.id),
+                onTap: () => _handleBlock(player),
+              ),
+              onPlayerTap: widget.onPlayerTap,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
           _SectionLabel(text: 'Blocked Users'),
           const SizedBox(height: AppSpacing.sm),
           _blockedUsers.isEmpty
