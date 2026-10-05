@@ -47,7 +47,6 @@ class _SupportScreenState extends State<SupportScreen> {
   final TextEditingController _messageController = TextEditingController();
   SupportTopic? _selectedTopic;
   SupportAttachment? _screenshot;
-  final Set<String> _expandedFaqIds = <String>{};
   bool _topicError = false;
   bool _messageError = false;
   bool _isSubmitting = false;
@@ -266,20 +265,6 @@ class _SupportScreenState extends State<SupportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const _SectionLabel(text: 'Frequently Asked Questions'),
-                    const SizedBox(height: AppSpacing.sm),
-                    _FaqGroup(
-                      faqs: widget.faqs,
-                      expandedIds: _expandedFaqIds,
-                      onToggle: (faq) {
-                        setState(() {
-                          if (!_expandedFaqIds.add(faq.id)) {
-                            _expandedFaqIds.remove(faq.id);
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
                     const _SectionLabel(text: 'Contact Support / Report a Problem'),
                     const SizedBox(height: AppSpacing.sm),
                     _TopicField(
