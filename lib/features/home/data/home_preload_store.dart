@@ -60,7 +60,7 @@ class HomePreloadStore {
     }
 
     final discoveryFuture = _safeMatches(
-      _matchRepository.list(filters: filters, discoverOnly: true),
+      _matchRepository.list(filters: filters),
     );
 
     final results = await Future.wait<List<HomeMatch>>([
