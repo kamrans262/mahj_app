@@ -311,6 +311,30 @@ class MatchRepository {
     return _matchFromEnvelope(payload);
   }
 
+  Future<List<HomeMatch>> listFavorites() async {
+    final payload = await _apiClient.get('/favorites');
+    final raw = payload['data'];
+    if (raw is! List) return const <HomeMatch>[];
+
+    return raw
+        .whereType<Map>()
+        .map(
+          (item) => HomeMatch.fromJson(
+            item.map((key, value) => MapEntry(key.toString(), value)),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<void> setFavorite(String matchId, bool favorite) async {
+    if (favorite) {
+      await _apiClient.post('/matches/$matchId/favorite');
+      return;
+    }
+    await _apiClient.delete('/matches/$matchId/favorite');
+  }
+
+
   Future<MatchPeopleData> fetchPeople(String matchId) async {
     final payload = await _apiClient.get('/matches/$matchId/people');
     return MatchPeopleData.fromJson(payload);
