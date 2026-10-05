@@ -11,9 +11,11 @@ import '../../../core/widgets/app_confirmation_dialog.dart';
 import '../../../core/widgets/app_responsive_action_pair.dart';
 import '../../../core/widgets/app_status_dialog.dart';
 import '../../home/domain/home_match.dart';
+import '../domain/match_people_data.dart';
 import '../domain/match_report.dart';
 import 'widgets/match_location_map.dart';
 import 'widgets/match_info_row.dart';
+import 'widgets/match_people_sheet.dart';
 import 'widgets/report_match_dialog.dart';
 
 typedef MatchJoinCallback = Future<HomeMatch> Function(HomeMatch match);
@@ -48,6 +50,8 @@ class MatchDetailsScreen extends StatefulWidget {
     this.createdBy = 'Alex Turner',
     this.playersLabel = '2/4',
     this.playersSupportingText = '3 joined · 1 opening left',
+    this.players = const <MatchPerson>[],
+    this.invitedPlayers = const <MatchPerson>[],
     this.notes = 'Let’s have a great match',
   });
 
@@ -79,6 +83,8 @@ class MatchDetailsScreen extends StatefulWidget {
   final String createdBy;
   final String playersLabel;
   final String playersSupportingText;
+  final List<MatchPerson> players;
+  final List<MatchPerson> invitedPlayers;
   final String notes;
 
   @override
@@ -840,6 +846,24 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _showPlayers() {
+    return showMatchPeopleSheet(
+      context: context,
+      title: 'Players',
+      people: widget.players,
+    );
+  }
+
+  Future<void> _showInvitedPlayers() {
+    return showMatchPeopleSheet(
+      context: context,
+      title: 'Invited Players',
+      people: widget.invitedPlayers,
+      showInvitationStatus: true,
+    );
+  }
+
+
   void _handleInvitePlayers() {
     final callback = widget.onInvitePlayers;
     if (callback == null) {
@@ -1022,23 +1046,76 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
                       value: Text(widget.createdBy, style: _valueStyle),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    MatchInfoRow(
-                      iconAsset: AppAssets.matchDetailsPlayersIcon,
-                      label: 'Players',
-                      value: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(_playersLabel, style: _valueStyle),
-                          const SizedBox(height: AppSpacing.micro),
-                          Text(
-                            _playersSupportingText,
-                            style: AppTypography.homeMeta12.copyWith(
-                              color: AppColors.heading,
-                            ),
+                    Semantics(
+                      button: widget.players.isNotEmpty,
+                      label: 'View joined players',
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: widget.players.isEmpty ? null : _showPlayers,
+                        child: MatchInfoRow(
+                          iconAsset: AppAssets.matchDetailsPlayersIcon,
+                          label: 'Players',
+                          value: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_playersLabel, style: _valueStyle),
+                                    const SizedBox(
+                                      height: AppSpacing.micro,
+                                    ),
+                                    Text(
+                                      _playersSupportingText,
+                                      style: AppTypography.homeMeta12.copyWith(
+                                        color: AppColors.heading,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (widget.players.isNotEmpty)
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 20,
+                                  color: AppColors.textSecondary,
+                                ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
+                    if (widget.invitedPlayers.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      Semantics(
+                        button: true,
+                        label: 'View invited players',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: _showInvitedPlayers,
+                          child: MatchInfoRow(
+                            iconAsset: AppAssets.matchDetailsPlayersIcon,
+                            label: 'Invited Players',
+                            value: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${widget.invitedPlayers.length} invited',
+                                    style: _valueStyle,
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 20,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                     MatchInfoRow(
                       iconAsset: AppAssets.matchDetailsStatusIcon,
