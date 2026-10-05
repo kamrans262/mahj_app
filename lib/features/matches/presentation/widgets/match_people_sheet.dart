@@ -13,8 +13,8 @@ Future<void> showMatchPeopleSheet({
   required String title,
   required List<MatchPerson> people,
   bool showInvitationStatus = false,
-}) {
-  return showModalBottomSheet<void>(
+}) async {
+  await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
