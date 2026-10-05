@@ -7,6 +7,7 @@ import '../../home/domain/match_filters.dart';
 import '../domain/create_match_form_state.dart';
 import '../domain/invite_player_result.dart';
 import '../domain/match_completion_data.dart';
+import '../domain/match_people_data.dart';
 import '../domain/my_matches_data.dart';
 import '../domain/sport_option.dart';
 
@@ -309,6 +310,12 @@ class MatchRepository {
     final payload = await _apiClient.get('/matches/$matchId');
     return _matchFromEnvelope(payload);
   }
+
+  Future<MatchPeopleData> fetchPeople(String matchId) async {
+    final payload = await _apiClient.get('/matches/$matchId/people');
+    return MatchPeopleData.fromJson(payload);
+  }
+
 
   Future<HomeMatch> create(CreateMatchRequest request) async {
     final payload = await _apiClient.post(
