@@ -269,7 +269,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    return 'Good Afternoon';
   }
 
   HomeData get _homeData {
