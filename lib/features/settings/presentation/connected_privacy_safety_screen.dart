@@ -57,6 +57,24 @@ class _ConnectedPrivacySafetyScreenState
     }
   }
 
+  Future<List<PrivacySafetyUser>> _searchUsers(String query) {
+    return widget.repository.searchUsers(query);
+  }
+
+  Future<bool> _blockUser(String playerId) async {
+    try {
+      await widget.repository.blockPlayer(
+        playerId: playerId,
+        reasonId: 'do_not_want_to_play',
+      );
+      if (mounted) await _load();
+      return true;
+    } catch (error) {
+      if (mounted) _showMessage(_messageFor(error));
+      return false;
+    }
+  }
+
   Future<bool> _unblock(String playerId) async {
     try {
       await widget.repository.unblockPlayer(playerId);
@@ -110,6 +128,8 @@ class _ConnectedPrivacySafetyScreenState
           data?.reportHistory ?? const <PrivacyReportHistoryEntry>[],
       onBack: widget.onBack,
       onUnblock: _unblock,
+      onSearchUsers: _searchUsers,
+      onBlockUser: _blockUser,
       onPlayerTap: _openPlayer,
       onRetry: _load,
       isLoading: _loading && data == null,
