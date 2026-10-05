@@ -19,6 +19,7 @@ import '../../features/matches/data/invite_players_preview_data.dart';
 import '../../features/matches/data/match_completed_preview_data.dart';
 import '../../features/matches/data/my_matches_preview_data.dart';
 import '../../features/matches/domain/my_matches_data.dart';
+import '../../features/matches/domain/match_people_data.dart';
 import '../../features/matches/presentation/connected_create_match_screen.dart';
 import '../../features/matches/presentation/connected_match_completed_screen.dart';
 import '../../features/matches/presentation/connected_match_details_screen.dart';
@@ -686,6 +687,8 @@ abstract final class AppRouter {
               initialMatch: match,
               repository: _matchRepository,
               onBack: () => Navigator.of(context).maybePop(),
+              onPlayerTap: (person) =>
+                  _openMatchPersonProfile(context, person, match),
               onInvitePlayers: match.canInviteOthers
                   ? () => _openInvitePlayers(context, match)
                   : null,
@@ -964,6 +967,8 @@ abstract final class AppRouter {
             initialMatch: match,
             repository: _matchRepository,
             onBack: () => Navigator.of(detailsContext).maybePop(),
+            onPlayerTap: (person) =>
+                _openMatchPersonProfile(detailsContext, person, match),
             onInvitePlayers: match.canInviteOthers
                 ? () => _openInvitePlayers(detailsContext, match)
                 : null,
@@ -1101,6 +1106,8 @@ abstract final class AppRouter {
           initialMatch: match,
           repository: _matchRepository,
           onBack: () => Navigator.of(joinedContext).maybePop(),
+          onPlayerTap: (person) =>
+              _openMatchPersonProfile(joinedContext, person, match),
           onInvitePlayers: match.canInviteOthers
               ? () => _openInvitePlayers(joinedContext, match)
               : null,
@@ -1116,6 +1123,30 @@ abstract final class AppRouter {
           },
         ),
       ),
+    );
+  }
+
+  static Future<void> _openMatchPersonProfile(
+    BuildContext context,
+    MatchPerson person,
+    HomeMatch match,
+  ) async {
+    final currentUser = _authRepository.currentUser;
+    if (currentUser != null && person.id == currentUser.id) {
+      await Navigator.of(context).pushNamed(AppRoutes.profile);
+      return;
+    }
+
+    final player = PlayerProfilePreviewData.forIdentity(
+      id: person.id,
+      displayName: person.name,
+      avatarAsset: AppAssets.bottomProfileIcon,
+      avatarUrl: person.avatarUrl,
+    );
+
+    await Navigator.of(context).pushNamed(
+      AppRoutes.playerProfile,
+      arguments: PlayerProfileRouteArgs(player: player, inviteMatch: match),
     );
   }
 
