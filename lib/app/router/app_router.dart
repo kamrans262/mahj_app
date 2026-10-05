@@ -11,6 +11,7 @@ import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/chat/data/match_chat_preview_data.dart';
 import '../../features/chat/domain/chat_models.dart';
 import '../../features/chat/presentation/connected_match_chat_screen.dart';
+import '../../features/chat/presentation/joined_match_chats_screen.dart';
 import '../../features/chat/presentation/match_chat_screen.dart';
 import '../../features/home/data/home_preview_data.dart';
 import '../../features/home/domain/home_match.dart';
@@ -1126,7 +1127,7 @@ abstract final class AppRouter {
       final data = MyMatchesPreviewData.create();
       HomeMatch? chatMatch;
 
-      for (final item in [...data.upcoming, ...data.createdByMe]) {
+      for (final item in data.upcoming) {
         final match = item.match;
         if (match.status != MatchStatus.cancelled &&
             match.status != MatchStatus.completed) {
@@ -1142,47 +1143,25 @@ abstract final class AppRouter {
       return;
     }
 
-    try {
-      final data = await _matchRepository.listMyMatches();
-      HomeMatch? chatMatch;
-
-      for (final item in data.upcoming) {
-        final match = item.match;
-        if (match.status != MatchStatus.cancelled &&
-            match.status != MatchStatus.completed &&
-            match.isCurrentUserJoined) {
-          chatMatch = match;
-          break;
-        }
-      }
-
-      if (chatMatch == null) {
-        for (final item in data.createdByMe) {
-          final match = item.match;
-          if (match.status != MatchStatus.cancelled &&
-              match.status != MatchStatus.completed &&
-              match.isOwnedByCurrentUser) {
-            chatMatch = match;
-            break;
-          }
-        }
-      }
-
-      if (!context.mounted) return;
-
-      if (chatMatch == null) {
-        _showApiError(
-          context,
-          'Join or create an active match to use match chat.',
-        );
-        return;
-      }
-
-      Navigator.of(context)
-          .pushNamed(AppRoutes.matchChat, arguments: chatMatch);
-    } catch (error) {
-      if (context.mounted) _showApiError(context, error);
-    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (chatListContext) => JoinedMatchChatsScreen(
+          repository: _matchRepository,
+          onBack: () => Navigator.of(chatListContext).maybePop(),
+          onFindMatches: () {
+            Navigator.of(chatListContext).pushReplacementNamed(
+              AppRoutes.nearbyMatches,
+            );
+          },
+          onStartChat: (match) {
+            Navigator.of(chatListContext).pushNamed(
+              AppRoutes.matchChat,
+              arguments: match,
+            );
+          },
+        ),
+      ),
+    );
   }
 
   static Future<bool> handlePushData(Map<String, dynamic> data) async {
