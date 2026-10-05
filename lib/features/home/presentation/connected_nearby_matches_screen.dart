@@ -59,7 +59,6 @@ class _ConnectedNearbyMatchesScreenState
       final matches = await widget.repository.list(
         filters: activeFilters,
         query: activeQuery,
-        discoverOnly: true,
       );
       if (!mounted) return;
       setState(() {
