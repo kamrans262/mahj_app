@@ -53,7 +53,6 @@ class CreateMatchScreen extends StatefulWidget {
 class _CreateMatchScreenState extends State<CreateMatchScreen> {
   static const double _headerToBodyGap = 35;
 
-  final _customSportController = TextEditingController();
   final _locationController = TextEditingController();
   final _venueController = TextEditingController();
   final _notesController = TextEditingController();
@@ -64,8 +63,40 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   HomeMatch? _createdMatch;
 
   @override
+  void initState() {
+    super.initState();
+    _selectMahJongg(widget.sports);
+  }
+
+  @override
+  void didUpdateWidget(covariant CreateMatchScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_formState.selectedSport == null &&
+        oldWidget.sports != widget.sports &&
+        widget.sports.isNotEmpty) {
+      setState(() => _selectMahJongg(widget.sports));
+    }
+  }
+
+  void _selectMahJongg(List<SportOption> sports) {
+    if (sports.isEmpty) return;
+
+    var selected = sports.first;
+    for (final sport in sports) {
+      if (sport.slug == 'mah-jongg') {
+        selected = sport;
+        break;
+      }
+    }
+
+    _formState = _formState.copyWith(
+      selectedSport: selected,
+      customSportName: '',
+    );
+  }
+
+  @override
   void dispose() {
-    _customSportController.dispose();
     _locationController.dispose();
     _venueController.dispose();
     _notesController.dispose();
@@ -392,24 +423,10 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   }
 
   Widget _buildSportField() {
-    final options = <SportOption>[...widget.sports, SportOption.other];
     final selectedSport = _formState.selectedSport;
 
-    return DropdownButtonFormField<String>(
-      key: ValueKey<String?>(selectedSport?.slug),
-      initialValue: selectedSport?.slug,
-      isExpanded: true,
-      icon: const Icon(
-        Icons.keyboard_arrow_down_rounded,
-        color: AppColors.textSecondary,
-      ),
-      hint: const Text('Select Sport', style: AppTypography.fieldHint),
+    return InputDecorator(
       decoration: InputDecoration(
-        prefixIcon: const Icon(
-          Icons.sports_outlined,
-          size: 22,
-          color: AppColors.textSecondary,
-        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 13,
@@ -420,84 +437,36 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
           borderRadius: BorderRadius.circular(AppRadius.control),
           borderSide: const BorderSide(color: AppColors.controlBorder),
         ),
-        disabledBorder: OutlineInputBorder(
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
           borderSide: const BorderSide(color: AppColors.controlBorder),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.control),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
-        ),
       ),
-      style: AppTypography.field,
-      selectedItemBuilder: (context) => options
-          .map(
-            (sport) => Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                sport.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.field,
-              ),
+      child: Row(
+        children: [
+          AppAssetIcon(
+            assetPath: SportIconResolver.assetForKey(
+              selectedSport?.iconKey ?? 'generic',
             ),
-          )
-          .toList(growable: false),
-      items: options
-          .map(
-            (sport) => DropdownMenuItem<String>(
-              value: sport.slug,
-              child: Row(
-                children: [
-                  AppAssetIcon(
-                    assetPath: SportIconResolver.assetForKey(sport.iconKey),
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      sport.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.field,
-                    ),
-                  ),
-                ],
-              ),
+            size: 20,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              selectedSport?.name ?? 'Mah Jongg',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.field,
             ),
-          )
-          .toList(growable: false),
-      onChanged: _isSubmitting
-          ? null
-          : (slug) {
-              if (slug == null) return;
-              final sport = options.firstWhere((option) => option.slug == slug);
-              setState(() {
-                _formState = _formState.copyWith(
-                  selectedSport: sport,
-                  customSportName: sport.isOther
-                      ? _formState.customSportName
-                      : '',
-                );
-                if (!sport.isOther) {
-                  _customSportController.clear();
-                }
-              });
-            },
-    );
-  }
-
-  Widget _buildCustomSportField() {
-    return AppTextField(
-      controller: _customSportController,
-      hintText: 'Enter Sport Name',
-      leadingIcon: Icons.edit_outlined,
-      enabled: !_isSubmitting,
-      textInputAction: TextInputAction.next,
-      textCapitalization: TextCapitalization.words,
-      onChanged: (value) {
-        _formState = _formState.copyWith(customSportName: value);
-      },
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          const Icon(
+            Icons.check_rounded,
+            size: 20,
+            color: AppColors.primary,
+          ),
+        ],
+      ),
     );
   }
 
@@ -738,11 +707,6 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                                   _buildVenueField(),
                                   const SizedBox(height: AppSpacing.lg),
                                   _buildSportField(),
-                                  if (_formState.selectedSport?.isOther ==
-                                      true) ...[
-                                    const SizedBox(height: AppSpacing.lg),
-                                    _buildCustomSportField(),
-                                  ],
                                   const SizedBox(height: AppSpacing.lg),
                                   _buildDateTimeFields(),
                                   const SizedBox(height: AppSpacing.lg),
