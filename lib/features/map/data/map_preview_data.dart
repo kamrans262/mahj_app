@@ -33,7 +33,7 @@ abstract final class MapPreviewData {
       ),
       MapMatchMarker(
         match: HomeMatch(
-          id: 'map-preview-mah-jongg-1',
+          id: 'map-preview-mah-jongg-2',
           sportName: 'Mah Jongg',
           location: 'Riverside Field',
           startsAt: todayAtSix.add(const Duration(minutes: 30)),
@@ -49,7 +49,7 @@ abstract final class MapPreviewData {
       ),
       MapMatchMarker(
         match: HomeMatch(
-          id: 'map-preview-mah-jongg-2',
+          id: 'map-preview-mah-jongg-3',
           sportName: 'Mah Jongg',
           location: 'East Court',
           startsAt: tomorrowAtSix.add(const Duration(hours: 1)),
@@ -65,7 +65,7 @@ abstract final class MapPreviewData {
       ),
       MapMatchMarker(
         match: HomeMatch(
-          id: 'map-preview-mah-jongg-2',
+          id: 'map-preview-mah-jongg-4',
           sportName: 'Mah Jongg',
           location: 'Westside Ground',
           startsAt: tomorrowAtSix.subtract(const Duration(minutes: 30)),
