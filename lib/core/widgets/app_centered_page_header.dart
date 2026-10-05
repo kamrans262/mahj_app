@@ -8,10 +8,12 @@ class AppCenteredPageHeader extends StatelessWidget {
     required this.title,
     required this.onBack,
     super.key,
+    this.trailing,
   });
 
   final String title;
   final VoidCallback? onBack;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +26,11 @@ class AppCenteredPageHeader extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: AppBackButton(onPressed: onBack),
           ),
+          if (trailing != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: trailing!,
+            ),
           IgnorePointer(
             child: Text(
               title,
