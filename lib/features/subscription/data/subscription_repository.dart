@@ -41,6 +41,19 @@ class SubscriptionRepository {
     );
   }
 
+  Future<SubscriptionStartResult> startPayment(String planId) async {
+    final payload = await _apiClient.post(
+      '/subscription/start-payment',
+      body: {'plan_id': _normalizePlanId(planId)},
+    );
+
+    return SubscriptionStartResult(
+      state: SubscriptionState.fromJson(payload),
+      checkoutUrl: payload['checkout_url']?.toString(),
+      checkoutSessionId: payload['checkout_session_id']?.toString(),
+    );
+  }
+
   Future<SubscriptionState> confirmCheckout(String sessionId) async {
     final payload = await _apiClient.post(
       '/subscription/confirm-checkout',
