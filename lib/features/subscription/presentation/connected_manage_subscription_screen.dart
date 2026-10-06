@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/network/api_exception.dart';
@@ -27,15 +28,37 @@ class ConnectedManageSubscriptionScreen extends StatefulWidget {
 }
 
 class _ConnectedManageSubscriptionScreenState
-    extends State<ConnectedManageSubscriptionScreen> {
+    extends State<ConnectedManageSubscriptionScreen>
+    with WidgetsBindingObserver {
   SubscriptionState? _state;
   String? _error;
   bool _loading = true;
+  bool _waitingForCheckout = false;
+  bool _refreshingCheckout = false;
+  String? _pendingCheckoutSessionId;
+  int _selectionRevision = 0;
+
+  bool get _hasActivePaidSubscription =>
+      _state?.provider == 'stripe' && _state?.status == 'active';
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _waitingForCheckout) {
+      _refreshAfterCheckout();
+    }
   }
 
   Future<void> _load() async {
@@ -67,6 +90,105 @@ class _ConnectedManageSubscriptionScreenState
     }
   }
 
+  Future<bool> _startPayment(SubscriptionPlan plan) async {
+    try {
+      final result = await widget.repository.startPayment(plan.id);
+      if (!mounted) return false;
+
+      if (!result.requiresCheckout ||
+          result.checkoutUrl == null ||
+          result.checkoutSessionId == null) {
+        _showMessage('Stripe checkout could not be started.');
+        return false;
+      }
+
+      final checkoutUrl = Uri.tryParse(result.checkoutUrl!);
+      if (checkoutUrl == null) {
+        _showMessage('Stripe checkout could not be started.');
+        return false;
+      }
+
+      final opened = await launchUrl(
+        checkoutUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!opened || !mounted) {
+        _showMessage('Stripe checkout could not be opened.');
+        return false;
+      }
+
+      setState(() {
+        _state = result.state;
+        _waitingForCheckout = true;
+        _pendingCheckoutSessionId = result.checkoutSessionId;
+      });
+
+      _showMessage('Complete the payment in Stripe, then return to Mahj.');
+      return true;
+    } catch (error) {
+      if (mounted) _showMessage(_messageFor(error));
+      return false;
+    }
+  }
+
+  Future<void> _refreshAfterCheckout() async {
+    if (_refreshingCheckout) return;
+    _refreshingCheckout = true;
+
+    try {
+      final sessionId = _pendingCheckoutSessionId;
+      SubscriptionState state;
+
+      if (sessionId != null && sessionId.isNotEmpty) {
+        state = await widget.repository.confirmCheckout(sessionId);
+      } else {
+        state = await widget.repository.fetch();
+      }
+
+      if (!mounted) return;
+
+      final paymentSucceeded =
+          state.provider == 'stripe' && state.status == 'active';
+
+      setState(() {
+        _state = state;
+        _waitingForCheckout = false;
+        _pendingCheckoutSessionId = null;
+        _selectionRevision++;
+      });
+
+      if (paymentSucceeded) {
+        _showMessage('Monthly Plan activated.');
+      } else {
+        _showMessage('Payment was not completed.');
+      }
+    } catch (_) {
+      try {
+        final state = await widget.repository.fetch();
+        if (!mounted) return;
+        setState(() {
+          _state = state;
+          _waitingForCheckout = false;
+          _pendingCheckoutSessionId = null;
+          _selectionRevision++;
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _waitingForCheckout = false;
+          _pendingCheckoutSessionId = null;
+          _selectionRevision++;
+        });
+      }
+      if (mounted) {
+        _showMessage('Payment was not completed.');
+      }
+    } finally {
+      _refreshingCheckout = false;
+    }
+  }
+
   Future<bool> _cancel() async {
     try {
       final state = await widget.repository.cancel();
@@ -91,6 +213,42 @@ class _ConnectedManageSubscriptionScreenState
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  SubscriptionPlan _displayCurrentPlan(SubscriptionPlan fallback) {
+    if (_hasActivePaidSubscription) {
+      return _state?.currentPlan ?? fallback;
+    }
+
+    return const SubscriptionPlan(
+      id: 'free',
+      name: 'Free',
+      description: 'No active paid subscription',
+      priceLabel: r'$0.00',
+      statusText: 'Active',
+      isCurrent: true,
+      isSelectable: false,
+      trialDays: 0,
+    );
+  }
+
+  List<SubscriptionPlan> _displayAvailablePlans() {
+    final plans = _state?.availablePlans ?? const <SubscriptionPlan>[];
+
+    if (_hasActivePaidSubscription) {
+      return plans;
+    }
+
+    return plans
+        .map(
+          (plan) => plan.copyWith(
+            isCurrent: false,
+            isSelectable: true,
+            statusText: null,
+            renewalText: null,
+          ),
+        )
+        .toList(growable: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = _state;
@@ -103,17 +261,28 @@ class _ConnectedManageSubscriptionScreenState
       isSelectable: false,
     );
 
+    final currentPlan = _displayCurrentPlan(fallback);
+    final canCancel =
+        _hasActivePaidSubscription &&
+        state?.cancelAtPeriodEnd != true &&
+        !_waitingForCheckout;
+
     return ColoredBox(
       color: AppColors.background,
       child: ManageSubscriptionScreen(
-        currentPlan: state?.currentPlan ?? fallback,
-        availablePlans: state?.availablePlans ?? const [],
-        isLoading: _loading,
+        key: ValueKey(
+          'manage-subscription-${currentPlan.id}-$_selectionRevision',
+        ),
+        currentPlan: currentPlan,
+        availablePlans: _displayAvailablePlans(),
+        isLoading: _loading || _refreshingCheckout,
         errorMessage: _error,
+        requiresPayment: !_hasActivePaidSubscription,
         onRetry: _load,
         onBack: widget.onBack,
+        onConfirmPayment: _startPayment,
         onConfirmChange: _changePlan,
-        onCancelSubscription: state?.status == null ? null : _cancel,
+        onCancelSubscription: canCancel ? _cancel : null,
         onTermsTap: widget.onTermsTap,
         onPrivacyPolicyTap: widget.onPrivacyPolicyTap,
       ),
