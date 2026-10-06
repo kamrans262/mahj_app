@@ -5,12 +5,14 @@ class SubscriptionState {
     required this.currentPlan,
     required this.availablePlans,
     this.status,
+    this.provider,
     this.cancelAtPeriodEnd = false,
   });
 
   final SubscriptionPlan currentPlan;
   final List<SubscriptionPlan> availablePlans;
   final String? status;
+  final String? provider;
   final bool cancelAtPeriodEnd;
 
   factory SubscriptionState.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,7 @@ class SubscriptionState {
       currentPlan: current,
       availablePlans: List.unmodifiable(plans),
       status: subscription?['status']?.toString(),
+      provider: subscription?['provider']?.toString(),
       cancelAtPeriodEnd: subscription?['cancel_at_period_end'] == true,
     );
   }
