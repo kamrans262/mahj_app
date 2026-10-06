@@ -16,9 +16,11 @@ class ManageSubscriptionScreen extends StatefulWidget {
     required this.availablePlans,
     super.key,
     this.isLoading = false,
+    this.requiresPayment = false,
     this.errorMessage,
     this.onBack,
     this.onRetry,
+    this.onConfirmPayment,
     this.onConfirmChange,
     this.onCancelSubscription,
     this.onTermsTap,
@@ -28,9 +30,11 @@ class ManageSubscriptionScreen extends StatefulWidget {
   final SubscriptionPlan currentPlan;
   final List<SubscriptionPlan> availablePlans;
   final bool isLoading;
+  final bool requiresPayment;
   final String? errorMessage;
   final VoidCallback? onBack;
   final VoidCallback? onRetry;
+  final Future<bool> Function(SubscriptionPlan plan)? onConfirmPayment;
   final Future<bool> Function(SubscriptionPlan plan)? onConfirmChange;
   final Future<bool> Function()? onCancelSubscription;
   final VoidCallback? onTermsTap;
@@ -89,6 +93,28 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
     setState(() {
       _selectedPlanId = plan.id;
     });
+  }
+
+  Future<void> _startPayment() async {
+    final selectedPlan = _selectedPlan;
+    if (selectedPlan == null) {
+      _showMessage('Choose a plan before confirming payment.');
+      return;
+    }
+    if (_submitting) return;
+
+    final callback = widget.onConfirmPayment;
+    if (callback == null) {
+      _showMessage('Subscription service is not connected yet.');
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      await callback(selectedPlan);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   Future<void> _openConfirmation() async {
@@ -313,7 +339,15 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
             if (!widget.isLoading && widget.errorMessage == null)
               _SubscriptionBottomArea(
                 infoText: _selectedPlan?.infoText,
-                onConfirm: _alternativePlans.isEmpty ? null : _openConfirmation,
+                confirmLabel: widget.requiresPayment
+                    ? 'Confirm Payment'
+                    : 'Confirm Changes',
+                isSubmitting: _submitting,
+                onConfirm: _alternativePlans.isEmpty
+                    ? null
+                    : widget.requiresPayment
+                    ? _startPayment
+                    : _openConfirmation,
                 onCancel: widget.onCancelSubscription == null
                     ? null
                     : _openCancellation,
@@ -372,7 +406,10 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
       children: [
         Text('Current Plan', style: AppTypography.homeMeta14),
         const SizedBox(height: AppSpacing.xs),
-        SubscriptionPlanCard(plan: _currentPlan),
+        SubscriptionPlanCard(
+          plan: _currentPlan,
+          isCurrentSelectionActive: _selectedPlanId == null,
+        ),
         if (alternativePlans.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.lg),
           Text('Choose Your Plan', style: AppTypography.homeMeta14),
@@ -400,6 +437,8 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
 class _SubscriptionBottomArea extends StatelessWidget {
   const _SubscriptionBottomArea({
     this.infoText,
+    this.confirmLabel = 'Confirm Changes',
+    this.isSubmitting = false,
     this.onConfirm,
     this.onCancel,
     required this.onTermsTap,
@@ -407,6 +446,8 @@ class _SubscriptionBottomArea extends StatelessWidget {
   });
 
   final String? infoText;
+  final String confirmLabel;
+  final bool isSubmitting;
   final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
   final VoidCallback onTermsTap;
@@ -428,8 +469,10 @@ class _SubscriptionBottomArea extends StatelessWidget {
           if (onConfirm != null) ...[
             AppButton.primary(
               key: const ValueKey('manage-subscription-confirm'),
-              label: 'Confirm Changes',
+              label: confirmLabel,
               onPressed: onConfirm,
+              isLoading: isSubmitting,
+              isEnabled: !isSubmitting,
             ),
             if (infoText != null && infoText!.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -446,7 +489,7 @@ class _SubscriptionBottomArea extends StatelessWidget {
               key: const ValueKey('manage-subscription-cancel'),
               onPressed: onCancel,
               child: Text(
-                'Cancel Subscription',
+                'Cancel Plan',
                 style: AppTypography.action14.copyWith(
                   color: AppColors.destructive,
                 ),
