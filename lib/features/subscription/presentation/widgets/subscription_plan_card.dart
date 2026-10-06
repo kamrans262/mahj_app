@@ -11,20 +11,23 @@ class SubscriptionPlanCard extends StatelessWidget {
     required this.plan,
     super.key,
     this.isSelected = false,
+    this.isCurrentSelectionActive = true,
     this.onTap,
   });
 
   final SubscriptionPlan plan;
   final bool isSelected;
+  final bool isCurrentSelectionActive;
   final VoidCallback? onTap;
 
-  bool get _highlighted => plan.isCurrent || isSelected;
+  bool get _highlighted =>
+      (plan.isCurrent && isCurrentSelectionActive) || isSelected;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: onTap != null,
-      selected: isSelected || plan.isCurrent,
+      selected: isSelected || (plan.isCurrent && isCurrentSelectionActive),
       label: plan.isCurrent ? '${plan.name}, current plan' : plan.name,
       child: AppSurfaceContainer(
         key: ValueKey('subscription-plan-${plan.id}'),
