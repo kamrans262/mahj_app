@@ -11,6 +11,7 @@ import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/chat/data/match_chat_preview_data.dart';
 import '../../features/chat/domain/chat_models.dart';
+import '../../features/chat/presentation/connected_direct_chat_screen.dart';
 import '../../features/chat/presentation/connected_match_chat_screen.dart';
 import '../../features/chat/presentation/joined_match_chats_screen.dart';
 import '../../features/chat/presentation/match_chat_screen.dart';
@@ -103,6 +104,7 @@ abstract final class AppRouter {
   static final _authRepository = AppServices.authRepository;
   static final _matchRepository = AppServices.matchRepository;
   static final _chatRepository = AppServices.chatRepository;
+  static final _playerRepository = AppServices.playerRepository;
   static final _privacySafetyRepository = AppServices.privacySafetyRepository;
   static final _supportContentRepository = AppServices.supportContentRepository;
   static final _notificationStore = AppServices.notificationStore;
@@ -246,9 +248,22 @@ abstract final class AppRouter {
             },
           ),
     AppRoutes.favorites: (context) => FavoritesScreen(
-      repository: _matchRepository,
+      matchRepository: _matchRepository,
+      playerRepository: _playerRepository,
       onBack: () => Navigator.of(context).maybePop(),
       onMatchTap: (match) => _openMatchDetails(context, match),
+      onPlayerTap: (favoritePlayer) async {
+        final player = PlayerProfilePreviewData.forIdentity(
+          id: favoritePlayer.id,
+          displayName: favoritePlayer.name,
+          avatarAsset: AppAssets.bottomProfileIcon,
+          avatarUrl: favoritePlayer.avatarUrl,
+        );
+        await Navigator.of(context).pushNamed(
+          AppRoutes.playerProfile,
+          arguments: PlayerProfileRouteArgs(player: player),
+        );
+      },
     ),
     AppRoutes.faq: (context) => FaqScreen(
       repository: _supportContentRepository,
@@ -602,7 +617,7 @@ abstract final class AppRouter {
           onNotificationTap: () {
             Navigator.of(context).pushNamed(AppRoutes.notifications);
           },
-          onMessageTap: () => _openHeaderChat(context),
+          onMessageTap: () => _openDirectChatWithPlayer(context, player),
           onMutualGameTap: (mutualMatch) {
             _openMatchDetails(context, mutualMatch);
           },
@@ -670,6 +685,12 @@ abstract final class AppRouter {
                     return false;
                   }
                 },
+          onLoadFavorite: int.tryParse(player.id) == null
+              ? null
+              : _playerRepository.isFavorite,
+          onSetFavorite: int.tryParse(player.id) == null
+              ? null
+              : _playerRepository.setFavorite,
         ),
       );
     }
@@ -1249,22 +1270,79 @@ abstract final class AppRouter {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (chatListContext) => JoinedMatchChatsScreen(
-          repository: _matchRepository,
+          matchRepository: _matchRepository,
+          chatRepository: _chatRepository,
           onBack: () => Navigator.of(chatListContext).maybePop(),
           onFindMatches: () {
             Navigator.of(chatListContext).pushReplacementNamed(
               AppRoutes.nearbyMatches,
             );
           },
-          onStartChat: (match) {
-            Navigator.of(chatListContext).pushNamed(
+          onStartMatchChat: (match) async {
+            await Navigator.of(chatListContext).pushNamed(
               AppRoutes.matchChat,
               arguments: match,
             );
           },
+          onOpenDirectChat: (chat) =>
+              _openDirectChat(chatListContext, chat),
+          onStartPlayerChat: (player) =>
+              _startDirectChatWithParticipant(chatListContext, player),
         ),
       ),
     );
+  }
+
+  static Future<void> _openDirectChat(
+    BuildContext context,
+    DirectChatSummary conversation,
+  ) async {
+    final currentUser = _authRepository.currentUser;
+    if (currentUser == null) return;
+
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (chatContext) => ConnectedDirectChatScreen(
+          conversation: conversation,
+          repository: _chatRepository,
+          currentUserId: currentUser.id,
+          onBack: () => Navigator.of(chatContext).maybePop(),
+        ),
+      ),
+    );
+  }
+
+  static Future<void> _startDirectChatWithParticipant(
+    BuildContext context,
+    ChatParticipant participant,
+  ) async {
+    try {
+      final conversation = await _chatRepository.startDirectChat(
+        participant.id,
+      );
+      if (!context.mounted) return;
+      await _openDirectChat(context, conversation);
+    } catch (error) {
+      if (context.mounted) _showApiError(context, error);
+    }
+  }
+
+  static Future<void> _openDirectChatWithPlayer(
+    BuildContext context,
+    PlayerProfileData player,
+  ) async {
+    if (int.tryParse(player.id) == null) {
+      _showApiError(context, 'Individual chat is not available for this player.');
+      return;
+    }
+
+    final participant = ChatParticipant(
+      id: player.id,
+      displayName: player.name,
+      avatarAsset: player.avatarAsset,
+      avatarUrl: player.avatarUrl,
+    );
+    await _startDirectChatWithParticipant(context, participant);
   }
 
   static Future<bool> handlePushData(Map<String, dynamic> data) async {
