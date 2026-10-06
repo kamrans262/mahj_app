@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/network/api_exception.dart';
 import '../app_assets.dart';
 import '../app_services.dart';
+import '../../features/auth/data/google_auth_service.dart';
 import '../../features/auth/domain/auth_flow_args.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
@@ -134,6 +135,21 @@ abstract final class AppRouter {
       },
       onForgotPassword: () {
         Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
+      },
+      onGoogleLogin: () async {
+        try {
+          final idToken = await AppServices.googleAuthService.authenticate();
+          if (idToken == null) return;
+
+          await _authRepository.loginWithGoogle(idToken: idToken);
+          await _homePreloadStore.preload();
+
+          if (!context.mounted) return;
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+        } catch (error) {
+          if (context.mounted) _showApiError(context, error);
+        }
       },
       onSignUp: () {
         Navigator.of(context).pushNamed(AppRoutes.signUp);
@@ -277,6 +293,7 @@ abstract final class AppRouter {
         try {
           await AppServices.pushNotificationService.unregisterCurrentDevice();
           await _authRepository.logout();
+          await AppServices.googleAuthService.signOut();
           _homePreloadStore.clear();
           _notificationStore.clear();
           if (!context.mounted) return true;
@@ -292,6 +309,7 @@ abstract final class AppRouter {
         try {
           await AppServices.pushNotificationService.unregisterCurrentDevice();
           await _authRepository.deleteAccount();
+          await AppServices.googleAuthService.signOut();
           _homePreloadStore.clear();
           _notificationStore.clear();
           if (!context.mounted) return true;
@@ -854,6 +872,8 @@ abstract final class AppRouter {
 
   static void _showApiError(BuildContext context, Object error) {
     final message = error is ApiException
+        ? error.message
+        : error is GoogleAuthException
         ? error.message
         : error is String
         ? error
