@@ -49,7 +49,11 @@ void main() {
               'trial_days': 14,
             },
           ],
-          'subscription': {'status': 'trialing', 'cancel_at_period_end': false},
+          'subscription': {
+            'status': 'trialing',
+            'provider': 'stripe',
+            'cancel_at_period_end': false,
+          },
         }),
         200,
         headers: {'content-type': 'application/json'},
@@ -68,7 +72,59 @@ void main() {
     expect(state.currentPlan.name, 'Monthly Plan');
     expect(state.currentPlan.trialDays, 14);
     expect(state.status, 'trialing');
+    expect(state.provider, 'stripe');
     expect(state.availablePlans, hasLength(1));
+  });
+
+  test('first paid subscription uses Stripe payment endpoint', () async {
+    final client = MockClient((request) async {
+      expect(request.method, 'POST');
+      expect(request.url.path, '/api/subscription/start-payment');
+
+      return http.Response(
+        jsonEncode({
+          'requires_checkout': true,
+          'checkout_url': 'https://checkout.stripe.com/c/pay/cs_paid_123',
+          'checkout_session_id': 'cs_paid_123',
+          'current_plan': {
+            'id': 'free',
+            'name': 'Free',
+            'description': 'No active subscription',
+            'price_label': r'$0.00',
+            'status_text': 'Inactive',
+            'is_current': true,
+            'is_selectable': false,
+            'trial_days': 0,
+          },
+          'available_plans': [
+            {
+              'id': '1',
+              'name': 'Monthly Plan',
+              'description': 'Monthly membership',
+              'price_label': r'$9.99',
+              'is_current': false,
+              'is_selectable': true,
+              'trial_days': 14,
+            },
+          ],
+          'subscription': null,
+        }),
+        201,
+        headers: {'content-type': 'application/json'},
+      );
+    });
+
+    final api = ApiClient(
+      baseUrl: 'https://example.com/api',
+      tokenStore: _MemoryTokenStore(),
+      httpClient: client,
+    );
+    final repository = SubscriptionRepository(apiClient: api);
+
+    final result = await repository.startPayment('1');
+
+    expect(result.requiresCheckout, isTrue);
+    expect(result.checkoutSessionId, 'cs_paid_123');
   });
 
   test('start trial exposes Stripe checkout URL when required', () async {
