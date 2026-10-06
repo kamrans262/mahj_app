@@ -16,6 +16,7 @@ import '../../features/chat/presentation/joined_match_chats_screen.dart';
 import '../../features/chat/presentation/match_chat_screen.dart';
 import '../../features/home/data/home_preview_data.dart';
 import '../../features/home/domain/home_match.dart';
+import '../../features/home/domain/match_filters.dart';
 import '../../features/home/presentation/connected_nearby_matches_screen.dart';
 import '../../features/matches/data/invite_players_preview_data.dart';
 import '../../features/matches/data/match_completed_preview_data.dart';
@@ -920,6 +921,27 @@ abstract final class AppRouter {
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser,
       homePreloadStore: isAuthenticated ? _homePreloadStore : null,
+      onUpcomingViewAll: () {
+        final openFilters = AppServices.matchDiscoveryStore.filters.copyWith(
+          showOpenOnly: true,
+        );
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (listContext) => ConnectedNearbyMatchesScreen(
+              repository: _matchRepository,
+              initialFilters: openFilters,
+              locationRepository: AppServices.locationRepository,
+              onBack: () => Navigator.of(listContext).maybePop(),
+              onMatchTap: (match) async {
+                await _openMatchDetails(listContext, match);
+              },
+              onCreateMatch: () {
+                Navigator.of(listContext).pushNamed(AppRoutes.createMatch);
+              },
+            ),
+          ),
+        );
+      },
       onNearbyViewAll: () {
         Navigator.of(context).pushNamed(AppRoutes.nearbyMatches);
       },
