@@ -5,6 +5,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_avatar.dart';
+import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_responsive_action_pair.dart';
@@ -44,6 +45,7 @@ class PlayerProfileScreen extends StatefulWidget {
     this.mutualGamesLoading = false,
     this.mutualGamesError,
     this.onRetry,
+    this.onBack,
     this.onNotificationTap,
     this.onMessageTap,
     this.onViewAllMutualGames,
@@ -63,6 +65,7 @@ class PlayerProfileScreen extends StatefulWidget {
   final bool mutualGamesLoading;
   final String? mutualGamesError;
   final VoidCallback? onRetry;
+  final VoidCallback? onBack;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onMessageTap;
   final VoidCallback? onViewAllMutualGames;
@@ -323,6 +326,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _PlayerProfileHeader(
+                    onBack: widget.onBack,
                     notificationCount: widget.notificationCount,
                     messageCount: widget.messageCount,
                     onNotificationTap: widget.onNotificationTap,
@@ -382,12 +386,14 @@ class _PlayerProfileHeader extends StatelessWidget {
   const _PlayerProfileHeader({
     required this.notificationCount,
     required this.messageCount,
+    this.onBack,
     this.onNotificationTap,
     this.onMessageTap,
   });
 
   final int notificationCount;
   final int messageCount;
+  final VoidCallback? onBack;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onMessageTap;
 
@@ -395,6 +401,11 @@ class _PlayerProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        AppBackButton(
+          key: const ValueKey('player-profile-header-back'),
+          onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+        ),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Text(
             'Players Profile',
