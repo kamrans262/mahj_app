@@ -46,7 +46,7 @@ class MatchLocationMap extends StatelessWidget {
         final markerIcon =
             snapshot.data ??
             gm.BitmapDescriptor.defaultMarkerWithHue(
-              gm.BitmapDescriptor.hueOrange,
+              MahjGoogleMarker.defaultGoogleMarkerHue,
             );
 
         return gm.GoogleMap(
