@@ -47,7 +47,7 @@ class GoogleAuthService {
       if (error.code == GoogleSignInExceptionCode.clientConfigurationError ||
           error.code == GoogleSignInExceptionCode.providerConfigurationError) {
         throw const GoogleAuthException(
-          'Google Sign-In is not configured correctly for this app.',
+          'Google Sign-In is not configured correctly. Check the app OAuth client, SHA fingerprint, and Google services configuration.',
         );
       }
 
@@ -74,27 +74,22 @@ class GoogleAuthService {
   }
 
   Future<void> _initialize() async {
-    final serverClientId = AppConfig.googleSignInServerClientId.trim();
-    if (serverClientId.isEmpty) {
-      throw const GoogleAuthException(
-        'Google Sign-In is not configured yet. Add the Google OAuth Web client ID.',
-      );
-    }
+    final configuredServerClientId =
+        AppConfig.googleSignInServerClientId.trim();
+    final configuredIosClientId = AppConfig.googleSignInIosClientId.trim();
 
     String? clientId;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-      final iosClientId = AppConfig.googleSignInIosClientId.trim();
-      if (iosClientId.isEmpty) {
-        throw const GoogleAuthException(
-          'Google Sign-In is not configured for iOS yet.',
-        );
-      }
-      clientId = iosClientId;
+    if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        configuredIosClientId.isNotEmpty) {
+      clientId = configuredIosClientId;
     }
 
     await GoogleSignIn.instance.initialize(
       clientId: clientId,
-      serverClientId: serverClientId,
+      serverClientId: configuredServerClientId.isEmpty
+          ? null
+          : configuredServerClientId,
     );
     _initialized = true;
   }
