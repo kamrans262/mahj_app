@@ -13,6 +13,7 @@ class ConnectedNearbyMatchesScreen extends StatefulWidget {
     required this.repository,
     super.key,
     this.discoveryStore,
+    this.initialFilters,
     this.locationRepository,
     this.onBack,
     this.onMatchTap,
@@ -21,6 +22,7 @@ class ConnectedNearbyMatchesScreen extends StatefulWidget {
 
   final MatchRepository repository;
   final MatchDiscoveryStore? discoveryStore;
+  final MatchFilters? initialFilters;
   final LocationRepository? locationRepository;
   final VoidCallback? onBack;
   final ValueChanged<HomeMatch>? onMatchTap;
@@ -42,7 +44,10 @@ class _ConnectedNearbyMatchesScreenState
   @override
   void initState() {
     super.initState();
-    _filters = widget.discoveryStore?.filters ?? MatchFilters.defaults();
+    _filters =
+        widget.initialFilters ??
+        widget.discoveryStore?.filters ??
+        MatchFilters.defaults();
     _load();
   }
 
@@ -80,7 +85,9 @@ class _ConnectedNearbyMatchesScreenState
 
   Future<void> _changeFilters(MatchFilters filters) async {
     _filters = filters;
-    widget.discoveryStore?.update(filters);
+    if (widget.initialFilters == null) {
+      widget.discoveryStore?.update(filters);
+    }
     await _load(filters: filters);
   }
 
