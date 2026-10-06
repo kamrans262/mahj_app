@@ -98,7 +98,7 @@ class _StaticLocationMap extends StatelessWidget {
         final markerIcon =
             snapshot.data ??
             gm.BitmapDescriptor.defaultMarkerWithHue(
-              gm.BitmapDescriptor.hueOrange,
+              MahjGoogleMarker.defaultGoogleMarkerHue,
             );
 
         return IgnorePointer(
