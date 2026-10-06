@@ -28,7 +28,7 @@ class LoginScreen extends StatefulWidget {
   final bool isLoading;
   final Future<void> Function(String email, String password)? onLogin;
   final VoidCallback? onForgotPassword;
-  final VoidCallback? onGoogleLogin;
+  final Future<void> Function()? onGoogleLogin;
   final VoidCallback? onAppleLogin;
   final VoidCallback? onSignUp;
 
@@ -42,6 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+  bool _googleLoading = false;
+
+  bool get _busy => widget.isLoading || _googleLoading;
 
   @override
   void dispose() {
@@ -64,6 +67,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     await callback(_emailController.text.trim(), _passwordController.text);
+  }
+
+  Future<void> _submitGoogle() async {
+    if (_busy) return;
+    final callback = widget.onGoogleLogin;
+    if (callback == null) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _googleLoading = true);
+
+    try {
+      await callback();
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
+    }
   }
 
   @override
@@ -153,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   leadingIcon: Icons.mail_outline_rounded,
                                   keyboardType: TextInputType.emailAddress,
                                   textInputAction: TextInputAction.next,
-                                  enabled: !widget.isLoading,
+                                  enabled: !_busy,
                                   autofillHints: const [AutofillHints.email],
                                   validator: AuthValidators.email,
                                   onFieldSubmitted: (_) {
@@ -169,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   leadingIcon: Icons.lock_outline_rounded,
                                   textInputAction: TextInputAction.done,
                                   obscureText: true,
-                                  enabled: !widget.isLoading,
+                                  enabled: !_busy,
                                   autofillHints: const [AutofillHints.password],
                                   validator: AuthValidators.password,
                                   onFieldSubmitted: (_) => _submit(),
@@ -179,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
                                     key: const ValueKey('forgot-password'),
-                                    onPressed: widget.isLoading
+                                    onPressed: _busy
                                         ? null
                                         : () => widget.onForgotPassword?.call(),
                                     style: TextButton.styleFrom(
@@ -204,9 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 AppButton.outlined(
                                   key: const ValueKey('google-login-button'),
                                   label: 'Continue with Google',
-                                  onPressed: widget.isLoading
-                                      ? null
-                                      : () => widget.onGoogleLogin?.call(),
+                                  onPressed: _busy ? null : _submitGoogle,
+                                  isLoading: _googleLoading,
                                   leading: const AppAssetIcon(
                                     key: ValueKey('google-login-icon'),
                                     assetPath: AppAssets.googleLoginIcon,
@@ -217,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 AppButton.outlined(
                                   key: const ValueKey('apple-login-button'),
                                   label: 'Continue with Apple',
-                                  onPressed: widget.isLoading
+                                  onPressed: _busy
                                       ? null
                                       : () => widget.onAppleLogin?.call(),
                                   leading: const AppAssetIcon(
@@ -232,13 +249,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   label: 'Log In',
                                   onPressed: _submit,
                                   isLoading: widget.isLoading,
-                                  isEnabled: !widget.isLoading,
+                                  isEnabled: !_busy,
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 AuthInlineActionPrompt(
                                   message: "Don't have an account? ",
                                   actionLabel: 'Sign Up',
-                                  enabled: !widget.isLoading,
+                                  enabled: !_busy,
                                   actionKey: const ValueKey('sign-up-link'),
                                   onAction: widget.onSignUp,
                                 ),
