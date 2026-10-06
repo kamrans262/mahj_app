@@ -262,9 +262,8 @@ class _HomeScreenState extends State<HomeScreen>
                   onTap: _openFilters,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                SectionHeader(
+                const SectionHeader(
                   title: 'Upcoming Matches',
-                  onViewAll: widget.onUpcomingViewAll,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _UpcomingSection(
