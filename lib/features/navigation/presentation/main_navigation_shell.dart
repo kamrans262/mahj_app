@@ -34,6 +34,7 @@ class MainNavigationShell extends StatefulWidget {
     this.locationRepository,
     this.notificationStore,
     this.onAuthenticatedReady,
+    this.onUpcomingViewAll,
     this.onNearbyViewAll,
     this.onCreateMatch,
     this.onMatchTap,
@@ -55,6 +56,7 @@ class MainNavigationShell extends StatefulWidget {
   final LocationRepository? locationRepository;
   final NotificationStore? notificationStore;
   final Future<void> Function()? onAuthenticatedReady;
+  final VoidCallback? onUpcomingViewAll;
   final VoidCallback? onNearbyViewAll;
   final VoidCallback? onCreateMatch;
   final Future<void> Function(HomeMatch)? onMatchTap;
@@ -580,6 +582,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         return HomeScreen(
           key: const ValueKey('main-navigation-home'),
           data: _homeData,
+          onUpcomingViewAll: widget.onUpcomingViewAll,
           onNearbyViewAll: widget.onNearbyViewAll,
           onMatchTap: widget.onMatchTap == null
               ? null
