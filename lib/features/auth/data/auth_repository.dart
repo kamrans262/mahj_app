@@ -63,6 +63,18 @@ class AuthRepository {
     return _storeSession(payload);
   }
 
+  Future<AuthUser> loginWithGoogle({
+    required String idToken,
+  }) async {
+    final payload = await _apiClient.post(
+      '/auth/google',
+      authenticated: false,
+      body: {'id_token': idToken},
+    );
+
+    return _storeSession(payload);
+  }
+
   Future<void> requestPasswordResetOtp(String email) async {
     await _apiClient.post(
       '/auth/forgot-password/request-otp',
