@@ -8,6 +8,8 @@ import '../../app/app_assets.dart';
 import '../../app/theme/app_colors.dart';
 
 abstract final class MahjGoogleMarker {
+  static const double defaultGoogleMarkerHue = 23.5;
+
   static final Map<String, Future<gm.BitmapDescriptor>> _cache =
       <String, Future<gm.BitmapDescriptor>>{};
 
