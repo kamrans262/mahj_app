@@ -57,3 +57,30 @@ class MatchChatPage {
   final bool hasMoreOlder;
   final bool canSend;
 }
+
+
+class DirectChatSummary {
+  const DirectChatSummary({
+    required this.id,
+    required this.participant,
+    this.lastMessageText,
+    this.updatedAt,
+  });
+
+  final String id;
+  final ChatParticipant participant;
+  final String? lastMessageText;
+  final DateTime? updatedAt;
+}
+
+class DirectChatPage {
+  const DirectChatPage({
+    required this.participant,
+    required this.messages,
+    required this.hasMoreOlder,
+  });
+
+  final ChatParticipant participant;
+  final List<ChatMessage> messages;
+  final bool hasMoreOlder;
+}
