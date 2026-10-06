@@ -46,7 +46,10 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
 
     final servicesEnabled = await Geolocator.isLocationServiceEnabled();
     final permission = await Geolocator.checkPermission();
-    final location = await widget.repository.currentLocationIfGranted();
+    final current = await widget.repository.currentLocationIfGranted();
+    final location = current == null
+        ? null
+        : await _resolveLocationLabel(current);
 
     if (!mounted) return;
     setState(() {
@@ -64,7 +67,8 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
     });
 
     try {
-      final location = await widget.repository.currentLocation();
+      final current = await widget.repository.currentLocation();
+      final location = await _resolveLocationLabel(current);
       if (!mounted) return;
       setState(() {
         _location = location;
@@ -83,6 +87,38 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
           _loading = false;
         });
       }
+    }
+  }
+
+  Future<DiscoveryLocation> _resolveLocationLabel(
+    DiscoveryLocation current,
+  ) async {
+    try {
+      final results = await widget.repository.search(
+        '${current.latitude.toStringAsFixed(6)},'
+        '${current.longitude.toStringAsFixed(6)}',
+      );
+      if (results.isEmpty) return current;
+
+      final resolved = results.first;
+      if (resolved.label.trim().isEmpty ||
+          resolved.label == DiscoveryLocation.current(
+            latitude: current.latitude,
+            longitude: current.longitude,
+          ).label) {
+        return current;
+      }
+
+      return DiscoveryLocation(
+        label: resolved.label,
+        latitude: current.latitude,
+        longitude: current.longitude,
+        city: resolved.city,
+        state: resolved.state,
+        zipCode: resolved.zipCode,
+      );
+    } catch (_) {
+      return current;
     }
   }
 
