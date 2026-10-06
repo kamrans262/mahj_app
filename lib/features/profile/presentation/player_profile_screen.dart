@@ -25,6 +25,13 @@ typedef PlayerProfileReportCallback = Future<bool> Function(
 typedef PlayerProfileBlockCallback = Future<bool> Function(
   PlayerBlockRequest request,
 );
+typedef PlayerProfileFavoriteStatusCallback = Future<bool> Function(
+  String playerId,
+);
+typedef PlayerProfileFavoriteToggleCallback = Future<bool> Function(
+  String playerId,
+  bool favorite,
+);
 
 class PlayerProfileScreen extends StatefulWidget {
   const PlayerProfileScreen({
@@ -44,6 +51,8 @@ class PlayerProfileScreen extends StatefulWidget {
     this.onSendInvite,
     this.onSubmitReport,
     this.onSubmitBlock,
+    this.onLoadFavorite,
+    this.onSetFavorite,
   });
 
   final PlayerProfileData player;
@@ -61,6 +70,8 @@ class PlayerProfileScreen extends StatefulWidget {
   final VoidCallback? onSendInvite;
   final PlayerProfileReportCallback? onSubmitReport;
   final PlayerProfileBlockCallback? onSubmitBlock;
+  final PlayerProfileFavoriteStatusCallback? onLoadFavorite;
+  final PlayerProfileFavoriteToggleCallback? onSetFavorite;
 
   @override
   State<PlayerProfileScreen> createState() => _PlayerProfileScreenState();
@@ -72,6 +83,57 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   bool _reportRequestInFlight = false;
   bool _blockRequestInFlight = false;
   bool _isBlocked = false;
+  bool _isFavorite = false;
+  bool _favoriteLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorite();
+  }
+
+  Future<void> _loadFavorite() async {
+    final callback = widget.onLoadFavorite;
+    if (callback == null) return;
+
+    setState(() => _favoriteLoading = true);
+    try {
+      final favorite = await callback(widget.player.id);
+      if (!mounted) return;
+      setState(() => _isFavorite = favorite);
+    } catch (_) {
+      // Keep the profile usable if favorite status cannot be loaded.
+    } finally {
+      if (mounted) setState(() => _favoriteLoading = false);
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_favoriteLoading || _isBlocked) return;
+
+    final callback = widget.onSetFavorite;
+    if (callback == null) {
+      _showMessage('Player favorites are not connected yet.');
+      return;
+    }
+
+    final next = !_isFavorite;
+    setState(() => _favoriteLoading = true);
+    try {
+      final saved = await callback(widget.player.id, next);
+      if (!mounted) return;
+      setState(() => _isFavorite = saved);
+      _showMessage(
+        saved ? 'Player added to favorites' : 'Player removed from favorites',
+      );
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Could not update favorites. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _favoriteLoading = false);
+    }
+  }
 
   void _showMessage(String message) {
     if (!mounted) return;
@@ -301,6 +363,9 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                       onSendInvite: _sendInvite,
                       onReport: _showReportDialog,
                       onBlock: _showBlockDialog,
+                      isFavorite: _isFavorite,
+                      favoriteLoading: _favoriteLoading,
+                      onFavorite: _toggleFavorite,
                     ),
                   ],
                 ]),
@@ -548,6 +613,9 @@ class _PlayerActions extends StatelessWidget {
     required this.onSendInvite,
     required this.onReport,
     required this.onBlock,
+    required this.isFavorite,
+    required this.favoriteLoading,
+    required this.onFavorite,
   });
 
   final PlayerProfileData player;
@@ -555,6 +623,9 @@ class _PlayerActions extends StatelessWidget {
   final VoidCallback onSendInvite;
   final VoidCallback onReport;
   final VoidCallback onBlock;
+  final bool isFavorite;
+  final bool favoriteLoading;
+  final VoidCallback onFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -608,6 +679,20 @@ class _PlayerActions extends StatelessWidget {
               color: AppColors.destructive,
             ),
           ),
+        if (!isBlocked) ...[
+          const SizedBox(height: AppSpacing.lg),
+          AppButton.secondary(
+            key: const ValueKey('player-profile-favorite'),
+            label: isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
+            onPressed: onFavorite,
+            isLoading: favoriteLoading,
+            leading: Icon(
+              isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+              size: 20,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
       ],
     );
   }
