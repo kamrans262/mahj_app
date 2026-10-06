@@ -2,6 +2,7 @@ import '../core/config/app_config.dart';
 import '../core/network/api_client.dart';
 import '../core/storage/token_store.dart';
 import '../features/auth/data/auth_repository.dart';
+import '../features/auth/data/google_auth_service.dart';
 import '../features/chat/data/chat_repository.dart';
 import '../features/home/data/home_preload_store.dart';
 import '../features/home/data/location_repository.dart';
@@ -26,6 +27,9 @@ abstract final class AppServices {
     apiClient: apiClient,
     tokenStore: tokenStore,
   );
+
+  static final GoogleAuthService googleAuthService = GoogleAuthService();
+
 
   static final SubscriptionRepository subscriptionRepository =
       SubscriptionRepository(apiClient: apiClient);
