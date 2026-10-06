@@ -1,6 +1,6 @@
 {
-    "name": "mahj_app",
-    "short_name": "mahj_app",
+    "name": "Mahj",
+    "short_name": "Mahj",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
