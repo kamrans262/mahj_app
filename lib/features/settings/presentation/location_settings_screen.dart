@@ -94,21 +94,30 @@ class _LocationSettingsScreenState extends State<LocationSettingsScreen> {
     DiscoveryLocation current,
   ) async {
     try {
+      final nativeResolved = await widget.repository.resolveMapTap(
+        latitude: current.latitude,
+        longitude: current.longitude,
+      );
+      if (nativeResolved != null && nativeResolved.label.trim().isNotEmpty) {
+        return DiscoveryLocation(
+          label: nativeResolved.label,
+          latitude: current.latitude,
+          longitude: current.longitude,
+          city: nativeResolved.city,
+          state: nativeResolved.state,
+          zipCode: nativeResolved.zipCode,
+        );
+      }
+
       final results = await widget.repository.search(
         '${current.latitude.toStringAsFixed(6)},'
         '${current.longitude.toStringAsFixed(6)}',
       );
-      if (results.isEmpty) return current;
-
-      final resolved = results.first;
-      if (resolved.label.trim().isEmpty ||
-          resolved.label == DiscoveryLocation.current(
-            latitude: current.latitude,
-            longitude: current.longitude,
-          ).label) {
+      if (results.isEmpty || results.first.label.trim().isEmpty) {
         return current;
       }
 
+      final resolved = results.first;
       return DiscoveryLocation(
         label: resolved.label,
         latitude: current.latitude,
