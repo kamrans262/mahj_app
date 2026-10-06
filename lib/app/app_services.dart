@@ -11,6 +11,7 @@ import '../features/matches/data/match_repository.dart';
 import '../features/notifications/data/notification_repository.dart';
 import '../features/notifications/data/notification_store.dart';
 import '../features/notifications/data/push_notification_service.dart';
+import '../features/profile/data/player_repository.dart';
 import '../features/settings/data/privacy_safety_repository.dart';
 import '../features/settings/data/support_content_repository.dart';
 import '../features/subscription/data/subscription_repository.dart';
@@ -39,6 +40,10 @@ abstract final class AppServices {
   );
 
   static final ChatRepository chatRepository = ChatRepository(
+    apiClient: apiClient,
+  );
+
+  static final PlayerRepository playerRepository = PlayerRepository(
     apiClient: apiClient,
   );
 
