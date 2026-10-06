@@ -35,9 +35,9 @@ class JoinedMatchChatsScreen extends StatefulWidget {
 
   final MatchRepository matchRepository;
   final ChatRepository chatRepository;
-  final ValueChanged<HomeMatch> onStartMatchChat;
-  final ValueChanged<DirectChatSummary> onOpenDirectChat;
-  final ValueChanged<ChatParticipant> onStartPlayerChat;
+  final Future<void> Function(HomeMatch match) onStartMatchChat;
+  final Future<void> Function(DirectChatSummary chat) onOpenDirectChat;
+  final Future<void> Function(ChatParticipant player) onStartPlayerChat;
   final VoidCallback? onBack;
   final VoidCallback? onFindMatches;
 
@@ -140,6 +140,25 @@ class _JoinedMatchChatsScreenState extends State<JoinedMatchChatsScreen> {
         });
       }
     });
+  }
+
+  Future<void> _openMatchChat(HomeMatch match) async {
+    await widget.onStartMatchChat(match);
+    if (mounted) await _load();
+  }
+
+  Future<void> _openDirectChat(DirectChatSummary chat) async {
+    await widget.onOpenDirectChat(chat);
+    if (mounted) await _load();
+  }
+
+  Future<void> _startPlayerChat(ChatParticipant player) async {
+    await widget.onStartPlayerChat(player);
+    if (mounted) {
+      _searchController.clear();
+      setState(() => _searchResults = const <ChatParticipant>[]);
+      await _load();
+    }
   }
 
   @override
@@ -291,7 +310,7 @@ class _JoinedMatchChatsScreenState extends State<JoinedMatchChatsScreen> {
           return MatchCard(
             key: ValueKey('chat-match-${match.id}'),
             match: match,
-            onTap: () => widget.onStartMatchChat(match),
+            onTap: () => _openMatchChat(match),
             trailing: const _StartChatBadge(),
           );
         },
@@ -340,7 +359,7 @@ class _JoinedMatchChatsScreenState extends State<JoinedMatchChatsScreen> {
                   child: _ChatPlayerCard(
                     participant: player,
                     subtitle: 'Start individual chat',
-                    onTap: () => widget.onStartPlayerChat(player),
+                    onTap: () => _startPlayerChat(player),
                   ),
                 ),
               ),
@@ -364,7 +383,7 @@ class _JoinedMatchChatsScreenState extends State<JoinedMatchChatsScreen> {
                     subtitle: (chat.lastMessageText?.trim().isNotEmpty ?? false)
                         ? chat.lastMessageText!
                         : 'Open individual chat',
-                    onTap: () => widget.onOpenDirectChat(chat),
+                    onTap: () => _openDirectChat(chat),
                   ),
                 ),
               ),
