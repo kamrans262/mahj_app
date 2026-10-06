@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mahj_app/features/subscription/data/subscription_preview_data.dart';
+import 'package:mahj_app/features/subscription/domain/subscription_plan.dart';
 import 'package:mahj_app/features/subscription/presentation/manage_subscription_screen.dart';
 
 void main() {
@@ -36,6 +37,61 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Confirm Payment calls Stripe payment callback directly', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var paymentCalls = 0;
+    const freePlan = SubscriptionPlan(
+      id: 'free',
+      name: 'Free',
+      description: 'No active paid subscription',
+      priceLabel: r'$0.00',
+      statusText: 'Active',
+      isCurrent: true,
+      isSelectable: false,
+      trialDays: 0,
+    );
+    const monthlyPlan = SubscriptionPlan(
+      id: 'monthly',
+      name: 'Monthly Plan',
+      description: 'Monthly membership',
+      priceLabel: r'$9.99',
+      isCurrent: false,
+      isSelectable: true,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ManageSubscriptionScreen(
+          currentPlan: freePlan,
+          availablePlans: const [monthlyPlan],
+          requiresPayment: true,
+          onConfirmPayment: (plan) async {
+            paymentCalls++;
+            return true;
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Confirm Payment'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('subscription-plan-monthly')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('manage-subscription-confirm')));
+    await tester.pump();
+
+    expect(paymentCalls, 1);
+    expect(find.text('Confirm Changes'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('Confirm Changes opens popup before subscription callback', (
     tester,
