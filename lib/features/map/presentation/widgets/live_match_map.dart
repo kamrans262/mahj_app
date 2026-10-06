@@ -78,7 +78,7 @@ class LiveMatchMap extends StatelessWidget {
         final matchIcon =
             snapshot.data?.first ??
             gm.BitmapDescriptor.defaultMarkerWithHue(
-              gm.BitmapDescriptor.hueOrange,
+              MahjGoogleMarker.defaultGoogleMarkerHue,
             );
         final selectedIcon = snapshot.data?.last ?? matchIcon;
         final googleMarkers = <gm.Marker>{};
@@ -94,7 +94,7 @@ class LiveMatchMap extends StatelessWidget {
               ),
               zIndexInt: 3,
               icon: gm.BitmapDescriptor.defaultMarkerWithHue(
-                gm.BitmapDescriptor.hueAzure,
+                MahjGoogleMarker.defaultGoogleMarkerHue,
               ),
             ),
           );
