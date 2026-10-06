@@ -610,6 +610,7 @@ abstract final class AppRouter {
         settings: settings,
         builder: (context) => PlayerProfileScreen(
           player: player,
+          onBack: () => Navigator.of(context).maybePop(),
           notificationCount: _authRepository.currentUser == null
               ? currentProfile.unreadNotificationCount
               : _notificationStore.unreadCount,
