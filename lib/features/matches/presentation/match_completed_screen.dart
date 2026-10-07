@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -36,6 +38,7 @@ class MatchCompletedScreen extends StatefulWidget {
     this.inviterAvatarUrl,
     this.scoresAlreadySubmitted = false,
     this.canSubmitScores = true,
+    this.transientSuccessMessage = false,
   });
 
   final HomeMatch match;
@@ -48,6 +51,7 @@ class MatchCompletedScreen extends StatefulWidget {
   final String? inviterAvatarUrl;
   final bool scoresAlreadySubmitted;
   final bool canSubmitScores;
+  final bool transientSuccessMessage;
 
   @override
   State<MatchCompletedScreen> createState() => _MatchCompletedScreenState();
@@ -57,6 +61,8 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
   final _scoreControllers = <String, TextEditingController>{};
   bool _isSubmitting = false;
   late bool _submitted;
+  late bool _showSuccessMessage;
+  Timer? _successMessageTimer;
 
   TextStyle get _valueStyle => AppTypography.field.copyWith(
     color: AppColors.heading,
@@ -67,6 +73,8 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
   void initState() {
     super.initState();
     _submitted = widget.scoresAlreadySubmitted;
+    _showSuccessMessage =
+        widget.scoresAlreadySubmitted && !widget.transientSuccessMessage;
     _syncControllers();
   }
 
@@ -78,6 +86,12 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
     }
     if (oldWidget.scoresAlreadySubmitted != widget.scoresAlreadySubmitted) {
       _submitted = widget.scoresAlreadySubmitted;
+      if (widget.scoresAlreadySubmitted) {
+        _showSubmissionSuccess();
+      } else {
+        _successMessageTimer?.cancel();
+        _showSuccessMessage = false;
+      }
     }
   }
 
@@ -102,6 +116,7 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
 
   @override
   void dispose() {
+    _successMessageTimer?.cancel();
     for (final controller in _scoreControllers.values) {
       controller.dispose();
     }
@@ -113,6 +128,18 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
         .clamp(0, widget.match.maxPlayers);
     final openingLabel = openings == 1 ? 'opening' : 'openings';
     return '${widget.match.currentPlayers} joined · $openings $openingLabel left';
+  }
+
+  void _showSubmissionSuccess() {
+    _successMessageTimer?.cancel();
+    _showSuccessMessage = true;
+
+    if (!widget.transientSuccessMessage) return;
+
+    _successMessageTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() => _showSuccessMessage = false);
+    });
   }
 
   Future<void> _submitScores() async {
@@ -140,7 +167,10 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
       await callback(widget.match.id, Map.unmodifiable(scores));
       if (!mounted) return;
       FocusManager.instance.primaryFocus?.unfocus();
-      setState(() => _submitted = true);
+      setState(() {
+        _submitted = true;
+        _showSubmissionSuccess();
+      });
     } catch (_) {
       if (!mounted) return;
       _showMessage('Could not submit scores. Please try again.');
@@ -329,11 +359,11 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                 AppSpacing.pageHorizontal,
                 AppSpacing.lg,
               ),
-              child: _submitted
+              child: _showSuccessMessage
                   ? const AppSuccessMessage(
                       message: 'Scores Submitted Successfully!',
                     )
-                  : widget.canSubmitScores
+                  : !_submitted && widget.canSubmitScores
                   ? AppButton.primary(
                       label: 'Submit Scores',
                       isLoading: _isSubmitting,
