@@ -13,6 +13,7 @@ import 'widgets/inviter_user_row.dart';
 import 'widgets/match_info_row.dart';
 
 typedef InvitationActionCallback = Future<void> Function(HomeMatch match);
+typedef InvitationFavoriteCallback = Future<bool> Function(bool favorite);
 
 enum InvitationAvailabilityState { invited, cannotJoin }
 
@@ -29,6 +30,9 @@ class InvitationReceivingScreen extends StatefulWidget {
     this.inviterAvatarAsset = AppAssets.demoAvatarOne,
     this.inviterAvatarUrl,
     this.distanceLabel,
+    this.showFavoriteAction = false,
+    this.isFavorite = false,
+    this.onFavoriteChanged,
   });
 
   final HomeMatch match;
@@ -41,6 +45,9 @@ class InvitationReceivingScreen extends StatefulWidget {
   final String inviterAvatarAsset;
   final String? inviterAvatarUrl;
   final String? distanceLabel;
+  final bool showFavoriteAction;
+  final bool isFavorite;
+  final InvitationFavoriteCallback? onFavoriteChanged;
 
   @override
   State<InvitationReceivingScreen> createState() =>
@@ -50,17 +57,24 @@ class InvitationReceivingScreen extends StatefulWidget {
 class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
   bool _isDeclining = false;
   bool _isAccepting = false;
+  bool _favoriteRequestInFlight = false;
+  late bool _isFavorite;
   late InvitationAvailabilityState _availabilityState;
 
   @override
   void initState() {
     super.initState();
+    _isFavorite = widget.isFavorite;
     _availabilityState = _resolveAvailabilityState();
   }
 
   @override
   void didUpdateWidget(covariant InvitationReceivingScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.isFavorite != widget.isFavorite &&
+        !_favoriteRequestInFlight) {
+      _isFavorite = widget.isFavorite;
+    }
     if (oldWidget.initialAvailabilityState != widget.initialAvailabilityState ||
         oldWidget.match.status != widget.match.status ||
         oldWidget.match.currentPlayers != widget.match.currentPlayers ||
@@ -189,6 +203,29 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
     }
   }
 
+  Future<void> _toggleFavorite() async {
+    if (_favoriteRequestInFlight) return;
+    final callback = widget.onFavoriteChanged;
+    if (callback == null) return;
+
+    final next = !_isFavorite;
+    setState(() => _favoriteRequestInFlight = true);
+
+    final saved = await callback(next);
+    if (!mounted) return;
+
+    setState(() {
+      _favoriteRequestInFlight = false;
+      if (saved) {
+        _isFavorite = next;
+      }
+    });
+
+    if (!saved) {
+      _showMessage('Could not update favorite. Please try again.');
+    }
+  }
+
   void _okay() {
     final callback = widget.onOkay;
     if (callback != null) {
@@ -223,6 +260,15 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
               child: AppCenteredPageHeader(
                 title: 'Match Details',
                 onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+                trailing: widget.showFavoriteAction
+                    ? _InvitationFavoriteButton(
+                        isFavorite: _isFavorite,
+                        isLoading: _favoriteRequestInFlight,
+                        onTap: widget.onFavoriteChanged == null
+                            ? null
+                            : _toggleFavorite,
+                      )
+                    : null,
               ),
             ),
             Expanded(
@@ -366,6 +412,61 @@ class _InvitationReceivingScreenState extends State<InvitationReceivingScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _InvitationFavoriteButton extends StatelessWidget {
+  const _InvitationFavoriteButton({
+    required this.isFavorite,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  final bool isFavorite;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      toggled: isFavorite,
+      label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
+      child: SizedBox.square(
+        dimension: 40,
+        child: Material(
+          color: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(
+              color: AppColors.border.withValues(alpha: 0.65),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: isLoading ? null : onTap,
+            child: Center(
+              child: isLoading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Icon(
+                      isFavorite
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      size: 25,
+                      color: AppColors.primary,
+                    ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
