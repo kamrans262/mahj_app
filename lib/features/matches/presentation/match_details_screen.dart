@@ -47,6 +47,7 @@ class MatchDetailsScreen extends StatefulWidget {
     this.isCurrentUserJoined = false,
     this.canCancelMatch = false,
     this.isFavorite = false,
+    this.showFavoriteAction = true,
     this.venueName = 'Central Park View',
     this.proximityLabel = '0.8 miles away',
     this.dateLabel = 'Tomorrow, May 25',
@@ -82,6 +83,7 @@ class MatchDetailsScreen extends StatefulWidget {
   /// to cancel the entire match.
   final bool canCancelMatch;
   final bool isFavorite;
+  final bool showFavoriteAction;
 
   final String venueName;
   final String proximityLabel;
@@ -1037,13 +1039,15 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               child: AppCenteredPageHeader(
                 title: 'Match Details',
                 onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
-                trailing: _MatchFavoriteButton(
-                  isFavorite: _isFavorite,
-                  isLoading: _favoriteRequestInFlight,
-                  onTap: widget.onFavoriteChanged == null
-                      ? null
-                      : _toggleFavorite,
-                ),
+                trailing: widget.showFavoriteAction
+                    ? _MatchFavoriteButton(
+                        isFavorite: _isFavorite,
+                        isLoading: _favoriteRequestInFlight,
+                        onTap: widget.onFavoriteChanged == null
+                            ? null
+                            : _toggleFavorite,
+                      )
+                    : null,
               ),
             ),
             Expanded(
