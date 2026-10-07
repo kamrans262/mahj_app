@@ -97,6 +97,7 @@ class HeaderActionButton extends StatelessWidget {
     required this.unreadCount,
     super.key,
     this.onTap,
+    this.iconSize = 24,
   });
 
   final String semanticsLabel;
@@ -104,6 +105,7 @@ class HeaderActionButton extends StatelessWidget {
   final IconData fallbackIcon;
   final int unreadCount;
   final VoidCallback? onTap;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -129,10 +131,10 @@ class HeaderActionButton extends StatelessWidget {
                   onTap: onTap,
                   child: Center(
                     child: assetPath.isNotEmpty
-                        ? AppAssetIcon(assetPath: assetPath, size: 24)
+                        ? AppAssetIcon(assetPath: assetPath, size: iconSize)
                         : Icon(
                             fallbackIcon,
-                            size: 24,
+                            size: iconSize,
                             color: AppColors.heading,
                           ),
                   ),
