@@ -258,6 +258,7 @@ abstract final class AppRouter {
           displayName: favoritePlayer.name,
           avatarAsset: AppAssets.bottomProfileIcon,
           avatarUrl: favoritePlayer.avatarUrl,
+          canInvite: false,
         );
         await Navigator.of(context).pushNamed(
           AppRoutes.playerProfile,
