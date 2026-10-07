@@ -983,6 +983,7 @@ abstract final class AppRouter {
         invitationId: item.invitationId,
         inviterName: item.inviterName,
         inviterAvatarUrl: item.inviterAvatarUrl,
+        showFavoriteAction: true,
       ),
       onNotificationTap: () {
         Navigator.of(context).pushNamed(AppRoutes.notifications);
@@ -1011,8 +1012,55 @@ abstract final class AppRouter {
     final match = item.match;
 
     if (match.status == MatchStatus.completed) {
-      await Navigator.of(context)
-          .pushNamed(AppRoutes.matchCompleted, arguments: match);
+      final currentUser = _authRepository.currentUser;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (completedContext) {
+            if (match.isBackendMatch && currentUser != null) {
+              return ConnectedMatchCompletedScreen(
+                initialMatch: match,
+                repository: _matchRepository,
+                currentUserId: currentUser.id,
+                transientSuccessMessage: true,
+                onBack: () => Navigator.of(completedContext).maybePop(),
+                onPlayerTap: (player) {
+                  final profile = PlayerProfilePreviewData.forIdentity(
+                    id: player.id,
+                    displayName: player.displayName,
+                    avatarAsset: player.avatarAsset,
+                    avatarUrl: player.avatarUrl,
+                  );
+                  Navigator.of(completedContext).pushNamed(
+                    AppRoutes.playerProfile,
+                    arguments: PlayerProfileRouteArgs(player: profile),
+                  );
+                },
+              );
+            }
+
+            return MatchCompletedScreen(
+              match: match,
+              players: MatchCompletedPreviewData.players,
+              inviterName: MatchCompletedPreviewData.inviterName,
+              inviterAvatarAsset: MatchCompletedPreviewData.inviterAvatarAsset,
+              transientSuccessMessage: true,
+              onBack: () => Navigator.of(completedContext).maybePop(),
+              onPlayerTap: (player) {
+                final profile = PlayerProfilePreviewData.forIdentity(
+                  id: player.id,
+                  displayName: player.displayName,
+                  avatarAsset: player.avatarAsset,
+                  avatarUrl: player.avatarUrl,
+                );
+                Navigator.of(completedContext).pushNamed(
+                  AppRoutes.playerProfile,
+                  arguments: PlayerProfileRouteArgs(player: profile),
+                );
+              },
+            );
+          },
+        ),
+      );
       return;
     }
 
@@ -1022,6 +1070,7 @@ abstract final class AppRouter {
         match,
         invitationId: item.invitationId,
         inviterName: item.inviterName,
+        showFavoriteAction: true,
       );
       return;
     }
@@ -1032,6 +1081,7 @@ abstract final class AppRouter {
           builder: (detailsContext) => ConnectedMatchDetailsScreen(
             initialMatch: match,
             repository: _matchRepository,
+            showFavoriteAction: false,
             onBack: () => Navigator.of(detailsContext).maybePop(),
             onPlayerTap: (person) =>
                 _openMatchPersonProfile(detailsContext, person, match),
@@ -1061,6 +1111,7 @@ abstract final class AppRouter {
           match: match,
           isCurrentUserJoined: true,
           canCancelMatch: isCreatedByMe,
+          showFavoriteAction: false,
           onBack: () => Navigator.of(detailsContext).maybePop(),
           onInvitePlayers: () {
             _openInvitePlayers(detailsContext, match);
@@ -1112,6 +1163,7 @@ abstract final class AppRouter {
     String? invitationId,
     String? inviterName,
     String? inviterAvatarUrl,
+    bool showFavoriteAction = false,
   }) {
     return Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
@@ -1125,6 +1177,7 @@ abstract final class AppRouter {
           invitationId: invitationId,
           inviterName: inviterName,
           inviterAvatarUrl: inviterAvatarUrl,
+          showFavoriteAction: showFavoriteAction,
         ),
       ),
     );
@@ -1136,11 +1189,24 @@ abstract final class AppRouter {
     String? invitationId,
     String? inviterName,
     String? inviterAvatarUrl,
+    bool showFavoriteAction = false,
   }) {
     return InvitationReceivingScreen(
       match: match,
       inviterName: inviterName ?? match.hostName ?? 'Host',
       inviterAvatarUrl: inviterAvatarUrl,
+      showFavoriteAction: showFavoriteAction,
+      isFavorite: match.isFavorite,
+      onFavoriteChanged: showFavoriteAction && match.isBackendMatch
+          ? (favorite) async {
+              try {
+                await _matchRepository.setFavorite(match.id, favorite);
+                return true;
+              } catch (_) {
+                return false;
+              }
+            }
+          : null,
       onBack: () => Navigator.of(context).maybePop(),
       onDecline: (_) async {
         if (invitationId != null) {
