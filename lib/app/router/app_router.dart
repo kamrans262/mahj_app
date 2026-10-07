@@ -1093,10 +1093,7 @@ abstract final class AppRouter {
                   .pushNamed(AppRoutes.matchChat, arguments: match);
             },
             onCompleted: (completed) {
-              Navigator.of(detailsContext).pushReplacementNamed(
-                AppRoutes.matchCompleted,
-                arguments: completed,
-              );
+              _replaceWithMyMatchesCompleted(detailsContext, completed);
             },
           ),
         ),
@@ -1121,6 +1118,62 @@ abstract final class AppRouter {
                 .pushNamed(AppRoutes.matchChat, arguments: match);
           },
         ),
+      ),
+    );
+  }
+
+  static void _replaceWithMyMatchesCompleted(
+    BuildContext context,
+    HomeMatch match,
+  ) {
+    final currentUser = _authRepository.currentUser;
+
+    Navigator.of(context).pushReplacement<void, void>(
+      MaterialPageRoute<void>(
+        builder: (completedContext) {
+          if (match.isBackendMatch && currentUser != null) {
+            return ConnectedMatchCompletedScreen(
+              initialMatch: match,
+              repository: _matchRepository,
+              currentUserId: currentUser.id,
+              transientSuccessMessage: true,
+              onBack: () => Navigator.of(completedContext).maybePop(),
+              onPlayerTap: (player) {
+                final profile = PlayerProfilePreviewData.forIdentity(
+                  id: player.id,
+                  displayName: player.displayName,
+                  avatarAsset: player.avatarAsset,
+                  avatarUrl: player.avatarUrl,
+                );
+                Navigator.of(completedContext).pushNamed(
+                  AppRoutes.playerProfile,
+                  arguments: PlayerProfileRouteArgs(player: profile),
+                );
+              },
+            );
+          }
+
+          return MatchCompletedScreen(
+            match: match,
+            players: MatchCompletedPreviewData.players,
+            inviterName: MatchCompletedPreviewData.inviterName,
+            inviterAvatarAsset: MatchCompletedPreviewData.inviterAvatarAsset,
+            transientSuccessMessage: true,
+            onBack: () => Navigator.of(completedContext).maybePop(),
+            onPlayerTap: (player) {
+              final profile = PlayerProfilePreviewData.forIdentity(
+                id: player.id,
+                displayName: player.displayName,
+                avatarAsset: player.avatarAsset,
+                avatarUrl: player.avatarUrl,
+              );
+              Navigator.of(completedContext).pushNamed(
+                AppRoutes.playerProfile,
+                arguments: PlayerProfileRouteArgs(player: profile),
+              );
+            },
+          );
+        },
       ),
     );
   }
