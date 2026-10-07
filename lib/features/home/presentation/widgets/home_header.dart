@@ -97,7 +97,7 @@ class HeaderActionButton extends StatelessWidget {
     required this.unreadCount,
     super.key,
     this.onTap,
-    this.iconSize = 24,
+    this.iconSize = 18,
   });
 
   final String semanticsLabel;
