@@ -18,6 +18,7 @@ class ConnectedMatchCompletedScreen extends StatefulWidget {
     super.key,
     this.onBack,
     this.onPlayerTap,
+    this.transientSuccessMessage = false,
   });
 
   final HomeMatch initialMatch;
@@ -25,6 +26,7 @@ class ConnectedMatchCompletedScreen extends StatefulWidget {
   final String currentUserId;
   final VoidCallback? onBack;
   final ValueChanged<MatchScorePlayer>? onPlayerTap;
+  final bool transientSuccessMessage;
 
   @override
   State<ConnectedMatchCompletedScreen> createState() =>
@@ -125,6 +127,7 @@ class _ConnectedMatchCompletedScreenState
       inviterAvatarUrl: data.match.hostAvatarUrl,
       scoresAlreadySubmitted: data.scoresSubmitted,
       canSubmitScores: data.canSubmitScores,
+      transientSuccessMessage: widget.transientSuccessMessage,
       onBack: widget.onBack,
       onPlayerTap: widget.onPlayerTap,
       onSubmitScores: data.canSubmitScores ? _submitScores : null,
