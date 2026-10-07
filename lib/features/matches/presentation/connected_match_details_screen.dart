@@ -21,6 +21,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
     this.onInvitePlayers,
     this.onChat,
     this.onCompleted,
+    this.showFavoriteAction = true,
   });
 
   final HomeMatch initialMatch;
@@ -30,6 +31,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
   final Future<void> Function()? onInvitePlayers;
   final MatchChatCallback? onChat;
   final ValueChanged<HomeMatch>? onCompleted;
+  final bool showFavoriteAction;
 
   @override
   State<ConnectedMatchDetailsScreen> createState() =>
@@ -213,6 +215,7 @@ class _ConnectedMatchDetailsScreenState
       onBack: widget.onBack,
       onPlayerTap: widget.onPlayerTap,
       isFavorite: _match.isFavorite,
+      showFavoriteAction: widget.showFavoriteAction,
       onFavoriteChanged: _setFavorite,
       onInvitePlayers: widget.onInvitePlayers == null
           ? null
