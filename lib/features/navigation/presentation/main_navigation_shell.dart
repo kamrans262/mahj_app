@@ -269,9 +269,20 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   String get _greeting {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Afternoon';
+    return hour < 12 ? 'Morning' : 'Afternoon';
+  }
+
+  String get _shortDisplayName {
+    final parts = _profileData.name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList(growable: false);
+
+    if (parts.isEmpty) return '';
+    if (parts.length == 1) return parts.first;
+
+    return '${parts.first} ${parts.last[0].toUpperCase()}';
   }
 
   HomeData get _homeData {
@@ -291,7 +302,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     return HomeData(
       greeting: _greeting,
-      displayName: _profileData.name,
+      displayName: _shortDisplayName,
       subtitle: 'Find and join matches near you',
       location: _discoveryStore.filters.usesCurrentLocation
           ? (_profileData.addressLine.isEmpty
