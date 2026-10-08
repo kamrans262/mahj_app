@@ -38,8 +38,13 @@ class _ConnectedManageSubscriptionScreenState
   String? _pendingCheckoutSessionId;
   int _selectionRevision = 0;
 
-  bool get _hasActivePaidSubscription =>
-      _state?.provider == 'stripe' && _state?.status == 'active';
+  bool get _hasActivePaidSubscription {
+    final state = _state;
+    if (state == null || state.status != 'active') return false;
+
+    final currentPlanId = state.currentPlan.id.trim().toLowerCase();
+    return currentPlanId.isNotEmpty && currentPlanId != 'free';
+  }
 
   @override
   void initState() {
@@ -148,8 +153,11 @@ class _ConnectedManageSubscriptionScreenState
 
       if (!mounted) return;
 
+      final currentPlanId = state.currentPlan.id.trim().toLowerCase();
       final paymentSucceeded =
-          state.provider == 'stripe' && state.status == 'active';
+          state.status == 'active' &&
+          currentPlanId.isNotEmpty &&
+          currentPlanId != 'free';
 
       setState(() {
         _state = state;
