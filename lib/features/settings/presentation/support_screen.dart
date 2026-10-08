@@ -316,7 +316,24 @@ class _SupportScreenState extends State<SupportScreen> {
                       attachment: _screenshot,
                       onTap: _pickScreenshot,
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+
+                  ],
+                ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageHorizontal,
+                  AppSpacing.sm,
+                  AppSpacing.pageHorizontal,
+                  AppSpacing.lg,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     AppButton.primary(
                       key: const ValueKey('support-submit-button'),
                       label: 'Submit Issue',
