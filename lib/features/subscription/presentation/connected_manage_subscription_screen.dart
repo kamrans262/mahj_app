@@ -234,7 +234,6 @@ class _ConnectedManageSubscriptionScreenState
 
   @override
   Widget build(BuildContext context) {
-    final state = _state;
     final fallback = const SubscriptionPlan(
       id: 'loading',
       name: 'Subscription',
@@ -246,9 +245,7 @@ class _ConnectedManageSubscriptionScreenState
 
     final currentPlan = _displayCurrentPlan(fallback);
     final canCancel =
-        _hasCurrentPaidSubscription &&
-        state?.cancelAtPeriodEnd != true &&
-        !_waitingForCheckout;
+        _hasCurrentPaidSubscription && !_waitingForCheckout;
 
     return ColoredBox(
       color: AppColors.background,
