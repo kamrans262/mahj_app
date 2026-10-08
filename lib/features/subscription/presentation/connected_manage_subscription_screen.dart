@@ -40,13 +40,21 @@ class _ConnectedManageSubscriptionScreenState
 
   bool get _hasCurrentPaidSubscription {
     final state = _state;
-    if (state == null ||
-        !const {'active', 'trialing'}.contains(state.status)) {
+    if (state == null) return false;
+
+    final plan = state.currentPlan;
+    final currentPlanId = plan.id.trim().toLowerCase();
+    if (!plan.isCurrent ||
+        currentPlanId.isEmpty ||
+        currentPlanId == 'free') {
       return false;
     }
 
-    final currentPlanId = state.currentPlan.id.trim().toLowerCase();
-    return currentPlanId.isNotEmpty && currentPlanId != 'free';
+    final status = (plan.statusText ?? state.status ?? '')
+        .trim()
+        .toLowerCase();
+
+    return const {'active', 'trialing'}.contains(status);
   }
 
   @override
