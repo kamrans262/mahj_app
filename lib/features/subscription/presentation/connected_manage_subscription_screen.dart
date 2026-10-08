@@ -38,9 +38,12 @@ class _ConnectedManageSubscriptionScreenState
   String? _pendingCheckoutSessionId;
   int _selectionRevision = 0;
 
-  bool get _hasActivePaidSubscription {
+  bool get _hasCurrentPaidSubscription {
     final state = _state;
-    if (state == null || state.status != 'active') return false;
+    if (state == null ||
+        !const {'active', 'trialing'}.contains(state.status)) {
+      return false;
+    }
 
     final currentPlanId = state.currentPlan.id.trim().toLowerCase();
     return currentPlanId.isNotEmpty && currentPlanId != 'free';
@@ -155,7 +158,7 @@ class _ConnectedManageSubscriptionScreenState
 
       final currentPlanId = state.currentPlan.id.trim().toLowerCase();
       final paymentSucceeded =
-          state.status == 'active' &&
+          const {'active', 'trialing'}.contains(state.status) &&
           currentPlanId.isNotEmpty &&
           currentPlanId != 'free';
 
@@ -222,39 +225,11 @@ class _ConnectedManageSubscriptionScreenState
   }
 
   SubscriptionPlan _displayCurrentPlan(SubscriptionPlan fallback) {
-    if (_hasActivePaidSubscription) {
-      return _state?.currentPlan ?? fallback;
-    }
-
-    return const SubscriptionPlan(
-      id: 'free',
-      name: 'Free',
-      description: 'No active paid subscription',
-      priceLabel: r'$0.00',
-      statusText: 'Active',
-      isCurrent: true,
-      isSelectable: false,
-      trialDays: 0,
-    );
+    return _state?.currentPlan ?? fallback;
   }
 
   List<SubscriptionPlan> _displayAvailablePlans() {
-    final plans = _state?.availablePlans ?? const <SubscriptionPlan>[];
-
-    if (_hasActivePaidSubscription) {
-      return plans;
-    }
-
-    return plans
-        .map(
-          (plan) => plan.copyWith(
-            isCurrent: false,
-            isSelectable: true,
-            statusText: null,
-            renewalText: null,
-          ),
-        )
-        .toList(growable: false);
+    return _state?.availablePlans ?? const <SubscriptionPlan>[];
   }
 
   @override
@@ -271,7 +246,7 @@ class _ConnectedManageSubscriptionScreenState
 
     final currentPlan = _displayCurrentPlan(fallback);
     final canCancel =
-        _hasActivePaidSubscription &&
+        _hasCurrentPaidSubscription &&
         state?.cancelAtPeriodEnd != true &&
         !_waitingForCheckout;
 
@@ -285,7 +260,7 @@ class _ConnectedManageSubscriptionScreenState
         availablePlans: _displayAvailablePlans(),
         isLoading: _loading || _refreshingCheckout,
         errorMessage: _error,
-        requiresPayment: !_hasActivePaidSubscription,
+        requiresPayment: !_hasCurrentPaidSubscription,
         onRetry: _load,
         onBack: widget.onBack,
         onConfirmPayment: _startPayment,
