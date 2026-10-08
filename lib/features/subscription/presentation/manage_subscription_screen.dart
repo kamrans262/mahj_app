@@ -216,14 +216,7 @@ class _ManageSubscriptionScreenState extends State<ManageSubscriptionScreen> {
 
       if (!mounted) return;
       if (changed == true) {
-        setState(() {
-          _currentPlan = selectedPlan.copyWith(
-            isCurrent: true,
-            isSelectable: false,
-            statusText: selectedPlan.statusText ?? 'Active',
-          );
-          _selectedPlanId = null;
-        });
+        setState(() => _selectedPlanId = null);
         _showMessage('Subscription updated');
       } else if (serviceUnavailable) {
         _showMessage('Subscription service is not connected yet.');
