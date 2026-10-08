@@ -478,11 +478,13 @@ class _SubscriptionBottomArea extends StatelessWidget {
           ],
           if (onCancel != null) ...[
             const SizedBox(height: AppSpacing.sm),
-            AppButton.destructive(
+            AppButton.destructiveOutlined(
               key: const ValueKey('manage-subscription-cancel'),
               label: 'Cancel Plan',
-              onPressed: onCancel,
-              isEnabled: !isSubmitting,
+              textStyle: AppTypography.matchSuccessSecondaryButton.copyWith(
+                color: AppColors.destructive,
+              ),
+              onPressed: isSubmitting ? null : onCancel,
             ),
           ],
           const SizedBox(height: 36),
