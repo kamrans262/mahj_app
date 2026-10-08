@@ -38,6 +38,43 @@ void main() {
     },
   );
 
+  testWidgets(
+    'Active Monthly Plan is shown as current with backend renewal messaging',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const monthlyPlan = SubscriptionPlan(
+        id: '1',
+        name: 'Monthly Plan',
+        description: 'Monthly membership',
+        priceLabel: r'$0.99',
+        renewalText: 'Your plan renews on Nov 6, 2026',
+        statusText: 'Active',
+        isCurrent: true,
+        isSelectable: false,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ManageSubscriptionScreen(
+            currentPlan: monthlyPlan,
+            availablePlans: [monthlyPlan],
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Monthly Plan'), findsOneWidget);
+      expect(find.text('Your plan renews on Nov 6, 2026'), findsOneWidget);
+      expect(find.text('Free'), findsNothing);
+      expect(find.text('Choose Your Plan'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('Confirm Payment calls Stripe payment callback directly', (
     tester,
   ) async {
