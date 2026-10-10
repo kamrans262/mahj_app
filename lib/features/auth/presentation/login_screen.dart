@@ -8,6 +8,8 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_asset_icon.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_loader.dart';
+import '../../../core/widgets/app_modal_card.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../domain/auth_validators.dart';
 import 'widgets/auth_background.dart';
@@ -42,9 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+  bool _loginLoading = false;
   bool _googleLoading = false;
 
-  bool get _busy => widget.isLoading || _googleLoading;
+  bool get _busy => widget.isLoading || _loginLoading || _googleLoading;
 
   @override
   void dispose() {
@@ -66,7 +69,12 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    await callback(_emailController.text.trim(), _passwordController.text);
+    setState(() => _loginLoading = true);
+    try {
+      await callback(_emailController.text.trim(), _passwordController.text);
+    } finally {
+      if (mounted) setState(() => _loginLoading = false);
+    }
   }
 
   Future<void> _submitGoogle() async {
@@ -89,8 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final mediaQuery = MediaQuery.of(context);
     final keyboardInset = mediaQuery.viewInsets.bottom;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Scaffold(
+          resizeToAvoidBottomInset: true,
       body: AuthBackground(
         child: SafeArea(
           child: LayoutBuilder(
@@ -273,6 +284,39 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+        ),
+        if (_busy)
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  const ModalBarrier(
+                    dismissible: false,
+                    color: AppColors.confirmationBackdrop,
+                  ),
+                  SafeArea(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.pageHorizontal,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 150),
+                          child: const AppModalCard(
+                            semanticLabel: 'Loading',
+                            child: Center(child: AppLoader()),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
