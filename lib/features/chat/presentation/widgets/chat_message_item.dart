@@ -79,26 +79,32 @@ class _IncomingMessage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.micro),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxBubbleWidth),
-            child: AppSurfaceContainer(
-              minHeight: 0,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Text(message.text, style: AppTypography.homeMeta14),
-            ),
-          ),
-          const SizedBox(height: 6),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxBubbleWidth),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                _formatTime(message.timestamp),
-                style: AppTypography.homeMeta14,
-              ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+                  child: AppSurfaceContainer(
+                    minHeight: 0,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Text(
+                      message.text,
+                      style: AppTypography.homeMeta14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _formatTime(message.timestamp),
+                  style: AppTypography.homeMeta14,
+                ),
+              ],
             ),
           ),
         ],
