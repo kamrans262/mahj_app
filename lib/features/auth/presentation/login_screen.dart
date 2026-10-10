@@ -306,7 +306,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           constraints: const BoxConstraints(maxWidth: 150),
                           child: const AppModalCard(
                             semanticLabel: 'Loading',
-                            child: Center(child: AppLoader()),
+                            child: Center(
+                              widthFactor: 1,
+                              heightFactor: 1,
+                              child: AppLoader(),
+                            ),
                           ),
                         ),
                       ),
