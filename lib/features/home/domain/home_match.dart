@@ -21,6 +21,7 @@ class HomeMatch {
     this.hostUserId,
     this.hostName,
     this.hostAvatarUrl,
+    this.playerAvatarUrls = const <String?>[],
     this.completedAt,
     this.notes,
     this.isPublic = true,
@@ -54,6 +55,7 @@ class HomeMatch {
   final String? hostUserId;
   final String? hostName;
   final String? hostAvatarUrl;
+  final List<String?> playerAvatarUrls;
   final DateTime? completedAt;
   final String? notes;
   final bool isPublic;
@@ -83,6 +85,16 @@ class HomeMatch {
         ? host.map((key, value) => MapEntry(key.toString(), value))
         : const <String, dynamic>{};
 
+    final rawPlayers = json['players'];
+    final playerAvatarUrls = rawPlayers is List
+        ? rawPlayers.whereType<Map>().map((player) {
+            final normalized = player.map(
+              (key, value) => MapEntry(key.toString(), value),
+            );
+            return normalized['avatar_url']?.toString();
+          }).toList(growable: false)
+        : const <String?>[];
+
     return HomeMatch(
       id: json['id']?.toString() ?? '',
       sportName:
@@ -107,6 +119,7 @@ class HomeMatch {
       hostUserId: hostMap['id']?.toString(),
       hostName: hostMap['name']?.toString(),
       hostAvatarUrl: hostMap['avatar_url']?.toString(),
+      playerAvatarUrls: playerAvatarUrls,
       completedAt: DateTime.tryParse(json['completed_at']?.toString() ?? ''),
       notes: json['notes']?.toString(),
       isPublic: json['is_public'] != false,
@@ -142,6 +155,7 @@ class HomeMatch {
     String? hostUserId,
     String? hostName,
     String? hostAvatarUrl,
+    List<String?>? playerAvatarUrls,
     DateTime? completedAt,
     String? notes,
     bool? isPublic,
@@ -175,6 +189,7 @@ class HomeMatch {
       hostUserId: hostUserId ?? this.hostUserId,
       hostName: hostName ?? this.hostName,
       hostAvatarUrl: hostAvatarUrl ?? this.hostAvatarUrl,
+      playerAvatarUrls: playerAvatarUrls ?? this.playerAvatarUrls,
       completedAt: completedAt ?? this.completedAt,
       notes: notes ?? this.notes,
       isPublic: isPublic ?? this.isPublic,
