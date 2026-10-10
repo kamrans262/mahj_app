@@ -126,9 +126,6 @@ class _OtpScreenState extends State<OtpScreen> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final contentWidth = math.min(constraints.maxWidth, 480.0);
-              final centerGap = (constraints.maxHeight * 0.10)
-                  .clamp(40.0, 88.0)
-                  .toDouble();
 
               return SingleChildScrollView(
                 key: const ValueKey('otp-scroll-view'),
@@ -141,67 +138,76 @@ class _OtpScreenState extends State<OtpScreen> {
                       minHeight: constraints.maxHeight,
                       maxWidth: contentWidth,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: AppBackButton(
-                              key: const ValueKey('otp-back-button'),
-                              onPressed: _isVerifying || _isResending
-                                  ? null
-                                  : widget.onBack,
-                            ),
-                          ),
-                          SizedBox(height: centerGap),
-                          Text(
-                            title,
-                            key: const ValueKey('otp-heading'),
-                            textAlign: TextAlign.center,
-                            style: AppTypography.authHeading,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            subtitle,
-                            key: const ValueKey('otp-subtitle'),
-                            textAlign: TextAlign.center,
-                            style: AppTypography.loginSubtitle.copyWith(
-                              height: 1.45,
-                            ),
-                          ),
-                          const SizedBox(height: 36),
-                          _OtpInput(
-                            controller: _otpController,
-                            focusNode: _otpFocusNode,
-                          ),
-                          const SizedBox(height: AppSpacing.xxl),
-                          AppButton.primary(
-                            key: const ValueKey('otp-verify-button'),
-                            label: 'Verify Code',
-                            onPressed: _verify,
-                            isLoading: _isVerifying,
-                            isEnabled: !_isResending,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Center(
-                            child: TextButton(
-                              key: const ValueKey('otp-resend-button'),
-                              onPressed: _isVerifying || _isResending
-                                  ? null
-                                  : _resend,
-                              child: Text(
-                                _isResending
-                                    ? 'Sending...'
-                                    : "Didn't receive the code? Resend",
-                                textAlign: TextAlign.center,
-                                style: AppTypography.action14,
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: AppBackButton(
+                                key: const ValueKey('otp-back-button'),
+                                onPressed: _isVerifying || _isResending
+                                    ? null
+                                    : widget.onBack,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                        ],
+                            Expanded(
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      title,
+                                      key: const ValueKey('otp-heading'),
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.authHeading,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Text(
+                                      subtitle,
+                                      key: const ValueKey('otp-subtitle'),
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.loginSubtitle
+                                          .copyWith(height: 1.45),
+                                    ),
+                                    const SizedBox(height: 36),
+                                    _OtpInput(
+                                      controller: _otpController,
+                                      focusNode: _otpFocusNode,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            AppButton.primary(
+                              key: const ValueKey('otp-verify-button'),
+                              label: 'Verify Code',
+                              onPressed: _verify,
+                              isLoading: _isVerifying,
+                              isEnabled: !_isResending,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Center(
+                              child: TextButton(
+                                key: const ValueKey('otp-resend-button'),
+                                onPressed: _isVerifying || _isResending
+                                    ? null
+                                    : _resend,
+                                child: Text(
+                                  _isResending
+                                      ? 'Sending...'
+                                      : "Didn't receive the code? Resend",
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.action14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
