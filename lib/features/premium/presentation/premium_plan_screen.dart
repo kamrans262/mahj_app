@@ -262,29 +262,52 @@ class _MonthlyPlanCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Longer pricing copy ($19.99/month) must not overflow when
+          // accessibility text is enlarged or on compact devices.
+          // Keep the approved side-by-side layout at normal sizes.
+          final stackPrice =
+              constraints.maxWidth < 300 ||
+              MediaQuery.textScalerOf(context).scale(1) > 1.2;
+
+          final planDetails = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(name, style: AppTypography.title18),
+              const SizedBox(height: AppSpacing.micro),
+              Text(description, style: AppTypography.body14),
+            ],
+          );
+          final price = Text(
+            priceLabel,
+            key: const ValueKey('premium-price'),
+            softWrap: stackPrice,
+            style: AppTypography.title18,
+          );
+
+          if (stackPrice) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(name, style: AppTypography.title18),
-                const SizedBox(height: AppSpacing.micro),
-                Text(description, style: AppTypography.body14),
+                planDetails,
+                const SizedBox(height: AppSpacing.sm),
+                price,
               ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            priceLabel,
-            key: const ValueKey('premium-price'),
-            maxLines: 1,
-            softWrap: false,
-            style: AppTypography.title18,
-          ),
-        ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: planDetails),
+              const SizedBox(width: AppSpacing.sm),
+              price,
+            ],
+          );
+        },
       ),
     );
   }

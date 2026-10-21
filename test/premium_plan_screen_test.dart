@@ -113,6 +113,15 @@ void main() {
     await pumpPremium(tester, size: const Size(320, 568), textScale: 1.35);
 
     expect(find.byType(SingleChildScrollView), findsOneWidget);
+    expect(find.text(r'$19.99/month'), findsOneWidget);
+    final priceBounds = tester.getRect(
+      find.byKey(const ValueKey('premium-price')),
+    );
+    final cardBounds = tester.getRect(
+      find.byKey(const ValueKey('monthly-plan-card')),
+    );
+    expect(priceBounds.left, greaterThanOrEqualTo(cardBounds.left));
+    expect(priceBounds.right, lessThanOrEqualTo(cardBounds.right));
     expect(tester.takeException(), isNull);
   });
 
