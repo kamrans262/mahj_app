@@ -284,34 +284,34 @@ class _DateFilterField extends StatelessWidget {
         height: 48,
         child: DropdownButtonHideUnderline(
           child: DropdownButton<MatchDateFilter>(
-          value: value,
-          isExpanded: true,
-          icon: const Icon(
-            Icons.keyboard_arrow_down,
-            size: 18,
-            color: AppColors.textSecondary,
-          ),
-          items: MatchDateFilter.values
-              .map(
-                (filter) => DropdownMenuItem(
-                  value: filter,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 20,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(filter.label, style: AppTypography.homeMeta14),
-                    ],
+            value: value,
+            isExpanded: true,
+            icon: const Icon(
+              Icons.keyboard_arrow_down,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+            items: MatchDateFilter.values
+                .map(
+                  (filter) => DropdownMenuItem(
+                    value: filter,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 20,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(filter.label, style: AppTypography.homeMeta14),
+                      ],
+                    ),
                   ),
-                ),
-              )
-              .toList(growable: false),
-          onChanged: (filter) {
-            if (filter != null) onChanged(filter);
-          },
+                )
+                .toList(growable: false),
+            onChanged: (filter) {
+              if (filter != null) onChanged(filter);
+            },
           ),
         ),
       ),
