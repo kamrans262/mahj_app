@@ -36,6 +36,7 @@ class AllNearbyMatchesScreen extends StatefulWidget {
     this.onLoadMore,
     this.isLoading = false,
     this.errorMessage,
+    this.distanceNotice,
   });
 
   final List<HomeMatch>? matches;
@@ -54,6 +55,7 @@ class AllNearbyMatchesScreen extends StatefulWidget {
   final Future<void> Function()? onLoadMore;
   final bool isLoading;
   final String? errorMessage;
+  final String? distanceNotice;
 
   @override
   State<AllNearbyMatchesScreen> createState() => _AllNearbyMatchesScreenState();
@@ -379,6 +381,15 @@ class _AllNearbyMatchesScreenState extends State<AllNearbyMatchesScreen> {
               _buildSearchRow(),
               const SizedBox(height: AppSpacing.lg),
               _buildResultsHeader(matches.length),
+              if (widget.distanceNotice != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  widget.distanceNotice!,
+                  style: AppTypography.homeMeta12.copyWith(
+                    color: AppColors.destructive,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               if (matches.isEmpty) _buildStateContent(matches),
             ]),

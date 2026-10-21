@@ -195,7 +195,16 @@ abstract final class AppRouter {
     ),
     AppRoutes.premiumPlan: (context) => SubscriptionEntryScreen(
       repository: AppServices.subscriptionRepository,
-      onBack: () => Navigator.of(context).maybePop(),
+      onBack: () {
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop();
+        } else {
+          // OTP completion clears the route history. Return to login
+          // rather than leaving the free-trial back button inert.
+          navigator.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+        }
+      },
       onActivated: () async {
         await _openHomeAfterPreload(context);
       },

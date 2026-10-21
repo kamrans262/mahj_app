@@ -38,6 +38,8 @@ class _ConnectedNearbyMatchesScreenState
   String _query = '';
   bool _loading = true;
   String? _error;
+  String? _distanceNotice;
+  int _loadVersion = 0;
 
   @override
   void initState() {
@@ -46,7 +48,41 @@ class _ConnectedNearbyMatchesScreenState
     _load();
   }
 
+  Future<MatchFilters> _resolveDistanceLocation(MatchFilters filters) async {
+    if (filters.sortOption != MatchSortOption.distance ||
+        filters.hasCoordinates) {
+      return filters;
+    }
+
+    final locations = widget.locationRepository;
+    if (locations == null) return filters;
+
+    try {
+      if (filters.usesCurrentLocation) {
+        final location = await locations.currentLocation();
+        return filters.copyWith(
+          selectedLocation: location.label,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        );
+      }
+
+      final results = await locations.search(filters.selectedLocation);
+      if (results.isNotEmpty) {
+        return filters.copyWith(
+          latitude: results.first.latitude,
+          longitude: results.first.longitude,
+        );
+      }
+    } catch (_) {
+      // A denied permission or failed geocoder must not masquerade as a
+      // successful distance sort. Keep the list available with a warning.
+    }
+    return filters;
+  }
+
   Future<void> _load({MatchFilters? filters, String? query}) async {
+    final requestVersion = ++_loadVersion;
     final activeFilters = filters ?? _filters;
     final activeQuery = query ?? _query;
 
@@ -56,26 +92,39 @@ class _ConnectedNearbyMatchesScreenState
     });
 
     try {
+      final resolvedFilters = await _resolveDistanceLocation(activeFilters);
+      final missingDistanceOrigin =
+          resolvedFilters.sortOption == MatchSortOption.distance &&
+          !resolvedFilters.hasCoordinates;
+
       final matches = await widget.repository.list(
-        filters: activeFilters,
+        filters: missingDistanceOrigin
+            ? resolvedFilters.copyWith(sortOption: MatchSortOption.date)
+            : resolvedFilters,
         query: activeQuery,
         discoverOnly: true,
       );
-      if (!mounted) return;
+      if (!mounted || requestVersion != _loadVersion) return;
+      widget.discoveryStore?.update(resolvedFilters, notify: false);
       setState(() {
-        _filters = activeFilters;
+        _filters = resolvedFilters;
         _query = activeQuery;
         _matches = matches;
+        _distanceNotice = missingDistanceOrigin
+            ? 'Select a city or ZIP code, or enable location access to sort by distance. Matches are shown by date until a location is available.'
+            : null;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || requestVersion != _loadVersion) return;
       setState(() {
         _error = error is ApiException
             ? error.message
             : 'Could not load matches. Please try again.';
       });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && requestVersion == _loadVersion) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -100,6 +149,7 @@ class _ConnectedNearbyMatchesScreenState
       onCurrentLocation: widget.locationRepository?.currentLocation,
       isLoading: _loading,
       errorMessage: _error,
+      distanceNotice: _distanceNotice,
     );
   }
 }
