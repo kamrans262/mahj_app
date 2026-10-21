@@ -250,7 +250,9 @@ void main() {
           ],
           scoresAlreadySubmitted: true,
           canSubmitScores: true,
-          onSubmitScores: (matchId, scores) async => updated = scores,
+          onSubmitScores: (matchId, scores) async {
+            updated = scores;
+          },
         ),
       ),
     );
