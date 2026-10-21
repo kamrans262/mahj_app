@@ -105,7 +105,7 @@ void main() {
     );
 
     expect(submitted.scoresSubmitted, isTrue);
-    expect(submitted.canSubmitScores, isFalse);
+    expect(submitted.canSubmitScores, isTrue);
     expect(submitted.players.first.initialScore, 21);
     expect(submitted.players.last.initialScore, 18);
 
@@ -134,6 +134,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     Map<String, int>? submittedScores;
+    var saveCount = 0;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -164,6 +165,7 @@ void main() {
           onSubmitScores: (matchId, scores) async {
             expect(matchId, '77');
             submittedScores = scores;
+            saveCount++;
           },
         ),
       ),
@@ -190,8 +192,73 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(submittedScores, {'10': 21, '11': 18});
-    expect(find.text('Scores Submitted Successfully!'), findsOneWidget);
+    expect(find.text('Scores Saved Successfully!'), findsOneWidget);
     expect(find.text('Submit Scores'), findsNothing);
+    expect(find.text('Edit Scores'), findsOneWidget);
+    expect(saveCount, 1);
+
+    // Reopening score entry remains possible after saving.
+    await tester.tap(find.text('Edit Scores'));
+    await tester.pump();
+    expect(find.text('Save Scores'), findsOneWidget);
+    await tester.ensureVisible(currentScore);
+    await tester.enterText(currentScore, '30');
+    await tester.ensureVisible(otherScore);
+    await tester.enterText(otherScore, '20');
+    await tester.tap(find.text('Save Scores'));
+    await tester.pumpAndSettle();
+
+    expect(submittedScores, {'10': 30, '11': 20});
+    expect(saveCount, 2);
+    expect(find.text('Edit Scores'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('joined player sees scores read-only and no edit action', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchCompletedScreen(
+          match: HomeMatch(
+            id: '77',
+            sportName: 'Mah Jongg',
+            location: 'Community Hall',
+            startsAt: DateTime(2026, 10, 1, 18),
+            currentPlayers: 2,
+            maxPlayers: 4,
+            status: MatchStatus.completed,
+          ),
+          players: const [
+            MatchScorePlayer(id: '10', displayName: 'Host', initialScore: 30),
+            MatchScorePlayer(
+              id: '11',
+              displayName: 'Joined Player',
+              isCurrentUser: true,
+              initialScore: 20,
+            ),
+          ],
+          scoresAlreadySubmitted: true,
+          canSubmitScores: false,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Submit Scores'), findsNothing);
+    expect(find.text('Save Scores'), findsNothing);
+    expect(find.text('Edit Scores'), findsNothing);
+    for (final id in ['10', '11']) {
+      final field = tester.widget<TextFormField>(
+        find.byKey(ValueKey('match-score-$id')),
+      );
+      expect(field.enabled, false);
+    }
     expect(tester.takeException(), isNull);
   });
 
@@ -248,7 +315,7 @@ Map<String, dynamic> _completionPayload({required bool scoresSubmitted}) {
       },
     ],
     'scores_submitted': scoresSubmitted,
-    'can_submit_scores': !scoresSubmitted,
+    'can_submit_scores': true,
   };
 }
 

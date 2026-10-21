@@ -60,6 +60,7 @@ class MatchCompletedScreen extends StatefulWidget {
 class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
   final _scoreControllers = <String, TextEditingController>{};
   bool _isSubmitting = false;
+  bool _editingScores = false;
   late bool _submitted;
   late bool _showSuccessMessage;
   Timer? _successMessageTimer;
@@ -73,8 +74,9 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
   void initState() {
     super.initState();
     _submitted = widget.scoresAlreadySubmitted;
-    _showSuccessMessage =
-        widget.scoresAlreadySubmitted && !widget.transientSuccessMessage;
+    // A saved result stays editable by the host; don't leave a permanent
+    // success banner on screen when reopening an already scored match.
+    _showSuccessMessage = false;
     _syncControllers();
   }
 
@@ -87,7 +89,7 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
     if (oldWidget.scoresAlreadySubmitted != widget.scoresAlreadySubmitted) {
       _submitted = widget.scoresAlreadySubmitted;
       if (widget.scoresAlreadySubmitted) {
-        _showSubmissionSuccess();
+        _editingScores = false;
       } else {
         _successMessageTimer?.cancel();
         _showSuccessMessage = false;
@@ -142,8 +144,21 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
     });
   }
 
+  void _editScores() {
+    if (!widget.canSubmitScores || !_submitted || _isSubmitting) return;
+    _successMessageTimer?.cancel();
+    setState(() {
+      _editingScores = true;
+      _showSuccessMessage = false;
+    });
+  }
+
   Future<void> _submitScores() async {
-    if (_isSubmitting || _submitted) return;
+    if (_isSubmitting ||
+        !widget.canSubmitScores ||
+        (_submitted && !_editingScores)) {
+      return;
+    }
 
     final scores = <String, int>{};
     for (final player in widget.players) {
@@ -169,6 +184,7 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
       FocusManager.instance.primaryFocus?.unfocus();
       setState(() {
         _submitted = true;
+        _editingScores = false;
         _showSubmissionSuccess();
       });
     } catch (_) {
@@ -336,7 +352,9 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                               return _ScoreRow(
                                 player: player,
                                 controller: _scoreControllers[player.id]!,
-                                enabled: !_submitted && !_isSubmitting,
+                                enabled: widget.canSubmitScores &&
+                                    (!_submitted || _editingScores) &&
+                                    !_isSubmitting,
                                 onPlayerTap:
                                     player.isCurrentUser ||
                                         widget.onPlayerTap == null
@@ -359,18 +377,34 @@ class _MatchCompletedScreenState extends State<MatchCompletedScreen> {
                 AppSpacing.pageHorizontal,
                 AppSpacing.lg,
               ),
-              child: _showSuccessMessage
-                  ? const AppSuccessMessage(
-                      message: 'Scores Submitted Successfully!',
-                    )
-                  : !_submitted && widget.canSubmitScores
-                  ? AppButton.primary(
-                      label: 'Submit Scores',
-                      isLoading: _isSubmitting,
-                      isEnabled: widget.players.isNotEmpty && !_isSubmitting,
-                      onPressed: _submitScores,
-                    )
-                  : const SizedBox.shrink(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_showSuccessMessage) ...[
+                    const AppSuccessMessage(
+                      message: 'Scores Saved Successfully!',
+                    ),
+                    if (widget.canSubmitScores)
+                      const SizedBox(height: AppSpacing.sm),
+                  ],
+                  if (widget.canSubmitScores && widget.players.isNotEmpty)
+                    if (_submitted && !_editingScores)
+                      AppButton.secondary(
+                        key: const ValueKey('match-edit-scores'),
+                        label: 'Edit Scores',
+                        onPressed: _editScores,
+                      )
+                    else
+                      AppButton.primary(
+                        key: const ValueKey('match-submit-scores'),
+                        label: _editingScores ? 'Save Scores' : 'Submit Scores',
+                        isLoading: _isSubmitting,
+                        isEnabled: !_isSubmitting,
+                        onPressed: _submitScores,
+                      ),
+                ],
+              ),
             ),
           ],
         ),
