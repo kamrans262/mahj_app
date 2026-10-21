@@ -13,5 +13,6 @@ class FavoritePlayer {
   final int gamesCount;
   final String? avatarUrl;
 
-  String get secondaryLabel => '@$username · $gamesCount games';
+  String get secondaryLabel =>
+      '$gamesCount mutual ${gamesCount == 1 ? 'game' : 'games'}';
 }

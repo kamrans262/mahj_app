@@ -63,7 +63,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       if (!mounted) return;
 
       setState(() {
-        _matches = matches;
+        // Older backend responses may still include ended/cancelled games.
+        // Favorited historical records remain saved on the server.
+        final now = DateTime.now();
+        _matches = matches.where((match) =>
+            match.startsAt.isAfter(now) &&
+            match.status != MatchStatus.completed &&
+            match.status != MatchStatus.cancelled,
+        ).toList(growable: false);
         _players = players;
       });
     } catch (_) {

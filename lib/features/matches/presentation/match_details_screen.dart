@@ -927,15 +927,6 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (widget.onEditMatch != null) ...[
-            AppButton.secondary(
-              key: const ValueKey('match-details-edit-match'),
-              label: 'Edit Match',
-              textStyle: AppTypography.matchSuccessSecondaryButton,
-              onPressed: widget.onEditMatch,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-          ],
           AppResponsiveActionPair(
             first: AppButton.secondary(
               key: const ValueKey('match-details-invite-players'),
@@ -958,6 +949,15 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
               isEnabled: !_cancelRequestInFlight,
               onPressed:
                   _completeRequestInFlight ? null : _showCompleteConfirmation,
+            ),
+          ],
+          if (widget.onEditMatch != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            AppButton.secondary(
+              key: const ValueKey('match-details-edit-match'),
+              label: 'Edit Match',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: widget.onEditMatch,
             ),
           ],
           const SizedBox(height: AppSpacing.lg),

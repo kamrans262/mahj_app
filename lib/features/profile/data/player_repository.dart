@@ -98,7 +98,7 @@ class PlayerRepository {
       id: id,
       name: json['name']?.toString() ?? 'Player',
       username: json['username']?.toString() ?? 'player',
-      gamesCount: _asInt(json['games_count']),
+      gamesCount: _asInt(json['mutual_games_count'] ?? json['games_count']),
       avatarUrl: json['avatar_url']?.toString(),
     );
   }
