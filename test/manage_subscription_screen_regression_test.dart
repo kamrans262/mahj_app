@@ -98,7 +98,7 @@ void main() {
       id: 'monthly',
       name: 'Monthly Plan',
       description: 'Monthly membership',
-      priceLabel: r'$9.99',
+      priceLabel: r'$19.99',
       isCurrent: false,
       isSelectable: true,
     );
