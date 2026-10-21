@@ -6,6 +6,8 @@ void main() {
     final filters = MatchFilters.defaults();
 
     expect(filters.selectedLocation, MatchFilters.defaultLocation);
+    expect(MatchFilters.minRadiusMiles, 1);
+    expect(MatchFilters.maxRadiusMiles, 50);
     expect(filters.radiusMiles, MatchFilters.defaultRadiusMiles);
     expect(filters.showOpenOnly, isTrue);
     expect(filters.sortOption, MatchSortOption.distance);
@@ -25,6 +27,7 @@ void main() {
 
     expect(updated.selectedLocation, 'Central Park, New York, NY');
     expect(updated.radiusMiles, 8);
+    expect(updated.copyWith(radiusMiles: 50).radiusMiles, 50);
     expect(updated.dateFilter, MatchDateFilter.nextThreeDays);
     expect(updated.latitude, 40.785091);
     expect(updated.longitude, -73.968285);

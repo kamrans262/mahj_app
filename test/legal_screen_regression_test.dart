@@ -30,6 +30,14 @@ void main() {
 
     expect(find.text('Legal'), findsOneWidget);
     expect(find.text('Acceptance of Terms'), findsOneWidget);
+    expect(
+      LegalPreviewData.terms.sections.first.paragraphs.first,
+      contains('Mahj Around Town'),
+    );
+    expect(
+      LegalPreviewData.privacy.sections.first.paragraphs.first,
+      contains('Mahj Around Town'),
+    );
     expect(find.text('Information We Collect'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('legal-tab-privacy')));
