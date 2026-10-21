@@ -222,7 +222,7 @@ abstract final class AppRouter {
     ),
     AppRoutes.premiumPlan: (context) => SubscriptionEntryScreen(
       repository: AppServices.subscriptionRepository,
-      onBack: () => Navigator.of(context).maybePop(),
+      onBack: () => backFromPremiumPlan(context),
       onActivated: () async {
         await _openHomeAfterPreload(context);
       },
@@ -890,6 +890,17 @@ abstract final class AppRouter {
     return null;
   }
 
+  /// The free-trial route may be the only route after OTP registration.
+  /// Preserve normal back navigation when a previous route is available.
+  static void backFromPremiumPlan(BuildContext context) {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      navigator.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+    }
+  }
+
   static void _openLegal(BuildContext context, LegalDocumentType document) {
     Navigator.of(context).pushNamed(AppRoutes.legal, arguments: document);
   }
@@ -1490,7 +1501,7 @@ abstract final class AppRouter {
     final notification = MahjNotification(
       id: data['notification_id']?.toString() ?? '',
       type: type,
-      title: data['title']?.toString() ?? 'Mahj',
+      title: data['title']?.toString() ?? 'Mahj Around Town',
       message: data['message']?.toString() ?? '',
       createdAt: DateTime.now(),
       relatedMatchId: nullableId(data['related_match_id']),

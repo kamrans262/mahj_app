@@ -104,7 +104,7 @@ class HomeMatch {
           json['location_address']?.toString() ??
           '',
       startsAt:
-          DateTime.tryParse(json['starts_at']?.toString() ?? '') ??
+          DateTime.tryParse(json['starts_at']?.toString() ?? '')?.toLocal() ??
           DateTime.now(),
       currentPlayers: (json['current_players'] as num?)?.toInt() ?? 0,
       maxPlayers: (json['max_players'] as num?)?.toInt() ?? 4,

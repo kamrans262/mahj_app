@@ -269,7 +269,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   String get _greeting {
     final hour = DateTime.now().hour;
-    return hour < 12 ? 'Morning' : 'Afternoon';
+    if (hour < 12) return 'Morning';
+    if (hour < 17) return 'Afternoon';
+    return 'Evening';
   }
 
   String get _shortDisplayName {
