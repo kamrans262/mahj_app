@@ -24,9 +24,13 @@ class ConnectedCreateMatchScreen extends StatefulWidget {
     this.onInvitePlayers,
     this.onBackHome,
     this.onViewMatch,
+    this.initialMatch,
+    this.onEdited,
   });
 
   final MatchRepository repository;
+  final HomeMatch? initialMatch;
+  final ValueChanged<HomeMatch>? onEdited;
   final LocationRepository? locationRepository;
   final VoidCallback? onBack;
   final VoidCallback? onCancel;
@@ -103,6 +107,39 @@ class _ConnectedCreateMatchScreenState
     return widget.repository.create(request);
   }
 
+  Future<HomeMatch> _saveMatch(CreateMatchRequest request) async {
+    final initial = widget.initialMatch;
+    if (initial == null) return _createMatch(request);
+
+    // Preserve the saved coordinates when the location was not edited.
+    if (request.locationAddress == initial.location &&
+        request.latitude == null && request.longitude == null &&
+        initial.latitude != null && initial.longitude != null) {
+      request = request.withCoordinates(
+        latitude: initial.latitude!,
+        longitude: initial.longitude!,
+      );
+    } else if ((request.latitude == null || request.longitude == null) &&
+        request.locationAddress != initial.location) {
+      final locations = widget.locationRepository;
+      if (locations != null) {
+        try {
+          final found = await locations.search(request.locationAddress);
+          if (found.isNotEmpty) {
+            request = request.withCoordinates(
+              latitude: found.first.latitude,
+              longitude: found.first.longitude,
+            );
+          }
+        } catch (_) {
+          // Location text can still be saved when geocoding is unavailable.
+        }
+      }
+    }
+
+    return widget.repository.update(initial.id, request);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_loading && _error == null && _sports.isNotEmpty) {
@@ -110,7 +147,9 @@ class _ConnectedCreateMatchScreenState
         sports: _sports,
         onBack: widget.onBack,
         onCancel: widget.onCancel,
-        onSubmit: _createMatch,
+        initialMatch: widget.initialMatch,
+        onEdited: widget.onEdited,
+        onSubmit: _saveMatch,
         onLocationSearch: widget.locationRepository?.search,
         onCurrentLocation: widget.locationRepository?.currentLocation,
         onResolveLocation: widget.locationRepository?.resolveMapTap,
@@ -133,7 +172,7 @@ class _ConnectedCreateMatchScreenState
                 0,
               ),
               child: AppCenteredPageHeader(
-                title: 'Create Match',
+                title: widget.initialMatch == null ? 'Create Match' : 'Edit Match',
                 onBack: widget.onBack,
               ),
             ),

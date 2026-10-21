@@ -29,6 +29,8 @@ class CreateMatchScreen extends StatefulWidget {
     this.onInvitePlayers,
     this.onBackHome,
     this.onViewMatch,
+    this.initialMatch,
+    this.onEdited,
     this.sports = const <SportOption>[],
   });
 
@@ -44,6 +46,8 @@ class CreateMatchScreen extends StatefulWidget {
   final ValueChanged<HomeMatch>? onInvitePlayers;
   final ValueChanged<HomeMatch>? onBackHome;
   final ValueChanged<HomeMatch>? onViewMatch;
+  final HomeMatch? initialMatch;
+  final ValueChanged<HomeMatch>? onEdited;
   final List<SportOption> sports;
 
   @override
@@ -66,6 +70,32 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   void initState() {
     super.initState();
     _selectMahJongg(widget.sports);
+    _loadInitialMatch();
+  }
+
+  void _loadInitialMatch() {
+    final initial = widget.initialMatch;
+    if (initial == null) return;
+    final startsAt = initial.startsAt.toLocal();
+    _locationController.text = initial.location;
+    _venueController.text = initial.venueName ?? '';
+    _notesController.text = initial.notes ?? '';
+    if (initial.latitude != null && initial.longitude != null) {
+      _selectedLocation = DiscoveryLocation(
+        label: initial.location,
+        latitude: initial.latitude!,
+        longitude: initial.longitude!,
+      );
+    }
+    _formState = _formState.copyWith(
+      locationAddress: initial.location,
+      venueName: initial.venueName ?? '',
+      notes: initial.notes ?? '',
+      selectedDate: startsAt,
+      selectedTimeMinutes: startsAt.hour * 60 + startsAt.minute,
+      isPublicMatch: initial.isPublic,
+      isInviteOnly: initial.isInviteOnly,
+    );
   }
 
   @override
@@ -374,6 +404,11 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       );
     }
 
+    if (!request.startsAt.isAfter(DateTime.now())) {
+      _showMessage('Please select a future date and time.');
+      return;
+    }
+
     final callback = widget.onSubmit;
     if (callback == null) {
       _showMessage('Match creation is not connected yet.');
@@ -386,6 +421,12 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       final createdMatch = await callback(request);
       if (!mounted) return;
 
+      if (widget.initialMatch != null) {
+        setState(() => _isSubmitting = false);
+        widget.onEdited?.call(createdMatch);
+        return;
+      }
+
       setState(() {
         _isSubmitting = false;
         _createdMatch = createdMatch;
@@ -394,7 +435,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       if (!mounted) return;
 
       setState(() => _isSubmitting = false);
-      _showMessage('Could not create the match. Please try again.');
+      _showMessage(widget.initialMatch == null
+          ? 'Could not create the match. Please try again.'
+          : 'Could not update the match. Please try again.');
     }
   }
 
@@ -523,13 +566,13 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     final selected = _selectedLocation;
 
     return _CreateMatchPickerField(
-      label: selected?.label ?? 'Choose match location',
+      label: selected?.label ?? widget.initialMatch?.location ?? 'Choose match location',
       semanticLabel: selected == null
           ? 'Choose match location'
           : 'Selected match location: ${selected.label}',
       leadingIcon: Icons.location_on_outlined,
       trailingIcon: Icons.keyboard_arrow_down_rounded,
-      isPlaceholder: selected == null,
+      isPlaceholder: selected == null && widget.initialMatch == null,
       onTap: _isSubmitting ? null : _pickLocation,
     );
   }
@@ -620,7 +663,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
     );
 
     final create = AppButton.primary(
-      label: 'Create Match',
+      label: widget.initialMatch == null ? 'Create Match' : 'Save Changes',
       onPressed: _isSubmitting ? null : _submit,
       isLoading: _isSubmitting,
     );
@@ -671,7 +714,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                       0,
                     ),
                     child: AppCenteredPageHeader(
-                      title: 'Create Match',
+                      title: widget.initialMatch == null ? 'Create Match' : 'Edit Match',
                       onBack: _isSubmitting ? null : _goBack,
                     ),
                   ),

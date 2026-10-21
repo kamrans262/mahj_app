@@ -362,6 +362,23 @@ class MatchRepository {
     return _matchFromEnvelope(payload);
   }
 
+  Future<HomeMatch> update(String matchId, CreateMatchRequest request) async {
+    final payload = await _apiClient.put(
+      '/matches/$matchId',
+      body: {
+        'location_address': request.locationAddress,
+        'venue_name': request.venueName,
+        'notes': request.notes,
+        'starts_at': request.startsAt.toUtc().toIso8601String(),
+        'is_public': request.isPublicMatch,
+        'is_invite_only': request.isInviteOnly,
+        'latitude': request.latitude,
+        'longitude': request.longitude,
+      },
+    );
+    return _matchFromEnvelope(payload);
+  }
+
   Future<HomeMatch> join(String matchId) async {
     final payload = await _apiClient.post('/matches/$matchId/join');
     return _matchFromEnvelope(payload);
