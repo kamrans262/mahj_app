@@ -65,6 +65,55 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('OTP layout avoids intrinsic height failure on reported viewport', (
+    tester,
+  ) async {
+    await pumpOtp(tester, size: const Size(411.4, 857.1));
+
+    final heading = tester.getRect(find.byKey(const ValueKey('otp-heading')));
+    final codeBoxes = tester.getRect(find.byKey(const ValueKey('otp-box-row')));
+    final verify = tester.getRect(find.byKey(const ValueKey('otp-verify-button')));
+    final resend = tester.getRect(find.byKey(const ValueKey('otp-resend-button')));
+
+    expect(heading.bottom, lessThan(codeBoxes.top));
+    expect(codeBoxes.bottom, lessThan(verify.top));
+    expect(verify.bottom, lessThan(resend.top));
+    expect(find.byType(IntrinsicHeight), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('OTP remains scrollable with large text and a short viewport', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 420);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(320, 420),
+            textScaler: TextScaler.linear(2),
+          ),
+          child: const OtpScreen(
+            email: 'longer.email.address@example.com',
+            purpose: OtpPurpose.registration,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('otp-heading')), findsOneWidget);
+    expect(find.byKey(const ValueKey('otp-scroll-view')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('otp-resend-button')));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tapping OTP boxes reopens keyboard when input stays focused', (
     tester,
   ) async {

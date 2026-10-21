@@ -126,6 +126,16 @@ class _OtpScreenState extends State<OtpScreen> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final contentWidth = math.min(constraints.maxWidth, 480.0);
+              // The scroll view does not supply a finite height to its child.
+              // IntrinsicHeight cannot measure the focused TextField in
+              // _OtpInput, so give the existing flex layout an explicit,
+              // scrollable height instead.
+              final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+              final minimumContentHeight = 460.0 * math.max(1.0, textScale);
+              final contentHeight = math.max(
+                constraints.maxHeight,
+                minimumContentHeight,
+              );
 
               return SingleChildScrollView(
                 key: const ValueKey('otp-scroll-view'),
@@ -133,13 +143,10 @@ class _OtpScreenState extends State<OtpScreen> {
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 child: Align(
                   alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight,
-                      maxWidth: contentWidth,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Padding(
+                  child: SizedBox(
+                    width: contentWidth,
+                    height: contentHeight,
+                    child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.pageHorizontal),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -209,7 +216,6 @@ class _OtpScreenState extends State<OtpScreen> {
                           ],
                         ),
                       ),
-                    ),
                   ),
                 ),
               );
