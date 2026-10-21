@@ -1,11 +1,11 @@
 {
-    "name": "Mahj",
-    "short_name": "Mahj",
+    "name": "Mahj Around Town",
+    "short_name": "Mahj Around Town",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Find and join local matches with Mahj Around Town.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

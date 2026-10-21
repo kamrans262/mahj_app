@@ -63,9 +63,7 @@ class MatchCreatedOverlay extends StatelessWidget {
                               'Match Created',
                               textAlign: TextAlign.center,
                               style: AppTypography.homeGreeting.copyWith(
-                                color: AppColors.heading.withValues(
-                                  alpha: 0.88,
-                                ),
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xs),

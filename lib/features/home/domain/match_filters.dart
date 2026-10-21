@@ -45,7 +45,7 @@ class MatchFilters {
 
   static const String defaultLocation = 'Current Location';
   static const double minRadiusMiles = 1;
-  static const double maxRadiusMiles = 10;
+  static const double maxRadiusMiles = 50;
   static const double defaultRadiusMiles = 6;
 
   final String selectedLocation;
@@ -63,7 +63,7 @@ class MatchFilters {
     return const MatchFilters(
       selectedLocation: defaultLocation,
       radiusMiles: defaultRadiusMiles,
-      showOpenOnly: false,
+      showOpenOnly: true,
       sortOption: MatchSortOption.distance,
       dateFilter: MatchDateFilter.any,
     );
