@@ -348,10 +348,50 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                     const SizedBox(height: AppSpacing.xl),
                     _PlayerStatistics(player: widget.player),
                     const SizedBox(height: AppSpacing.lg),
-                    SectionHeader(
-                      title:
-                          'Mutual Games (${widget.player.mutualGamesTotal})',
-                      onViewAll: widget.onViewAllMutualGames,
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final title =
+                            'Mutual Games (${widget.player.mutualGamesTotal})';
+                        final largeText =
+                            MediaQuery.textScalerOf(context).scale(1) > 1.2;
+                        if (constraints.maxWidth >= 320 && !largeText) {
+                          return SectionHeader(
+                            title: title,
+                            onViewAll: widget.onViewAllMutualGames,
+                          );
+                        }
+
+                        // Reuse the existing SectionHeader typography,
+                        // colors and action style without truncating title.
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              title,
+                              softWrap: true,
+                              style: AppTypography.homeSectionHeading,
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: widget.onViewAllMutualGames,
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  minimumSize: const Size(48, 40),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 2,
+                                  ),
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Text(
+                                  'View All',
+                                  style: AppTypography.homeAction12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     _MutualGamesPreview(
