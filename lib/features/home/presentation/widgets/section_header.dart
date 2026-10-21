@@ -21,17 +21,19 @@ class SectionHeader extends StatelessWidget {
             style: AppTypography.homeSectionHeading,
           ),
         ),
-        const SizedBox(width: 12),
-        TextButton(
-          onPressed: onViewAll,
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            minimumSize: const Size(48, 40),
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        if (onViewAll != null) ...[
+          const SizedBox(width: 12),
+          TextButton(
+            onPressed: onViewAll,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              minimumSize: const Size(48, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('View All', style: AppTypography.homeAction12),
           ),
-          child: const Text('View All', style: AppTypography.homeAction12),
-        ),
+        ],
       ],
     );
   }

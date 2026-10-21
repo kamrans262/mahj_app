@@ -284,7 +284,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (parts.isEmpty) return '';
     if (parts.length == 1) return parts.first;
 
-    return '${parts.first} ${parts.last[0].toUpperCase()}';
+    return '${parts.first} ${parts.last[0].toUpperCase()}.';
   }
 
   HomeData get _homeData {
