@@ -11,7 +11,6 @@ abstract final class PlayerProfilePreviewData {
     bool canReport = true,
     bool canBlock = true,
   }) {
-    final home = HomePreviewData.create();
     final normalizedId = id.toLowerCase();
 
     final resolved = switch (normalizedId) {
@@ -69,7 +68,7 @@ abstract final class PlayerProfilePreviewData {
       matchesHosted: resolved.matchesHosted,
       attendancePercent: resolved.attendance,
       memberSinceLabel: resolved.memberSince,
-      mutualGames: const <HomeMatch>[],
+      mutualGames: const [],
       mutualGamesTotal: 0,
       canInvite: canInvite,
       canReport: canReport,
