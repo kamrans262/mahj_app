@@ -121,18 +121,22 @@ abstract final class AppRouter {
           return AppRoutes.login;
         }
 
-        await _homePreloadStore.preload();
-        return AppRoutes.home;
+        try {
+          final subscription = await AppServices.subscriptionRepository.fetch();
+          if (!subscription.hasAccess) return AppRoutes.premiumPlan;
+          await _homePreloadStore.preload();
+          return AppRoutes.home;
+        } catch (_) {
+          // Never grant app access when billing status cannot be verified.
+          return AppRoutes.premiumPlan;
+        }
       },
     ),
     AppRoutes.login: (context) => LoginScreen(
       onLogin: (email, password) async {
         try {
           await _authRepository.login(email: email, password: password);
-          await _homePreloadStore.preload();
-          if (!context.mounted) return;
-          Navigator.of(context)
-              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+          await _openAuthenticatedDestination(context);
         } catch (error) {
           if (context.mounted) _showApiError(context, error);
         }
@@ -146,11 +150,7 @@ abstract final class AppRouter {
           if (idToken == null) return;
 
           await _authRepository.loginWithGoogle(idToken: idToken);
-          await _homePreloadStore.preload();
-
-          if (!context.mounted) return;
-          Navigator.of(context)
-              .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+          await _openAuthenticatedDestination(context);
         } catch (error) {
           if (context.mounted) _showApiError(context, error);
         }
@@ -960,13 +960,32 @@ abstract final class AppRouter {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  static Future<void> _openHomeAfterPreload(BuildContext context) async {
-    await _homePreloadStore.preload();
-    if (!context.mounted) return;
+  static Future<void> _openAuthenticatedDestination(BuildContext context) async {
+    // A valid auth token alone never grants access to matches.
+    // Failed billing checks also fail closed to the existing trial screen.
+    var canEnter = false;
+    try {
+      final subscription = await AppServices.subscriptionRepository.fetch();
+      canEnter = subscription.hasAccess;
+    } catch (_) {
+      canEnter = false;
+    }
 
-    Navigator.of(context)
-        .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+    if (canEnter) {
+      await _homePreloadStore.preload();
+    } else {
+      _homePreloadStore.clear();
+    }
+
+    if (!context.mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      canEnter ? AppRoutes.home : AppRoutes.premiumPlan,
+      (route) => false,
+    );
   }
+
+  static Future<void> _openHomeAfterPreload(BuildContext context) =>
+      _openAuthenticatedDestination(context);
 
   static MainNavigationShell _mainShell(
     BuildContext context, {

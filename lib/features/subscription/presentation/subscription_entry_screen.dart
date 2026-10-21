@@ -116,7 +116,11 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       }
 
       setState(() => _state = result.state);
-      await widget.onActivated?.call();
+      if (result.state.hasAccess) {
+        await widget.onActivated?.call();
+      } else {
+        _showMessage('Finish secure checkout to activate your subscription.');
+      }
     } catch (error) {
       if (!mounted) return;
       _showMessage(_messageFor(error));
@@ -142,7 +146,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       if (!mounted) return;
       setState(() => _state = state);
 
-      if (state.status == 'trialing' || state.status == 'active') {
+      if (state.hasAccess) {
         _waitingForCheckout = false;
         _pendingCheckoutSessionId = null;
         await widget.onActivated?.call();

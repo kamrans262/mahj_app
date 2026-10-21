@@ -7,6 +7,7 @@ class SubscriptionState {
     this.status,
     this.provider,
     this.cancelAtPeriodEnd = false,
+    this.hasAccess = false,
   });
 
   final SubscriptionPlan currentPlan;
@@ -14,6 +15,8 @@ class SubscriptionState {
   final String? status;
   final String? provider;
   final bool cancelAtPeriodEnd;
+  /// True only after the backend verifies the Stripe entitlement.
+  final bool hasAccess;
 
   factory SubscriptionState.fromJson(Map<String, dynamic> json) {
     final rawCurrent = json['current_plan'];
@@ -56,6 +59,7 @@ class SubscriptionState {
       status: subscription?['status']?.toString(),
       provider: subscription?['provider']?.toString(),
       cancelAtPeriodEnd: subscription?['cancel_at_period_end'] == true,
+      hasAccess: json['has_access'] == true,
     );
   }
 }
