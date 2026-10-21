@@ -72,6 +72,11 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       final state = await widget.repository.fetch();
       if (!mounted) return;
       setState(() => _state = state);
+      // A returning subscriber may reach this screen after a transient
+      // network error. Recheck the entitlement before opening Home.
+      if (state.hasAccess) {
+        await widget.onActivated?.call();
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _messageFor(error));
