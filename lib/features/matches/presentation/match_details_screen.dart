@@ -40,6 +40,7 @@ class MatchDetailsScreen extends StatefulWidget {
     this.onLeaveMatch,
     this.onChat,
     this.onCancelMatch,
+    this.onEditMatch,
     this.onCompleteMatch,
     this.onCompleted,
     this.onSubmitReport,
@@ -71,6 +72,7 @@ class MatchDetailsScreen extends StatefulWidget {
   final MatchLeaveCallback? onLeaveMatch;
   final MatchChatCallback? onChat;
   final MatchCancelCallback? onCancelMatch;
+  final VoidCallback? onEditMatch;
   final MatchCompleteCallback? onCompleteMatch;
   final ValueChanged<HomeMatch>? onCompleted;
   final MatchReportCallback? onSubmitReport;
@@ -925,6 +927,15 @@ class _MatchDetailsScreenState extends State<MatchDetailsScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.onEditMatch != null) ...[
+            AppButton.secondary(
+              key: const ValueKey('match-details-edit-match'),
+              label: 'Edit Match',
+              textStyle: AppTypography.matchSuccessSecondaryButton,
+              onPressed: widget.onEditMatch,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
           AppResponsiveActionPair(
             first: AppButton.secondary(
               key: const ValueKey('match-details-invite-players'),

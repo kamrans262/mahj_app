@@ -729,6 +729,7 @@ abstract final class AppRouter {
             return ConnectedMatchDetailsScreen(
               initialMatch: match,
               repository: _matchRepository,
+              locationRepository: AppServices.locationRepository,
               onBack: () => Navigator.of(context).maybePop(),
               onPlayerTap: (person) =>
                   _openMatchPersonProfile(context, person, match),

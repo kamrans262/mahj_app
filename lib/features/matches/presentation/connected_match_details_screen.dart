@@ -8,6 +8,8 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../home/domain/home_match.dart';
 import '../data/match_repository.dart';
+import '../../home/data/location_repository.dart';
+import 'connected_create_match_screen.dart';
 import '../domain/match_people_data.dart';
 import 'match_details_screen.dart';
 
@@ -21,6 +23,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
     this.onInvitePlayers,
     this.onChat,
     this.onCompleted,
+    this.locationRepository,
     this.showFavoriteAction = true,
   });
 
@@ -32,6 +35,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
   final MatchChatCallback? onChat;
   final ValueChanged<HomeMatch>? onCompleted;
   final bool showFavoriteAction;
+  final LocationRepository? locationRepository;
 
   @override
   State<ConnectedMatchDetailsScreen> createState() =>
@@ -101,6 +105,27 @@ class _ConnectedMatchDetailsScreenState
     await callback();
     if (!mounted) return;
     await _refreshPeople();
+  }
+
+  Future<void> _editMatch() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (editContext) => ConnectedCreateMatchScreen(
+          repository: widget.repository,
+          locationRepository: widget.locationRepository,
+          initialMatch: _match,
+          onBack: () => Navigator.of(editContext).maybePop(),
+          onEdited: (_) => Navigator.of(editContext).pop(true),
+        ),
+      ),
+    );
+
+    if (!mounted || saved != true) return;
+    await _refresh();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Match updated successfully.')));
   }
 
   Future<HomeMatch> _join(HomeMatch match) async {
@@ -223,6 +248,12 @@ class _ConnectedMatchDetailsScreenState
       onJoinMatch: _match.isOwnedByCurrentUser ? null : _join,
       onLeaveMatch: _match.canLeave ? _leave : null,
       onCancelMatch: _match.canCancel ? _cancel : null,
+      onEditMatch: _match.isOwnedByCurrentUser &&
+              _match.startsAt.isAfter(DateTime.now()) &&
+              _match.status != MatchStatus.cancelled &&
+              _match.status != MatchStatus.completed
+          ? _editMatch
+          : null,
       onCompleteMatch: _match.canComplete ? _complete : null,
       onCompleted: widget.onCompleted,
       onChat: widget.onChat,
