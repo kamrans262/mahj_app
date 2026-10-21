@@ -84,7 +84,7 @@ class _MyMatchesScreenState extends State<MyMatchesScreen> {
       MyMatchesTab.upcoming => 'No upcoming matches',
       MyMatchesTab.createdByMe => "You haven't created any matches yet",
       MyMatchesTab.invites => 'No match invitations',
-      MyMatchesTab.completed => 'No completed matches',
+      MyMatchesTab.completed => 'No past games',
       MyMatchesTab.cancelled => 'No cancelled matches',
     };
   }
@@ -341,7 +341,7 @@ class _MyMatchesTabButton extends StatelessWidget {
       MyMatchesTab.upcoming => 'Upcoming',
       MyMatchesTab.createdByMe => 'Created by Me',
       MyMatchesTab.invites => 'Invites',
-      MyMatchesTab.completed => 'Completed',
+      MyMatchesTab.completed => 'Past Games',
       MyMatchesTab.cancelled => 'Cancelled',
     };
   }

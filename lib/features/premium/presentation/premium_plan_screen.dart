@@ -20,7 +20,7 @@ class PremiumPlanScreen extends StatefulWidget {
     this.trialDays = 14,
     this.planName = 'Monthly Plan',
     this.planDescription = 'No charges for 14 days',
-    this.priceLabel = r'$0.00',
+    this.priceLabel = r'$19.99/month',
     this.onBack,
     this.onStartFreeTrial,
     this.onTermsOfService,

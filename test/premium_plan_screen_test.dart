@@ -40,7 +40,7 @@ void main() {
     expect(find.text('Create and join matches'), findsOneWidget);
     expect(find.text('Chat with Players'), findsOneWidget);
     expect(find.byKey(const ValueKey('monthly-plan-card')), findsOneWidget);
-    expect(find.text(r'$0.00'), findsOneWidget);
+    expect(find.text(r'$19.99/month'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('start-free-trial-button')),
       findsOneWidget,

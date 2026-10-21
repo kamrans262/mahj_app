@@ -195,7 +195,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('M8 My Matches exposes Completed and Cancelled tabs', (
+  testWidgets('M8 My Matches exposes Past Games and Cancelled tabs', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -206,7 +206,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: MyMatchesScreen()));
     await tester.pump();
 
-    expect(find.text('Completed'), findsOneWidget);
+    expect(find.text('Past Games'), findsOneWidget);
     expect(find.text('Cancelled'), findsOneWidget);
 
     final tabStrip = find.byKey(

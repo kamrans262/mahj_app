@@ -20,7 +20,9 @@ abstract final class MyMatchesPreviewData {
           id: id,
           sportName: 'Mah Jongg',
           location: 'Central Park View',
-          startsAt: tomorrow.add(Duration(hours: hourOffset)),
+          startsAt: status == MatchStatus.completed
+              ? now.subtract(const Duration(days: 1))
+              : tomorrow.add(Duration(hours: hourOffset)),
           currentPlayers: currentPlayers,
           maxPlayers: maxPlayers,
           status: status,

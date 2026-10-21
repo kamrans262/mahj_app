@@ -228,7 +228,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       trialDays: plan.trialDays,
       planName: plan.name,
       planDescription: plan.description,
-      priceLabel: plan.priceLabel,
+      priceLabel: '${plan.priceLabel}/month',
       onBack: widget.onBack,
       onStartFreeTrial: () => _startTrial(plan),
       onTermsOfService: widget.onTermsTap,
