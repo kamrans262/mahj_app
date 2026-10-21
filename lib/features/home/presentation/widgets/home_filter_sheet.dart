@@ -239,6 +239,7 @@ class _LocationField extends StatelessWidget {
         : selectedLocation;
 
     return AppSurfaceContainer(
+      key: const ValueKey('home-filter-location-field'),
       onTap: onTap,
       semanticsLabel: 'Select filter location',
       child: Row(
@@ -277,8 +278,12 @@ class _DateFilterField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppSurfaceContainer(
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<MatchDateFilter>(
+      key: const ValueKey('home-filter-date-field'),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SizedBox(
+        height: 48,
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<MatchDateFilter>(
           value: value,
           isExpanded: true,
           icon: const Icon(
@@ -307,6 +312,7 @@ class _DateFilterField extends StatelessWidget {
           onChanged: (filter) {
             if (filter != null) onChanged(filter);
           },
+          ),
         ),
       ),
     );
@@ -337,6 +343,7 @@ class _RadiusControl extends StatelessWidget {
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                tickMarkShape: SliderTickMarkShape.noTickMark,
               ),
               child: Slider(
                 min: MatchFilters.minRadiusMiles,
