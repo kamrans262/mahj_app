@@ -350,7 +350,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     SectionHeader(
                       title:
-                          'Mutual Games (${widget.player.mutualGames.length})',
+                          'Mutual Games (${widget.player.mutualGamesTotal})',
                       onViewAll: widget.onViewAllMutualGames,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -461,19 +461,7 @@ class _PlayerIdentity extends StatelessWidget {
           style: AppTypography.homeMatchTitle18,
         ),
         const SizedBox(height: AppSpacing.micro),
-        Text(
-          player.email,
-          textAlign: TextAlign.center,
-          softWrap: true,
-          style: AppTypography.homeMeta12,
-        ),
-        const SizedBox(height: AppSpacing.micro),
-        Text(
-          player.addressLine,
-          textAlign: TextAlign.center,
-          softWrap: true,
-          style: AppTypography.homeMeta12,
-        ),
+
       ],
     );
   }

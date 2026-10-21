@@ -1,5 +1,4 @@
 import '../../../app/app_assets.dart';
-import '../../home/data/home_preview_data.dart';
 import '../domain/player_profile_data.dart';
 
 abstract final class PlayerProfilePreviewData {
@@ -24,7 +23,7 @@ abstract final class PlayerProfilePreviewData {
         matchesPlayed: 12,
         matchesHosted: 12,
         attendance: 96,
-        memberSince: '12',
+        memberSince: '—',
       ),
       'alex' => (
         name: 'Alex Turner',
@@ -34,7 +33,7 @@ abstract final class PlayerProfilePreviewData {
         matchesPlayed: 18,
         matchesHosted: 7,
         attendance: 94,
-        memberSince: '18',
+        memberSince: '—',
       ),
       'robert' => (
         name: 'Robert Miles',
@@ -44,7 +43,7 @@ abstract final class PlayerProfilePreviewData {
         matchesPlayed: 9,
         matchesHosted: 3,
         attendance: 91,
-        memberSince: '8',
+        memberSince: '—',
       ),
       _ => (
         name: displayName,
@@ -54,7 +53,7 @@ abstract final class PlayerProfilePreviewData {
         matchesPlayed: 12,
         matchesHosted: 4,
         attendance: 95,
-        memberSince: '12',
+        memberSince: '—',
       ),
     };
 
@@ -70,7 +69,8 @@ abstract final class PlayerProfilePreviewData {
       matchesHosted: resolved.matchesHosted,
       attendancePercent: resolved.attendance,
       memberSinceLabel: resolved.memberSince,
-      mutualGames: List.unmodifiable(home.nearbyMatches),
+      mutualGames: const <HomeMatch>[],
+      mutualGamesTotal: 0,
       canInvite: canInvite,
       canReport: canReport,
       canBlock: canBlock,

@@ -14,6 +14,7 @@ class PlayerProfileData {
     required this.memberSinceLabel,
     required this.mutualGames,
     this.avatarUrl,
+    this.mutualGamesTotal = 0,
     this.canInvite = true,
     this.canReport = true,
     this.canBlock = true,
@@ -31,6 +32,7 @@ class PlayerProfileData {
   final int attendancePercent;
   final String memberSinceLabel;
   final List<HomeMatch> mutualGames;
+  final int mutualGamesTotal;
   final bool canInvite;
   final bool canReport;
   final bool canBlock;
