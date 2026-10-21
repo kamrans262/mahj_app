@@ -31,12 +31,35 @@ void main() {
     expect(find.text('Matches Hosted'), findsOneWidget);
     expect(find.text('Attendance'), findsOneWidget);
     expect(find.text('Member since'), findsOneWidget);
-    expect(find.text('Mutual Games (3)'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('player-profile-mutual-games')),
-      findsOneWidget,
-    );
+    expect(find.text('Mutual Games (0)'), findsOneWidget);
+    expect(find.text('No mutual games yet'), findsOneWidget);
+    expect(find.text(PlayerProfilePreviewData.demo.email), findsNothing);
+    expect(find.text(PlayerProfilePreviewData.demo.addressLine), findsNothing);
     expect(find.byType(SliverFillRemaining), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Mutual Games stays within narrow profile and View All receives tap', (tester) async {
+    tester.view.physicalSize = const Size(320, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    var tapped = false;
+    final player = PlayerProfilePreviewData.demo;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlayerProfileScreen(
+          player: player,
+          onViewAllMutualGames: () => tapped = true,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Mutual Games (0)'), findsOneWidget);
+    await tester.ensureVisible(find.text('View All'));
+    await tester.tap(find.text('View All'));
+    expect(tapped, isTrue);
     expect(tester.takeException(), isNull);
   });
 

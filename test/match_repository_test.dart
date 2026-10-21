@@ -22,6 +22,54 @@ class _MemoryTokenStore implements TokenStore {
 }
 
 void main() {
+  test('host edit sends PUT without losing privacy and returns refreshed match', () async {
+    final client = MockClient((request) async {
+      expect(request.method, 'PUT');
+      expect(request.url.path, '/api/matches/42');
+      final body = jsonDecode(request.body) as Map<String, dynamic>;
+      expect(body['location_address'], 'New Community Hall');
+      expect(body['venue_name'], 'Updated Venue');
+      expect(body['notes'], 'Updated notes');
+      expect(body['is_invite_only'], true);
+      expect(body['is_public'], false);
+      return http.Response(jsonEncode({
+        'match': {
+          'id': '42',
+          'name': 'Mah Jongg',
+          'location': 'New Community Hall',
+          'venue_name': 'Updated Venue',
+          'notes': 'Updated notes',
+          'starts_at': '2026-12-01T12:00:00Z',
+          'current_players': 2,
+          'max_players': 4,
+          'status': 'open',
+          'is_public': false,
+          'is_invite_only': true,
+          'is_host': true,
+        },
+      }), 200);
+    });
+    final repository = MatchRepository(apiClient: ApiClient(
+      baseUrl: 'https://example.com/api',
+      tokenStore: _MemoryTokenStore(),
+      httpClient: client,
+    ));
+    final updated = await repository.update('42', CreateMatchRequest(
+      sportName: 'Mah Jongg',
+      sportIconKey: 'generic',
+      locationAddress: 'New Community Hall',
+      venueName: 'Updated Venue',
+      notes: 'Updated notes',
+      startsAt: DateTime.utc(2026, 12, 1, 12),
+      isPublicMatch: false,
+      isInviteOnly: true,
+    ));
+    expect(updated.venueName, 'Updated Venue');
+    expect(updated.isInviteOnly, isTrue);
+    expect(updated.isOwnedByCurrentUser, isTrue);
+  });
+
+
   test('loads managed sports catalog', () async {
     final client = MockClient((request) async {
       expect(request.method, 'GET');
