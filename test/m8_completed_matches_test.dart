@@ -214,6 +214,68 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('host can reopen and correct previously saved scores', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    Map<String, int>? updated;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MatchCompletedScreen(
+          match: HomeMatch(
+            id: '77',
+            sportName: 'Mah Jongg',
+            location: 'Community Hall',
+            startsAt: DateTime(2026, 10, 1, 18),
+            currentPlayers: 2,
+            maxPlayers: 4,
+            status: MatchStatus.completed,
+          ),
+          players: const [
+            MatchScorePlayer(
+              id: '10',
+              displayName: 'Host',
+              isCurrentUser: true,
+              initialScore: 21,
+            ),
+            MatchScorePlayer(
+              id: '11',
+              displayName: 'Joined Player',
+              initialScore: 18,
+            ),
+          ],
+          scoresAlreadySubmitted: true,
+          canSubmitScores: true,
+          onSubmitScores: (matchId, scores) async => updated = scores,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Edit Scores'), findsOneWidget);
+    expect(find.text('Submit Scores'), findsNothing);
+    expect(find.text('Scores Saved Successfully!'), findsNothing);
+
+    await tester.tap(find.text('Edit Scores'));
+    await tester.pump();
+    final hostScore = find.byKey(const ValueKey('match-score-10'));
+    final playerScore = find.byKey(const ValueKey('match-score-11'));
+    await tester.ensureVisible(hostScore);
+    await tester.enterText(hostScore, '23');
+    await tester.ensureVisible(playerScore);
+    await tester.enterText(playerScore, '19');
+    await tester.tap(find.text('Save Scores'));
+    await tester.pumpAndSettle();
+
+    expect(updated, {'10': 23, '11': 19});
+    expect(find.text('Edit Scores'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('joined player sees scores read-only and no edit action', (
     tester,
   ) async {
@@ -255,7 +317,10 @@ void main() {
     expect(find.text('Edit Scores'), findsNothing);
     for (final id in ['10', '11']) {
       final field = tester.widget<TextFormField>(
-        find.byKey(ValueKey('match-score-$id')),
+        find.descendant(
+          of: find.byKey(ValueKey('match-score-$id')),
+          matching: find.byType(TextFormField),
+        ),
       );
       expect(field.enabled, false);
     }
