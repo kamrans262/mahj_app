@@ -195,16 +195,7 @@ abstract final class AppRouter {
     ),
     AppRoutes.premiumPlan: (context) => SubscriptionEntryScreen(
       repository: AppServices.subscriptionRepository,
-      onBack: () {
-        final navigator = Navigator.of(context);
-        if (navigator.canPop()) {
-          navigator.pop();
-        } else {
-          // OTP completion clears the route history. Return to login
-          // rather than leaving the free-trial back button inert.
-          navigator.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-        }
-      },
+      onBack: () => backFromPremiumPlan(context),
       onActivated: () async {
         await _openHomeAfterPreload(context);
       },
@@ -828,6 +819,17 @@ abstract final class AppRouter {
     return null;
   }
 
+  /// Go back when a previous route exists. OTP completion deliberately
+  /// removes route history, so the free-trial page needs an explicit fallback.
+  static void backFromPremiumPlan(BuildContext context) {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      navigator.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+    }
+  }
+
   static void _openLegal(BuildContext context, LegalDocumentType document) {
     Navigator.of(context).pushNamed(AppRoutes.legal, arguments: document);
   }
@@ -1218,7 +1220,7 @@ abstract final class AppRouter {
     final notification = MahjNotification(
       id: data['notification_id']?.toString() ?? '',
       type: type,
-      title: data['title']?.toString() ?? 'Mahj',
+      title: data['title']?.toString() ?? 'Mahj Around Town',
       message: data['message']?.toString() ?? '',
       createdAt: DateTime.now(),
       relatedMatchId: nullableId(data['related_match_id']),

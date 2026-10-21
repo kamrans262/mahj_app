@@ -110,7 +110,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
           _pendingCheckoutSessionId = result.checkoutSessionId;
         });
         _showMessage(
-          'Complete the secure Stripe checkout, then return to Mahj.',
+          'Complete the secure Stripe checkout, then return to Mahj Around Town.',
         );
         return;
       }
@@ -151,7 +151,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
 
       _waitingForCheckout = false;
       _showMessage(
-        'Stripe checkout is not complete yet. Finish checkout and return to Mahj.',
+        'Stripe checkout is not complete yet. Finish checkout and return to Mahj Around Town.',
       );
     } catch (error) {
       if (!mounted) return;
