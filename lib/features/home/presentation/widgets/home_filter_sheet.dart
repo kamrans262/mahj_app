@@ -341,7 +341,7 @@ class _RadiusControl extends StatelessWidget {
               child: Slider(
                 min: MatchFilters.minRadiusMiles,
                 max: MatchFilters.maxRadiusMiles,
-                divisions: 9,
+                divisions: 49,
                 value: value.clamp(
                   MatchFilters.minRadiusMiles,
                   MatchFilters.maxRadiusMiles,
@@ -355,7 +355,7 @@ class _RadiusControl extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('1 mile', style: AppTypography.homeMeta14),
-              Text('10 miles', style: AppTypography.homeMeta14),
+              Text('50 miles', style: AppTypography.homeMeta14),
             ],
           ),
         ],

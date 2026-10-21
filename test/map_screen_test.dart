@@ -180,6 +180,16 @@ void main() {
               normalizedY: 0.5,
               distanceMiles: 8,
             ),
+            MapMatchMarker(
+              match: matchFor(
+                id: 'farther-match',
+                startsAt: today,
+                location: 'Farther Field',
+              ),
+              normalizedX: 0.3,
+              normalizedY: 0.3,
+              distanceMiles: 45,
+            ),
           ],
         ),
       ),
@@ -187,10 +197,27 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('10 miles'));
-    await tester.pumpAndSettle();
+    var currentLabel = '10 miles';
+    for (final nextLabel in <String>[
+      '20 miles',
+      '30 miles',
+      '40 miles',
+      '50 miles',
+      '1 mile',
+    ]) {
+      await tester.tap(find.text(currentLabel));
+      await tester.pumpAndSettle();
 
-    expect(find.text('1 mile'), findsOneWidget);
+      expect(find.text(nextLabel), findsOneWidget);
+      if (nextLabel == '50 miles') {
+        expect(
+          find.byKey(const ValueKey('map-marker-farther-match')),
+          findsOneWidget,
+        );
+      }
+      currentLabel = nextLabel;
+    }
+
     expect(find.text('No matches found in this area'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

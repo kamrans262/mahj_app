@@ -49,7 +49,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  static const _radiusOptions = <int>[1, 5, 10];
+  static const _radiusOptions = <int>[1, 5, 10, 20, 30, 40, 50];
   static const _dateOptions = <MatchDateFilter>[
     MatchDateFilter.today,
     MatchDateFilter.tomorrow,

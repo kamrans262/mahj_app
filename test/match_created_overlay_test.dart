@@ -29,6 +29,7 @@ void main() {
     );
 
     expect(find.text('Match Created'), findsOneWidget);
+    expect(tester.widget<Text>(find.text('Match Created')).style?.color, Colors.white);
     expect(
       find.text('The match has been created successfully'),
       findsOneWidget,
