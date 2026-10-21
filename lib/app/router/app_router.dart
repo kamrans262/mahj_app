@@ -43,6 +43,7 @@ import '../../features/profile/domain/profile_data.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/favorites_screen.dart';
 import '../../features/profile/presentation/player_profile_screen.dart';
+import '../../features/profile/presentation/mutual_games_screen.dart';
 import '../../features/settings/data/legal_preview_data.dart';
 import '../../features/settings/data/privacy_safety_preview_data.dart';
 import '../../features/settings/data/support_preview_data.dart';
@@ -607,10 +608,29 @@ abstract final class AppRouter {
       final currentProfile =
           _authRepository.currentUser?.toProfileData() ??
           ProfilePreviewData.currentUser;
+      // Resolve current profile statistics from the backend. Never present
+      // fabricated email/location or membership years for real users.
+      final isBackendPlayer = int.tryParse(player.id) != null;
+      final profileFuture = isBackendPlayer
+          ? _playerRepository.fetchProfile(
+              player.id,
+              avatarAsset: player.avatarAsset,
+              canInvite: player.canInvite,
+              canReport: player.canReport,
+              canBlock: player.canBlock,
+            )
+          : null;
       return MaterialPageRoute<void>(
         settings: settings,
-        builder: (context) => PlayerProfileScreen(
-          player: player,
+        builder: (context) => FutureBuilder<PlayerProfileData>(
+          future: profileFuture,
+          builder: (context, snapshot) => PlayerProfileScreen(
+          player: snapshot.data ?? player,
+          isLoading: profileFuture != null &&
+              snapshot.connectionState != ConnectionState.done,
+          errorMessage: snapshot.hasError
+              ? 'Could not load player details. Please try again.'
+              : null,
           onBack: () => Navigator.of(context).maybePop(),
           notificationCount: _authRepository.currentUser == null
               ? currentProfile.unreadNotificationCount
@@ -622,6 +642,18 @@ abstract final class AppRouter {
           onMessageTap: () => _openDirectChatWithPlayer(context, player),
           onMutualGameTap: (mutualMatch) {
             _openMatchDetails(context, mutualMatch);
+          },
+          onViewAllMutualGames: !isBackendPlayer ? null : () {
+            Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (mutualContext) => MutualGamesScreen(
+                  playerId: player.id,
+                  repository: _playerRepository,
+                  onBack: () => Navigator.of(mutualContext).maybePop(),
+                  onMatchTap: (match) => _openMatchDetails(mutualContext, match),
+                ),
+              ),
+            );
           },
           onSendInvite: () async {
             var resolvedMatch = inviteMatch;
@@ -693,6 +725,7 @@ abstract final class AppRouter {
           onSetFavorite: int.tryParse(player.id) == null
               ? null
               : _playerRepository.setFavorite,
+        ),
         ),
       );
     }
