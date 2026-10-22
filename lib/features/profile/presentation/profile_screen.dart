@@ -25,6 +25,7 @@ class ProfileScreen extends StatelessWidget {
     this.onSettingsTap,
     this.onFavoritesTap,
     this.onEditProfile,
+    this.onAvatarTap,
   });
 
   final ProfileData? data;
@@ -36,6 +37,7 @@ class ProfileScreen extends StatelessWidget {
   final VoidCallback? onSettingsTap;
   final VoidCallback? onFavoritesTap;
   final VoidCallback? onEditProfile;
+  final VoidCallback? onAvatarTap;
 
   ProfileData get _data => data ?? ProfilePreviewData.currentUser;
 
@@ -78,7 +80,7 @@ class ProfileScreen extends StatelessWidget {
                       onRetry: onRetry,
                     )
                   else ...[
-                    _ProfileIdentity(profile: profile),
+                    _ProfileIdentity(profile: profile, onAvatarTap: onAvatarTap),
                     const SizedBox(height: AppSpacing.xl),
                     _ProfileStats(profile: profile),
                     const SizedBox(height: AppSpacing.lg),
@@ -180,19 +182,24 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _ProfileIdentity extends StatelessWidget {
-  const _ProfileIdentity({required this.profile});
+  const _ProfileIdentity({required this.profile, this.onAvatarTap});
 
   final ProfileData profile;
+  final VoidCallback? onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        AppAvatar(
-          key: const ValueKey('profile-avatar'),
-          fallbackAsset: profile.avatarAsset,
-          imageUrl: profile.avatarUrl,
-          size: 60,
+        GestureDetector(
+          key: const ValueKey('profile-avatar-action'),
+          onTap: onAvatarTap,
+          child: AppAvatar(
+            key: const ValueKey('profile-avatar'),
+            fallbackAsset: profile.avatarAsset,
+            imageUrl: profile.avatarUrl,
+            size: 60,
+          ),
         ),
         const SizedBox(height: AppSpacing.iconGap),
         Text(
