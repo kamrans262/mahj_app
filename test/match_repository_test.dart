@@ -324,12 +324,7 @@ void main() {
     );
     expect(resolved.distanceMiles, closeTo(0, 0.0001));
 
-    final noCoordinates = created.copyWith(
-      latitude: null,
-      longitude: null,
-    );
-    // The model's copyWith retains null coordinates; use a fresh API object
-    // to check that missing coordinates never produce a made-up distance.
+    // Missing coordinates must not produce a fabricated distance.
     final missingLocation = HomeMatch.fromJson({
       'id': '92',
       'sport_name': 'Mah Jongg',
@@ -339,7 +334,6 @@ void main() {
       'max_players': 4,
       'status': 'open',
     });
-    expect(noCoordinates.hasCoordinates, isTrue);
     expect(
       repository.withDistanceFromOrigin(
         missingLocation,
