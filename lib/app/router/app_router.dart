@@ -766,6 +766,7 @@ abstract final class AppRouter {
               initialMatch: match,
               repository: _matchRepository,
               locationRepository: AppServices.locationRepository,
+              distanceFilters: AppServices.matchDiscoveryStore.filters,
               onBack: () => Navigator.of(context).maybePop(),
               onPlayerTap: (person) =>
                   _openMatchPersonProfile(context, person, match),
@@ -1152,6 +1153,7 @@ abstract final class AppRouter {
             initialMatch: match,
             repository: _matchRepository,
             locationRepository: AppServices.locationRepository,
+            distanceFilters: AppServices.matchDiscoveryStore.filters,
             showFavoriteAction: false,
             onBack: () => Navigator.of(detailsContext).maybePop(),
             onPlayerTap: (person) =>
@@ -1362,6 +1364,7 @@ abstract final class AppRouter {
           initialMatch: match,
           repository: _matchRepository,
           locationRepository: AppServices.locationRepository,
+          distanceFilters: AppServices.matchDiscoveryStore.filters,
           onBack: () => Navigator.of(joinedContext).maybePop(),
           onPlayerTap: (person) =>
               _openMatchPersonProfile(joinedContext, person, match),
