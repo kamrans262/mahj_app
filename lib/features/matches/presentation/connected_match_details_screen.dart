@@ -72,7 +72,7 @@ class _ConnectedMatchDetailsScreenState
       }
 
       // Keep a distance supplied by the list only when the venue is unchanged.
-      // The show endpoint does not calculate distance unless given an origin.
+      // The match-detail response has no distance without a viewer origin.
       final sameLocation =
           match.latitude == _match.latitude &&
           match.longitude == _match.longitude;
