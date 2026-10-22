@@ -1061,6 +1061,9 @@ abstract final class AppRouter {
       onProfileFavoritesTap: () {
         Navigator.of(context).pushNamed(AppRoutes.favorites);
       },
+      onAvatarUpload: (bytes, filename) =>
+          _authRepository.uploadAvatar(bytes: bytes, filename: filename),
+      onAvatarRemove: _authRepository.removeAvatar,
       onEditProfileRequest: (profile) {
         return Navigator.of(context)
             .pushNamed<ProfileData>(AppRoutes.editProfile, arguments: profile);
