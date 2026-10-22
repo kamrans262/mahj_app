@@ -30,6 +30,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (_supportsFirebaseMobile) {
+    // Register before showing splash so cold-start Stripe callbacks survive
+    // authentication and navigation restoration.
+    AppServices.checkoutReturnStore.start();
+  }
+
+  if (_supportsFirebaseMobile) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
