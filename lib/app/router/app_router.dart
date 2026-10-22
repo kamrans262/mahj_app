@@ -468,6 +468,9 @@ abstract final class AppRouter {
         _openInvitePlayers(context, match);
       },
       onBackHome: (_) {
+        // A created match must be included in the next Home/Nearby fetch,
+        // not hidden behind the pre-creation preload snapshot.
+        _homePreloadStore.clear();
         Navigator.of(context)
             .pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
       },
@@ -1148,6 +1151,7 @@ abstract final class AppRouter {
           builder: (detailsContext) => ConnectedMatchDetailsScreen(
             initialMatch: match,
             repository: _matchRepository,
+            locationRepository: AppServices.locationRepository,
             showFavoriteAction: false,
             onBack: () => Navigator.of(detailsContext).maybePop(),
             onPlayerTap: (person) =>
@@ -1357,6 +1361,7 @@ abstract final class AppRouter {
         builder: (joinedContext) => ConnectedMatchDetailsScreen(
           initialMatch: match,
           repository: _matchRepository,
+          locationRepository: AppServices.locationRepository,
           onBack: () => Navigator.of(joinedContext).maybePop(),
           onPlayerTap: (person) =>
               _openMatchPersonProfile(joinedContext, person, match),
