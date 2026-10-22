@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -9,6 +11,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../premium/presentation/premium_plan_screen.dart';
 import '../data/subscription_repository.dart';
+import '../data/checkout_return_store.dart';
 import '../domain/subscription_plan.dart';
 import '../domain/subscription_state.dart';
 
@@ -16,6 +19,7 @@ class SubscriptionEntryScreen extends StatefulWidget {
   const SubscriptionEntryScreen({
     required this.repository,
     super.key,
+    this.checkoutReturnStore,
     this.onBack,
     this.onActivated,
     this.onTermsTap,
@@ -23,6 +27,7 @@ class SubscriptionEntryScreen extends StatefulWidget {
   });
 
   final SubscriptionRepository repository;
+  final CheckoutReturnStore? checkoutReturnStore;
   final VoidCallback? onBack;
   final Future<void> Function()? onActivated;
   final VoidCallback? onTermsTap;
@@ -47,12 +52,17 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.checkoutReturnStore?.addListener(_onCheckoutReturn);
     _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _onCheckoutReturn();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.checkoutReturnStore?.removeListener(_onCheckoutReturn);
     super.dispose();
   }
 
@@ -60,6 +70,29 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _waitingForCheckout) {
       _refreshAfterCheckout();
+    }
+  }
+
+  void _onCheckoutReturn() {
+    final result = widget.checkoutReturnStore?.take();
+    if (result == null || !mounted) return;
+
+    if (result.cancelled) {
+      setState(() {
+        _waitingForCheckout = false;
+        _pendingCheckoutSessionId = null;
+      });
+      _showMessage('Stripe checkout was canceled. No subscription was activated.');
+      return;
+    }
+
+    setState(() {
+      _waitingForCheckout = true;
+      _pendingCheckoutSessionId = result.sessionId;
+    });
+
+    if (!_loading) {
+      unawaited(_refreshAfterCheckout());
     }
   }
 
@@ -81,7 +114,12 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       if (!mounted) return;
       setState(() => _error = _messageFor(error));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+        if (_waitingForCheckout && _pendingCheckoutSessionId != null) {
+          unawaited(_refreshAfterCheckout());
+        }
+      }
     }
   }
 
@@ -115,7 +153,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
           _pendingCheckoutSessionId = result.checkoutSessionId;
         });
         _showMessage(
-          'Complete the secure Stripe checkout, then return to Mahj Around Town.',
+          'Complete secure Stripe checkout. Mahj Around Town will reopen automatically.',
         );
         return;
       }
@@ -158,13 +196,13 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
         return;
       }
 
-      _waitingForCheckout = false;
+      // Keep the pending session so the next app resume or callback can retry.
       _showMessage(
-        'Stripe checkout is not complete yet. Finish checkout and return to Mahj Around Town.',
+        'Stripe checkout is not complete yet. Complete checkout to activate your trial.',
       );
     } catch (error) {
       if (!mounted) return;
-      _waitingForCheckout = false;
+      // Keep the session available for a retry when Stripe is still syncing.
       _showMessage(_messageFor(error));
     } finally {
       _refreshingCheckout = false;
