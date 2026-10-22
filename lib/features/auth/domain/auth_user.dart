@@ -69,7 +69,7 @@ class AuthUser {
       email: email,
       address: city,
       postCode: zipCode,
-      avatarAsset: AppAssets.demoAvatarOne,
+      avatarAsset: AppAssets.bottomProfileIcon,
       avatarUrl: avatarUrl,
       phone: phone,
       city: city,
