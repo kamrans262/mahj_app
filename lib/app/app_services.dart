@@ -15,6 +15,7 @@ import '../features/profile/data/player_repository.dart';
 import '../features/settings/data/privacy_safety_repository.dart';
 import '../features/settings/data/support_content_repository.dart';
 import '../features/subscription/data/subscription_repository.dart';
+import '../features/subscription/data/checkout_return_store.dart';
 
 abstract final class AppServices {
   static final TokenStore tokenStore = SecureTokenStore();
@@ -34,6 +35,8 @@ abstract final class AppServices {
 
   static final SubscriptionRepository subscriptionRepository =
       SubscriptionRepository(apiClient: apiClient);
+
+  static final CheckoutReturnStore checkoutReturnStore = CheckoutReturnStore();
 
   static final MatchRepository matchRepository = MatchRepository(
     apiClient: apiClient,
