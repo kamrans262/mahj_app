@@ -406,7 +406,17 @@ class _SelectedMatchDetails extends StatelessWidget {
             final players = Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PlayerAvatarStack(assetPaths: marker.playerAvatarAssets),
+                PlayerAvatarStack(
+                  imageUrls: marker.playerAvatarUrls.isNotEmpty
+                      ? marker.playerAvatarUrls
+                      : marker.playerAvatarAssets.isEmpty
+                      ? List<String?>.filled(
+                          match.currentPlayers.clamp(0, 3),
+                          null,
+                        )
+                      : const <String?>[],
+                  assetPaths: marker.playerAvatarAssets,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Flexible(
                   child: Text(
