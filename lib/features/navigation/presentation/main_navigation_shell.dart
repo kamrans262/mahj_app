@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../app/app_scroll_behavior.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../home/data/home_preload_store.dart';
 import '../../home/data/home_preview_data.dart';
 import '../../home/data/location_repository.dart';
@@ -554,9 +555,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                   title: const Text('Remove Photo'),
                   onTap: () => Navigator.pop(sheetContext, 'remove'),
                 ),
-              ListTile(
-                title: const Center(child: Text('Cancel')),
-                onTap: () => Navigator.pop(sheetContext),
+              const SizedBox(height: 12),
+              AppButton.primary(
+                key: const ValueKey('profile-photo-cancel'),
+                label: 'Cancel',
+                onPressed: () => Navigator.pop(sheetContext),
               ),
             ],
           ),
