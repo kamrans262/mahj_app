@@ -102,8 +102,11 @@ class _ConnectedMatchDetailsScreenState
     if (locations == null) return match;
 
     try {
-      final origin = await locations.currentLocationIfGranted();
-      if (origin == null) return match;
+      // Reuse permission when granted; otherwise request it only when
+      // actual distance is needed for a coordinate-backed match.
+      final origin =
+          await locations.currentLocationIfGranted() ??
+          await locations.currentLocation();
       return widget.repository.withDistanceFromOrigin(
         match,
         latitude: origin.latitude,
