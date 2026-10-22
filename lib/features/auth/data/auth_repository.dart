@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/storage/token_store.dart';
@@ -161,6 +162,29 @@ class AuthRepository {
       await _tokenStore.clear();
       currentUser = null;
     }
+  }
+
+  Future<ProfileData> uploadAvatar({
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    final payload = await _apiClient.postMultipart(
+      '/profile/avatar',
+      fields: const <String, String>{},
+      fileField: 'avatar',
+      fileBytes: Uint8List.fromList(bytes),
+      fileName: filename,
+    );
+    final user = AuthUser.fromJson(_readMap(payload, 'data'));
+    currentUser = user;
+    return user.toProfileData();
+  }
+
+  Future<ProfileData> removeAvatar() async {
+    final payload = await _apiClient.delete('/profile/avatar');
+    final user = AuthUser.fromJson(_readMap(payload, 'data'));
+    currentUser = user;
+    return user.toProfileData();
   }
 
   Future<ProfileData> updateProfile(ProfileData draft) async {
