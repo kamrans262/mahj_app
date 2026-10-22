@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../core/network/api_exception.dart';
 import '../data/subscription_repository.dart';
+import '../data/checkout_return_store.dart';
 import '../domain/subscription_plan.dart';
 import '../domain/subscription_state.dart';
 import 'manage_subscription_screen.dart';
@@ -12,12 +15,14 @@ class ConnectedManageSubscriptionScreen extends StatefulWidget {
   const ConnectedManageSubscriptionScreen({
     required this.repository,
     super.key,
+    this.checkoutReturnStore,
     this.onBack,
     this.onTermsTap,
     this.onPrivacyPolicyTap,
   });
 
   final SubscriptionRepository repository;
+  final CheckoutReturnStore? checkoutReturnStore;
   final VoidCallback? onBack;
   final VoidCallback? onTermsTap;
   final VoidCallback? onPrivacyPolicyTap;
@@ -61,12 +66,17 @@ class _ConnectedManageSubscriptionScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.checkoutReturnStore?.addListener(_onCheckoutReturn);
     _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _onCheckoutReturn();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    widget.checkoutReturnStore?.removeListener(_onCheckoutReturn);
     super.dispose();
   }
 
@@ -74,6 +84,28 @@ class _ConnectedManageSubscriptionScreenState
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _waitingForCheckout) {
       _refreshAfterCheckout();
+    }
+  }
+
+  void _onCheckoutReturn() {
+    final result = widget.checkoutReturnStore?.take();
+    if (result == null || !mounted) return;
+
+    if (result.cancelled) {
+      setState(() {
+        _waitingForCheckout = false;
+        _pendingCheckoutSessionId = null;
+      });
+      _showMessage('Stripe checkout was canceled.');
+      return;
+    }
+
+    setState(() {
+      _waitingForCheckout = true;
+      _pendingCheckoutSessionId = result.sessionId;
+    });
+    if (!_loading) {
+      unawaited(_refreshAfterCheckout());
     }
   }
 
@@ -90,7 +122,12 @@ class _ConnectedManageSubscriptionScreenState
       if (!mounted) return;
       setState(() => _error = _messageFor(error));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+        if (_waitingForCheckout && _pendingCheckoutSessionId != null) {
+          unawaited(_refreshAfterCheckout());
+        }
+      }
     }
   }
 
@@ -140,7 +177,7 @@ class _ConnectedManageSubscriptionScreenState
         _pendingCheckoutSessionId = result.checkoutSessionId;
       });
 
-      _showMessage('Complete the payment in Stripe, then return to Mahj.');
+      _showMessage('Complete Stripe payment. Mahj Around Town will reopen automatically.');
       return true;
     } catch (error) {
       if (mounted) _showMessage(_messageFor(error));
