@@ -435,6 +435,28 @@ class MatchRepository {
     );
   }
 
+  /// Recalculate distance from the viewer's actual location when a match
+  /// response (such as create/show) has no distance_miles field.
+  HomeMatch withDistanceFromOrigin(
+    HomeMatch match, {
+    required double latitude,
+    required double longitude,
+  }) {
+    if (match.distanceMiles != null ||
+        match.latitude == null ||
+        match.longitude == null) {
+      return match;
+    }
+    return match.copyWith(
+      distanceMiles: _distanceMiles(
+        latitude,
+        longitude,
+        match.latitude!,
+        match.longitude!,
+      ),
+    );
+  }
+
   double _distanceMiles(
     double originLatitude,
     double originLongitude,
