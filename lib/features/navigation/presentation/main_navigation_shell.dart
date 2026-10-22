@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../app/app_scroll_behavior.dart';
 import '../../../app/theme/app_colors.dart';
@@ -46,6 +47,8 @@ class MainNavigationShell extends StatefulWidget {
     this.onProfileFavoritesTap,
     this.onEditProfile,
     this.onEditProfileRequest,
+    this.onAvatarUpload,
+    this.onAvatarRemove,
   });
 
   final int initialIndex;
@@ -70,6 +73,8 @@ class MainNavigationShell extends StatefulWidget {
   final VoidCallback? onEditProfile;
   final Future<ProfileData?> Function(ProfileData profile)?
   onEditProfileRequest;
+  final Future<ProfileData> Function(List<int> bytes, String filename)? onAvatarUpload;
+  final Future<ProfileData> Function()? onAvatarRemove;
 
   @override
   State<MainNavigationShell> createState() => _MainNavigationShellState();
@@ -522,6 +527,72 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     });
   }
 
+  Future<void> _changeAvatar() async {
+    if (widget.onAvatarUpload == null || widget.onAvatarRemove == null) return;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.background,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('Profile Photo',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+                title: const Text('Upload / Change Photo'),
+                onTap: () => Navigator.pop(sheetContext, 'upload'),
+              ),
+              if ((_profileData.avatarUrl ?? '').isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: const Text('Remove Photo'),
+                  onTap: () => Navigator.pop(sheetContext, 'remove'),
+                ),
+              ListTile(
+                title: const Center(child: Text('Cancel')),
+                onTap: () => Navigator.pop(sheetContext),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    try {
+      ProfileData? updated;
+      if (action == 'remove') {
+        updated = await widget.onAvatarRemove!();
+      } else {
+        final picked = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 85,
+          maxWidth: 1400,
+        );
+        if (picked == null) return;
+        updated = await widget.onAvatarUpload!(
+          await picked.readAsBytes(),
+          picked.name,
+        );
+      }
+      if (!mounted) return;
+      setState(() => _profileData = updated!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile photo updated successfully.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update profile photo. Please try again.')),
+      );
+    }
+  }
+
   Widget _buildActivePage() {
     switch (_currentIndex) {
       case 1:
@@ -589,6 +660,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           onSettingsTap: widget.onProfileSettingsTap,
           onFavoritesTap: widget.onProfileFavoritesTap,
           onEditProfile: _requestEditProfile,
+          onAvatarTap: _changeAvatar,
         );
       case 0:
       default:
