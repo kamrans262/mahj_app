@@ -71,13 +71,20 @@ class _ConnectedMatchDetailsScreenState
         // Match details remain usable if people data is temporarily unavailable.
       }
 
-      if (!mounted) return;
-      final refreshedMatch = _match.distanceMiles == null ||
-              match.distanceMiles != null
+      // Keep a distance supplied by the list only when the venue is unchanged.
+      // The show endpoint does not calculate distance unless given an origin.
+      final sameLocation =
+          match.latitude == _match.latitude &&
+          match.longitude == _match.longitude;
+      final refreshedMatch = match.distanceMiles != null ||
+              !sameLocation ||
+              _match.distanceMiles == null
           ? match
           : match.copyWith(distanceMiles: _match.distanceMiles);
+      final withDistance = await _resolveDistance(refreshedMatch);
+      if (!mounted) return;
       setState(() {
-        _match = refreshedMatch;
+        _match = withDistance;
         _people = people;
       });
     } catch (error) {
@@ -85,6 +92,26 @@ class _ConnectedMatchDetailsScreenState
       setState(() => _error = _messageFor(error));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<HomeMatch> _resolveDistance(HomeMatch match) async {
+    if (match.distanceMiles != null || !match.hasCoordinates) return match;
+
+    final locations = widget.locationRepository;
+    if (locations == null) return match;
+
+    try {
+      final origin = await locations.currentLocationIfGranted();
+      if (origin == null) return match;
+      return widget.repository.withDistanceFromOrigin(
+        match,
+        latitude: origin.latitude,
+        longitude: origin.longitude,
+      );
+    } catch (_) {
+      // Never show a fabricated distance if location is unavailable.
+      return match;
     }
   }
 
