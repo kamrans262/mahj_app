@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mahj_app/core/network/api_client.dart';
 import 'package:mahj_app/core/storage/token_store.dart';
+import 'package:mahj_app/features/home/domain/home_match.dart';
 import 'package:mahj_app/features/matches/data/match_repository.dart';
 import 'package:mahj_app/features/matches/domain/create_match_form_state.dart';
 
@@ -293,5 +294,59 @@ void main() {
     expect(match.isCurrentUserJoined, isTrue);
     expect(match.canLeave, isTrue);
     expect(match.isFull, isTrue);
+  });
+
+  test('created match with map coordinates gains a real distance when details open', () {
+    final repository = MatchRepository(
+      apiClient: ApiClient(
+        baseUrl: 'https://example.com/api',
+        tokenStore: _MemoryTokenStore(),
+        httpClient: MockClient((_) async => throw StateError('No HTTP needed')),
+      ),
+    );
+    final created = HomeMatch.fromJson({
+      'id': '91',
+      'sport_name': 'Mah Jongg',
+      'location': 'Central Park',
+      'starts_at': '2026-12-01T18:00:00Z',
+      'current_players': 1,
+      'max_players': 4,
+      'status': 'open',
+      'latitude': 40.785091,
+      'longitude': -73.968285,
+    });
+
+    expect(created.distanceMiles, isNull);
+    final resolved = repository.withDistanceFromOrigin(
+      created,
+      latitude: 40.785091,
+      longitude: -73.968285,
+    );
+    expect(resolved.distanceMiles, closeTo(0, 0.0001));
+
+    final noCoordinates = created.copyWith(
+      latitude: null,
+      longitude: null,
+    );
+    // The model's copyWith retains null coordinates; use a fresh API object
+    // to check that missing coordinates never produce a made-up distance.
+    final missingLocation = HomeMatch.fromJson({
+      'id': '92',
+      'sport_name': 'Mah Jongg',
+      'location': 'Unresolved Venue',
+      'starts_at': '2026-12-01T18:00:00Z',
+      'current_players': 1,
+      'max_players': 4,
+      'status': 'open',
+    });
+    expect(noCoordinates.hasCoordinates, isTrue);
+    expect(
+      repository.withDistanceFromOrigin(
+        missingLocation,
+        latitude: 40.785091,
+        longitude: -73.968285,
+      ).distanceMiles,
+      isNull,
+    );
   });
 }
