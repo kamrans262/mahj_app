@@ -7,6 +7,8 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../home/domain/home_match.dart';
+import '../../home/domain/match_filters.dart';
+import '../data/match_distance_resolver.dart';
 import '../data/match_repository.dart';
 import '../../home/data/location_repository.dart';
 import 'connected_create_match_screen.dart';
@@ -24,6 +26,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
     this.onChat,
     this.onCompleted,
     this.locationRepository,
+    this.distanceFilters,
     this.showFavoriteAction = true,
   });
 
@@ -36,6 +39,7 @@ class ConnectedMatchDetailsScreen extends StatefulWidget {
   final ValueChanged<HomeMatch>? onCompleted;
   final bool showFavoriteAction;
   final LocationRepository? locationRepository;
+  final MatchFilters? distanceFilters;
 
   @override
   State<ConnectedMatchDetailsScreen> createState() =>
@@ -48,6 +52,7 @@ class _ConnectedMatchDetailsScreenState
   MatchPeopleData _people = const MatchPeopleData();
   bool _loading = true;
   String? _error;
+  MatchDistanceResolution? _distanceResolution;
 
   @override
   void initState() {
@@ -81,10 +86,20 @@ class _ConnectedMatchDetailsScreenState
               _match.distanceMiles == null
           ? match
           : match.copyWith(distanceMiles: _match.distanceMiles);
-      final withDistance = await _resolveDistance(refreshedMatch);
+      final locations = widget.locationRepository;
+      final distanceResult = locations == null
+          ? MatchDistanceResolution(match: refreshedMatch)
+          : await MatchDistanceResolver(
+              repository: widget.repository,
+              locations: locations,
+            ).resolve(
+              refreshedMatch,
+              selectedFilters: widget.distanceFilters,
+            );
       if (!mounted) return;
       setState(() {
-        _match = withDistance;
+        _match = distanceResult.match;
+        _distanceResolution = distanceResult;
         _people = people;
       });
     } catch (error) {
@@ -92,29 +107,6 @@ class _ConnectedMatchDetailsScreenState
       setState(() => _error = _messageFor(error));
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<HomeMatch> _resolveDistance(HomeMatch match) async {
-    if (match.distanceMiles != null || !match.hasCoordinates) return match;
-
-    final locations = widget.locationRepository;
-    if (locations == null) return match;
-
-    try {
-      // Reuse permission when granted; otherwise request it only when
-      // actual distance is needed for a coordinate-backed match.
-      final origin =
-          await locations.currentLocationIfGranted() ??
-          await locations.currentLocation();
-      return widget.repository.withDistanceFromOrigin(
-        match,
-        latitude: origin.latitude,
-        longitude: origin.longitude,
-      );
-    } catch (_) {
-      // Never show a fabricated distance if location is unavailable.
-      return match;
     }
   }
 
@@ -209,6 +201,15 @@ class _ConnectedMatchDetailsScreenState
   }
 
   String _distanceLabel(HomeMatch match) {
+    if (_loading && match.distanceMiles == null) {
+      return 'Calculating distance...';
+    }
+
+    final resolution = _distanceResolution;
+    if (resolution != null && resolution.match.id == match.id) {
+      return resolution.distanceLabel;
+    }
+
     final miles = match.distanceMiles;
     if (miles == null) return 'Distance unavailable';
     return '${miles.toStringAsFixed(1)} miles';
