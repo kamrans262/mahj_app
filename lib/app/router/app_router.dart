@@ -223,6 +223,7 @@ abstract final class AppRouter {
     ),
     AppRoutes.premiumPlan: (context) => SubscriptionEntryScreen(
       repository: AppServices.subscriptionRepository,
+      checkoutReturnStore: AppServices.checkoutReturnStore,
       onBack: () => backFromPremiumPlan(context),
       onActivated: () async {
         await _openHomeAfterPreload(context);
@@ -436,6 +437,7 @@ abstract final class AppRouter {
     AppRoutes.manageSubscription: (context) =>
         ConnectedManageSubscriptionScreen(
           repository: AppServices.subscriptionRepository,
+          checkoutReturnStore: AppServices.checkoutReturnStore,
           onBack: () => Navigator.of(context).maybePop(),
           onTermsTap: () => _openLegal(context, LegalDocumentType.terms),
           onPrivacyPolicyTap: () =>
