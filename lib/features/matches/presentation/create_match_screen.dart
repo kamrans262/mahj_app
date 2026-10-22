@@ -389,6 +389,18 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       return;
     }
 
+    // Connected creation must save actual map coordinates. Saving only a
+    // label produces a game visible in My Matches but missing from radius
+    // searches and the main map.
+    final usesLocationPicker =
+        widget.onLocationSearch != null &&
+        widget.onCurrentLocation != null &&
+        widget.onResolveLocation != null;
+    if (usesLocationPicker && _selectedLocation == null) {
+      _showMessage('Choose a location on the map so nearby players can find this match.');
+      return;
+    }
+
     var request = _formState.toRequest();
     if (request == null) {
       _showMessage('Please complete the required match details.');
