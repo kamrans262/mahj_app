@@ -42,13 +42,11 @@ abstract final class FeaturedMatchSelector {
             distance <= radiusMiles;
       }
 
-      final location = _normalize(match.location);
-      // A whole city name avoids mistakenly matching a different city whose
-      // name contains the searched text (e.g. York vs New York).
-      return location == cityName ||
-          location.startsWith('$cityName ') ||
-          location.endsWith(' $cityName') ||
-          location.contains(' $cityName ');
+      // Compare comma-delimited city/address components, not arbitrary
+      // substrings: "York" must never match "New York".
+      final parts = match.location.split(',').map(_normalize);
+      return parts.any((part) =>
+          part == cityName || part.startsWith('$cityName '));
     }).toList();
 
     candidates.sort((a, b) {
