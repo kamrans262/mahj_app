@@ -186,7 +186,9 @@ void main() {
               ),
             ],
             onRadiusChanged: (_) => radiusUpdates++,
-            onFiltersChanged: (_) async => filterUpdates++,
+            onFiltersChanged: (_) async {
+              filterUpdates++;
+            },
           ),
         ),
       );
@@ -284,7 +286,9 @@ void main() {
               ),
             ],
             onRadiusChanged: selectedRadii.add,
-            onFiltersChanged: (value) async => applied = value,
+            onFiltersChanged: (value) async {
+              applied = value;
+            },
           ),
         ),
       );
