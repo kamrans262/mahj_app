@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mahj_app/features/home/domain/home_match.dart';
+import 'package:mahj_app/features/home/domain/match_filters.dart';
 import 'package:mahj_app/features/map/domain/map_match_marker.dart';
 import 'package:mahj_app/features/map/presentation/map_screen.dart';
 
@@ -157,68 +158,171 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Map radius filter can show an empty state', (tester) async {
-    tester.view.physicalSize = const Size(820, 1500);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'Map radius chip opens selector; Cancel leaves search and markers unchanged',
+    (tester) async {
+      tester.view.physicalSize = const Size(820, 1500);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day, 18);
+      final today = DateTime.now();
+      var filterUpdates = 0;
+      var radiusUpdates = 0;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: MapScreen(
-          markers: [
-            MapMatchMarker(
-              match: matchFor(
-                id: 'far-match',
-                startsAt: today,
-                location: 'Far Field',
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MapScreen(
+            markers: [
+              MapMatchMarker(
+                match: matchFor(
+                  id: 'near-match',
+                  startsAt: DateTime(today.year, today.month, today.day, 18),
+                  location: 'Nearby Field',
+                ),
+                normalizedX: 0.5,
+                normalizedY: 0.5,
+                distanceMiles: 8,
               ),
-              normalizedX: 0.5,
-              normalizedY: 0.5,
-              distanceMiles: 8,
-            ),
-            MapMatchMarker(
-              match: matchFor(
-                id: 'farther-match',
-                startsAt: today,
-                location: 'Farther Field',
-              ),
-              normalizedX: 0.3,
-              normalizedY: 0.3,
-              distanceMiles: 45,
-            ),
-          ],
+            ],
+            onRadiusChanged: (_) => radiusUpdates++,
+            onFiltersChanged: (_) async => filterUpdates++,
+          ),
         ),
-      ),
-    );
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('10 miles'), findsOneWidget);
+      expect(find.byKey(const ValueKey('map-marker-near-match')), findsOneWidget);
 
-    await tester.pumpAndSettle();
-
-    var currentLabel = '10 miles';
-    for (final nextLabel in <String>[
-      '20 miles',
-      '30 miles',
-      '40 miles',
-      '50 miles',
-      '1 mile',
-    ]) {
-      await tester.tap(find.text(currentLabel));
+      await tester.tap(find.text('10 miles'));
       await tester.pumpAndSettle();
 
-      expect(find.text(nextLabel), findsOneWidget);
-      if (nextLabel == '50 miles') {
-        expect(
-          find.byKey(const ValueKey('map-marker-farther-match')),
-          findsOneWidget,
-        );
-      }
-      currentLabel = nextLabel;
-    }
+      expect(find.byKey(const ValueKey('map-radius-sheet')), findsOneWidget);
+      expect(find.text('Select Radius'), findsOneWidget);
+      expect(
+        find.text('10 miles'),
+        findsNWidgets(2), // Map chip plus unsaved sheet value.
+      );
 
-    expect(find.text('No matches found in this area'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+      final slider = tester.widget<Slider>(
+        find.byKey(const ValueKey('mahj-radius-slider')),
+      );
+      expect(slider.min, MatchFilters.minRadiusMiles);
+      expect(slider.max, MatchFilters.maxRadiusMiles);
+      slider.onChanged!(1);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('map-radius-selected-value')),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<Text>(
+          find.byKey(const ValueKey('map-radius-selected-value')),
+        ).data,
+        '1 mile',
+      );
+      expect(filterUpdates, 0);
+      expect(radiusUpdates, 0);
+
+      await tester.tap(find.byKey(const ValueKey('map-radius-cancel')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('map-radius-sheet')), findsNothing);
+      expect(find.text('10 miles'), findsOneWidget);
+      expect(find.byKey(const ValueKey('map-marker-near-match')), findsOneWidget);
+      expect(filterUpdates, 0);
+      expect(radiusUpdates, 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Map radius applies any chosen mile within 1–50 and preserves other filters',
+    (tester) async {
+      tester.view.physicalSize = const Size(820, 1500);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day, 18);
+      final originalFilters = MatchFilters.defaults().copyWith(
+        radiusMiles: 10,
+        dateFilter: MatchDateFilter.today,
+        selectedLocation: 'New York',
+        latitude: 40.7,
+        longitude: -73.9,
+      );
+      MatchFilters? applied;
+      final selectedRadii = <int>[];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MapScreen(
+            filters: originalFilters,
+            markers: [
+              MapMatchMarker(
+                match: matchFor(
+                  id: 'far-match',
+                  startsAt: today,
+                  location: 'Far Field',
+                ),
+                normalizedX: 0.5,
+                normalizedY: 0.5,
+                distanceMiles: 8,
+              ),
+              MapMatchMarker(
+                match: matchFor(
+                  id: 'farther-match',
+                  startsAt: today,
+                  location: 'Farther Field',
+                ),
+                normalizedX: 0.3,
+                normalizedY: 0.3,
+                distanceMiles: 45,
+              ),
+            ],
+            onRadiusChanged: selectedRadii.add,
+            onFiltersChanged: (value) async => applied = value,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('10 miles'));
+      await tester.pumpAndSettle();
+      tester
+          .widget<Slider>(find.byKey(const ValueKey('mahj-radius-slider')))
+          .onChanged!(1);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('map-radius-apply')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 mile'), findsOneWidget);
+      expect(find.text('No matches found in this area'), findsOneWidget);
+      expect(applied?.radiusMiles, 1);
+      expect(applied?.dateFilter, MatchDateFilter.today);
+      expect(applied?.selectedLocation, originalFilters.selectedLocation);
+      expect(applied?.latitude, originalFilters.latitude);
+      expect(applied?.longitude, originalFilters.longitude);
+      expect(selectedRadii, [1]);
+
+      await tester.tap(find.text('1 mile'));
+      await tester.pumpAndSettle();
+      tester
+          .widget<Slider>(find.byKey(const ValueKey('mahj-radius-slider')))
+          .onChanged!(50);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('map-radius-apply')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('50 miles'), findsOneWidget);
+      expect(find.byKey(const ValueKey('map-marker-farther-match')), findsOneWidget);
+      expect(selectedRadii, [1, 50]);
+      expect(applied?.radiusMiles, 50);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
 }
