@@ -17,7 +17,7 @@ abstract final class SubscriptionPreviewData {
     SubscriptionPlan(
       id: 'monthly',
       name: 'Monthly Plan',
-      description: 'No charges for 14 days',
+      description: 'No charges for 30 days',
       priceLabel: r'$19.99',
       infoText: 'You won’t be charged until the trial ends',
     ),
