@@ -273,24 +273,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     _myMatchesTab = tab;
   }
 
-  String get _greeting {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Morning';
-    if (hour < 17) return 'Afternoon';
-    return 'Evening';
-  }
+  String get _greeting => 'Hello';
 
   String get _shortDisplayName {
-    final parts = _profileData.name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .toList(growable: false);
-
-    if (parts.isEmpty) return '';
-    if (parts.length == 1) return parts.first;
-
-    return '${parts.first} ${parts.last[0].toUpperCase()}.';
+    final name = _profileData.name.trim();
+    if (name.isEmpty) return '';
+    return name.split(RegExp(r'\s+')).first;
   }
 
   HomeData get _homeData {
