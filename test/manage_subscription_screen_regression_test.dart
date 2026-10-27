@@ -28,7 +28,7 @@ void main() {
       expect(find.text('Choose Your Plan'), findsOneWidget);
       expect(find.text('Premium'), findsOneWidget);
       expect(find.text('Active'), findsOneWidget);
-      expect(find.text('14- Day Free Trial'), findsOneWidget);
+      expect(find.text('30- Day Free Trial'), findsOneWidget);
       expect(find.text('Monthly Plan'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('manage-subscription-confirm')),
