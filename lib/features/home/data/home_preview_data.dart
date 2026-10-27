@@ -8,11 +8,7 @@ abstract final class HomePreviewData {
     final tomorrow = DateTime(now.year, now.month, now.day + 1, 18);
 
     return HomeData(
-      greeting: now.hour < 12
-          ? 'Morning'
-          : now.hour < 17
-          ? 'Afternoon'
-          : 'Evening',
+      greeting: 'Hello',
       displayName: 'John',
       subtitle: 'Find and join matches near you',
       location: '1001, New York, NY',
