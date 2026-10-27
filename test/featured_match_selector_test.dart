@@ -93,6 +93,14 @@ void main() {
     ), isEmpty);
   });
 
+  test('city names must match whole address components, not fragments', () {
+    final picks = FeaturedMatchSelector.select([
+      match('new-york', city: 'New York'),
+      match('york', city: 'York'),
+    ], now: now, hasCoordinates: false, radiusMiles: 6, city: 'York');
+    expect(picks.map((m) => m.id), ['york']);
+  });
+
   test('limits automatic carousel without mutating the discovery result', () {
     final matches = [
       for (var i = 0; i < 10; i++) match('$i', distance: i.toDouble()),
