@@ -41,7 +41,9 @@ class HomeHeader extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: '$greeting, ',
+                        text: displayName.trim().isEmpty
+                            ? greeting
+                            : '$greeting, ',
                         style: AppTypography.homeGreeting,
                       ),
                       TextSpan(
