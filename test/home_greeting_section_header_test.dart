@@ -13,7 +13,7 @@ import 'package:mahj_app/features/navigation/presentation/main_navigation_shell.
 import 'package:mahj_app/features/profile/data/profile_preview_data.dart';
 
 void main() {
-  testWidgets('logged-in Home greeting ends last-name initial with a period', (
+  testWidgets('logged-in Home greeting says Hello with first name only', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 900);
@@ -40,8 +40,8 @@ void main() {
     await tester.pump();
 
     final greeting = tester.widget<HomeHeader>(find.byType(HomeHeader));
-    expect(greeting.displayName, 'Jerry W.');
-    expect(greeting.greeting, isIn(['Morning', 'Afternoon', 'Evening']));
+    expect(greeting.displayName, 'Jerry');
+    expect(greeting.greeting, 'Hello');
     expect(tester.takeException(), isNull);
   });
 
