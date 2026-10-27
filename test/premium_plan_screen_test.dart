@@ -35,7 +35,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('premium-back-button')), findsOneWidget);
     expect(find.byKey(const ValueKey('premium-crown-badge')), findsOneWidget);
-    expect(find.text('Start your 14 day free trial'), findsOneWidget);
+    expect(find.text('Start your 30 day free trial'), findsOneWidget);
     expect(find.text('See available matches close to you'), findsOneWidget);
     expect(find.text('Create and join matches'), findsOneWidget);
     expect(find.text('Chat with Players'), findsOneWidget);
