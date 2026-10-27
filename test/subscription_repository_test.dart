@@ -31,22 +31,22 @@ void main() {
           'current_plan': {
             'id': '1',
             'name': 'Monthly Plan',
-            'description': 'No charges for 14 days',
+            'description': 'No charges for 30 days',
             'price_label': r'$19.99',
             'status_text': 'Trialing',
             'is_current': true,
             'is_selectable': false,
-            'trial_days': 14,
+            'trial_days': 30,
           },
           'available_plans': [
             {
               'id': '1',
               'name': 'Monthly Plan',
-              'description': 'No charges for 14 days',
+              'description': 'No charges for 30 days',
               'price_label': r'$19.99',
               'is_current': true,
               'is_selectable': false,
-              'trial_days': 14,
+              'trial_days': 30,
             },
           ],
           'subscription': {
@@ -70,7 +70,7 @@ void main() {
     final state = await repository.fetch();
 
     expect(state.currentPlan.name, 'Monthly Plan');
-    expect(state.currentPlan.trialDays, 14);
+    expect(state.currentPlan.trialDays, 30);
     expect(state.status, 'trialing');
     expect(state.provider, 'stripe');
     expect(state.availablePlans, hasLength(1));
@@ -104,7 +104,7 @@ void main() {
               'price_label': r'$19.99',
               'is_current': false,
               'is_selectable': true,
-              'trial_days': 14,
+              'trial_days': 30,
             },
           ],
           'subscription': null,
@@ -150,11 +150,11 @@ void main() {
             {
               'id': '1',
               'name': 'Monthly Plan',
-              'description': 'No charges for 14 days',
+              'description': 'No charges for 30 days',
               'price_label': r'$19.99',
               'is_current': false,
               'is_selectable': true,
-              'trial_days': 14,
+              'trial_days': 30,
             },
           ],
           'subscription': null,
