@@ -10,6 +10,7 @@ import '../../domain/discovery_location.dart';
 import '../../domain/match_filters.dart';
 import 'compact_switch.dart';
 import 'location_selection_dialog.dart';
+import 'radius_slider.dart';
 
 class HomeFilterSheet extends StatefulWidget {
   const HomeFilterSheet({
@@ -138,7 +139,7 @@ class _HomeFilterSheetState extends State<HomeFilterSheet> {
                 onTap: _selectLocation,
               ),
               const SizedBox(height: AppSpacing.lg),
-              _RadiusControl(
+              RadiusSlider(
                 value: _draft.radiusMiles,
                 onChanged: (value) {
                   setState(() {
@@ -315,58 +316,6 @@ class _DateFilterField extends StatelessWidget {
           },
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _RadiusControl extends StatelessWidget {
-  const _RadiusControl({required this.value, required this.onChanged});
-
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Search radius',
-      value: '${value.round()} miles',
-      child: Column(
-        children: [
-          SizedBox(
-            height: 28,
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: AppColors.filterSliderInactive,
-                thumbColor: AppColors.primary,
-                overlayColor: AppColors.primary.withValues(alpha: 0.08),
-                trackHeight: 4,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                tickMarkShape: SliderTickMarkShape.noTickMark,
-              ),
-              child: Slider(
-                min: MatchFilters.minRadiusMiles,
-                max: MatchFilters.maxRadiusMiles,
-                divisions: 49,
-                value: value.clamp(
-                  MatchFilters.minRadiusMiles,
-                  MatchFilters.maxRadiusMiles,
-                ),
-                onChanged: onChanged,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('1 mile', style: AppTypography.homeMeta14),
-              Text('50 miles', style: AppTypography.homeMeta14),
-            ],
-          ),
-        ],
       ),
     );
   }
