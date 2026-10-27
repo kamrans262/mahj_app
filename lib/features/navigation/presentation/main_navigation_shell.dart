@@ -12,6 +12,7 @@ import '../../home/data/location_repository.dart';
 import '../../home/data/match_discovery_store.dart';
 import '../../home/domain/home_data.dart';
 import '../../home/domain/home_match.dart';
+import '../../home/domain/featured_match_selector.dart';
 import '../../home/domain/match_filters.dart';
 import '../../home/presentation/home_screen.dart';
 import '../../home/presentation/widgets/app_bottom_navigation.dart';
@@ -286,14 +287,19 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       return HomePreviewData.create();
     }
 
-    final featured = _liveMatches
-        .where((match) => match.isFeatured)
-        .toList()
-      ..sort((a, b) {
-        final order = a.featuredOrder.compareTo(b.featuredOrder);
-        if (order != 0) return order;
-        return a.startsAt.compareTo(b.startsAt);
-      });
+    final filters = _discoveryStore.filters;
+    // Featured Matches are chosen automatically from the user's verified
+    // local discovery results, never from the global all-cities match list.
+    // Admin-featured matches are preferred only when they qualify locally.
+    final featured = FeaturedMatchSelector.select(
+      _discoveryMatches,
+      now: DateTime.now(),
+      radiusMiles: filters.radiusMiles,
+      hasCoordinates: filters.hasCoordinates,
+      city: filters.usesCurrentLocation
+          ? _profileData.city
+          : filters.selectedLocation,
+    );
     final nearby = _discoveryMatches;
 
     return HomeData(
