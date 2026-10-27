@@ -30,6 +30,7 @@ class SubscriptionState {
             statusText: 'Inactive',
             isCurrent: true,
             isSelectable: false,
+            trialDays: 0,
           );
 
     final plans = <SubscriptionPlan>[];
