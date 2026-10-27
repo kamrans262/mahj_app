@@ -17,9 +17,9 @@ class PremiumPlanScreen extends StatefulWidget {
   const PremiumPlanScreen({
     super.key,
     this.isLoading = false,
-    this.trialDays = 14,
+    this.trialDays = 30,
     this.planName = 'Monthly Plan',
-    this.planDescription = 'No charges for 14 days',
+    this.planDescription = 'No charges for 30 days',
     this.priceLabel = r'$19.99/month',
     this.onBack,
     this.onStartFreeTrial,
