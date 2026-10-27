@@ -9,7 +9,7 @@ class SubscriptionPlan {
     this.infoText,
     this.isCurrent = false,
     this.isSelectable = true,
-    this.trialDays = 14,
+    this.trialDays = 30,
   });
 
   final String id;
@@ -34,7 +34,7 @@ class SubscriptionPlan {
       infoText: json['info_text']?.toString(),
       isCurrent: json['is_current'] == true,
       isSelectable: json['is_selectable'] != false,
-      trialDays: (json['trial_days'] as num?)?.toInt() ?? 14,
+      trialDays: (json['trial_days'] as num?)?.toInt() ?? 30,
     );
   }
 
