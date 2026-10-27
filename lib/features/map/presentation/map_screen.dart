@@ -17,6 +17,7 @@ import '../domain/map_match_marker.dart';
 import 'widgets/demo_match_map.dart';
 import 'widgets/live_match_map.dart';
 import 'widgets/map_filter_chip.dart';
+import 'widgets/map_radius_sheet.dart';
 
 enum MapDateFilter { today, tomorrow }
 
@@ -49,7 +50,6 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  static const _radiusOptions = <int>[1, 5, 10, 20, 30, 40, 50];
   static const _dateOptions = <MatchDateFilter>[
     MatchDateFilter.today,
     MatchDateFilter.tomorrow,
@@ -195,16 +195,24 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _cycleRadius() async {
-    final currentRadius = _filters.radiusMiles.round();
-    final currentIndex = _radiusOptions.indexOf(currentRadius);
-    final nextIndex = currentIndex < 0
-        ? 0
-        : (currentIndex + 1) % _radiusOptions.length;
-    final next = _radiusOptions[nextIndex];
+  Future<void> _showRadiusSelector() async {
+    final selectedRadius = await showModalBottomSheet<double>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.confirmationBackdrop,
+      builder: (_) => MapRadiusSheet(initialRadius: _filters.radiusMiles),
+    );
 
-    await _applyFilters(_filters.copyWith(radiusMiles: next.toDouble()));
-    widget.onRadiusChanged?.call(next);
+    // Tapping the chip only opens the selector. A dismissed sheet must never
+    // change map filters or trigger a server request.
+    if (!mounted || selectedRadius == null ||
+        selectedRadius == _filters.radiusMiles) {
+      return;
+    }
+
+    await _applyFilters(_filters.copyWith(radiusMiles: selectedRadius));
+    widget.onRadiusChanged?.call(selectedRadius.round());
   }
 
   void _selectMarker(MapMatchMarker marker) {
@@ -293,9 +301,7 @@ class _MapScreenState extends State<MapScreen> {
                           MapFilterChip(
                             label: _radiusLabel,
                             semanticLabel: 'Distance radius filter',
-                            onTap: () {
-                              _cycleRadius();
-                            },
+                            onTap: _showRadiusSelector,
                           ),
                         ],
                       ),
