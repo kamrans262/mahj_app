@@ -77,7 +77,16 @@ class _LiveMatchMapState extends State<LiveMatchMap> {
     final searchChanged = widget.radiusMiles != oldWidget.radiusMiles ||
         widget.centerLatitude != oldWidget.centerLatitude ||
         widget.centerLongitude != oldWidget.centerLongitude;
-    if (searchChanged) {
+    // If location permissions are unavailable, refit when the visible
+    // markers themselves change (for example after a radius API refresh).
+    final markersChangedWithoutOrigin = !_hasSearchOrigin &&
+        !listEquals(
+          oldWidget.markers.map((m) =>
+              '${m.match.id}:${m.match.latitude}:${m.match.longitude}').toList(),
+          widget.markers.map((m) =>
+              '${m.match.id}:${m.match.latitude}:${m.match.longitude}').toList(),
+        );
+    if (searchChanged || markersChangedWithoutOrigin) {
       _scheduleCameraUpdate();
     }
   }
@@ -116,7 +125,8 @@ class _LiveMatchMapState extends State<LiveMatchMap> {
               ))
           .toList(growable: false);
       if (points.isEmpty) return;
-      if (points.length == 1) {
+      if (points.length == 1 ||
+          points.every((point) => point == points.first)) {
         await controller.animateCamera(
           gm.CameraUpdate.newCameraPosition(
             gm.CameraPosition(target: points.first, zoom: 13),
@@ -144,16 +154,6 @@ class _LiveMatchMapState extends State<LiveMatchMap> {
     } catch (_) {
       // The platform map can be disposed during navigation/animation.
     }
-  }
-
-  @override
-  void dispose() {
-    final controller = _controller;
-    _controller = null;
-    if (controller != null) {
-      unawaited(controller.dispose());
-    }
-    super.dispose();
   }
 
   @override
@@ -259,6 +259,9 @@ class _LiveMatchMapState extends State<LiveMatchMap> {
             key: const ValueKey('mahj-live-google-map'),
             onMapCreated: (controller) {
               _controller = controller;
+              if (!_hasSearchOrigin) {
+                _scheduleCameraUpdate();
+              }
             },
             initialCameraPosition: gm.CameraPosition(
               target: center,
