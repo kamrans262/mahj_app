@@ -131,7 +131,61 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Previously introduced Map never opens automatically', (
+  test('Map radius intro resets on a new app launch, not a new tab', () async {
+    final firstLaunch = SessionMapRadiusIntroStore();
+    expect(await firstLaunch.hasBeenShown(), isFalse);
+
+    await firstLaunch.markShown();
+    expect(await firstLaunch.hasBeenShown(), isTrue);
+    // Reusing the store within the same launch preserves the dismissal.
+    expect(await firstLaunch.hasBeenShown(), isTrue);
+
+    // A fresh Dart app process creates a new store, so a new launch can
+    // introduce radius selection again without clearing installation data.
+    final nextLaunch = SessionMapRadiusIntroStore();
+    expect(await nextLaunch.hasBeenShown(), isFalse);
+  });
+
+  testWidgets('Each app launch opens the Map sheet once', (tester) async {
+    prepareSize(tester);
+
+    final firstLaunch = SessionMapRadiusIntroStore();
+    await tester.pumpWidget(MaterialApp(
+      home: MapScreen(
+        key: const ValueKey('first-launch'),
+        radiusIntroStore: firstLaunch,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('map-radius-sheet')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('map-radius-cancel')));
+    await tester.pumpAndSettle();
+
+    // A second Map visit during the same app session must stay dismissed.
+    await tester.pumpWidget(MaterialApp(
+      home: MapScreen(
+        key: const ValueKey('first-launch-return-to-map'),
+        radiusIntroStore: firstLaunch,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('map-radius-sheet')), findsNothing);
+
+    // A full app restart resets session-only state.
+    final secondLaunch = SessionMapRadiusIntroStore();
+    await tester.pumpWidget(MaterialApp(
+      home: MapScreen(
+        key: const ValueKey('second-launch'),
+        radiusIntroStore: secondLaunch,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('map-radius-sheet')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Previously introduced Map never opens again in the same launch', (
     tester,
   ) async {
     prepareSize(tester);
@@ -145,7 +199,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('A manual tap during initial storage read never opens two sheets', (
+  testWidgets('A manual tap during initial session-state read never opens two sheets', (
     tester,
   ) async {
     prepareSize(tester);
@@ -155,7 +209,7 @@ void main() {
     ));
     await tester.pump();
 
-    // The automatic intro is waiting for the saved preference.
+    // The automatic intro is waiting for the in-memory state.
     await tester.tap(find.text('10 miles'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('map-radius-sheet')), findsOneWidget);
