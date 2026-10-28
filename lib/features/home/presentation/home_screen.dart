@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -109,6 +110,22 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void didUpdateWidget(covariant HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    // Radius/location changes can replace a multi-card local carousel with a
+    // shorter cross-city fallback. Always start the new set at its first card.
+    final previousIds = oldWidget.data?.upcomingMatches
+        .map((match) => match.id).toList(growable: false);
+    final nextIds = widget.data?.upcomingMatches
+        .map((match) => match.id).toList(growable: false);
+    if (!listEquals(previousIds, nextIds)) {
+      _pageIndex = 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          _pageController.jumpToPage(0);
+        }
+      });
+    }
+
     final nextFilters = widget.initialFilters;
     if (nextFilters != null &&
         nextFilters != oldWidget.initialFilters &&
