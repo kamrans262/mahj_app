@@ -42,6 +42,13 @@ void main() {
     final greeting = tester.widget<HomeHeader>(find.byType(HomeHeader));
     expect(greeting.displayName, 'Jerry');
     expect(greeting.greeting, 'Hello');
+    final greetingText = tester.widget<Text>(
+      find.descendant(
+        of: find.byType(HomeHeader),
+        matching: find.byType(Text),
+      ).first,
+    );
+    expect(greetingText.textSpan?.toPlainText(), 'Hello, Jerry.');
     expect(tester.takeException(), isNull);
   });
 
