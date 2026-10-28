@@ -92,7 +92,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   List<HomeMatch> _discoveryMatches = const [];
   // The Home Upcoming Matches banner uses independent GPS-based 50-mile
   // results. Never share its origin or radius with Map/Nearby filters.
-  List<HomeMatch> _bannerRadiusMatches = const [];
+  List<HomeMatch> _bannerLocalMatches = const [];
   double? _bannerLatitude;
   double? _bannerLongitude;
   String _bannerCity = '';
@@ -308,7 +308,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     // admin-featured in the user's city/50 miles, other local matches, then
     // upcoming open matches from any location.
     final selection = FeaturedMatchSelector.selectHomeBanner(
-      _bannerRadiusMatches,
+      _bannerLocalMatches,
       _liveMatches,
       now: DateTime.now(),
       city: _bannerCity.isNotEmpty ? _bannerCity : _profileData.city,
@@ -535,29 +535,43 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     if (!mounted || version != _bannerRequestVersion) return;
 
-    List<HomeMatch> radiusMatches = const [];
+    // Both searches are banner-only and run concurrently. The city query
+    // includes same-city matches without GPS coordinates or beyond 50 miles;
+    // the radius query includes eligible games in neighboring cities.
+    final localRequests = <Future<List<HomeMatch>>>[];
     if (origin != null) {
-      try {
-        // This 50-mile request is banner-only. It never changes the user's
-        // Map radius, date filters, or Nearby Matches data.
-        final bannerFilters = MatchFilters.defaults().copyWith(
-          radiusMiles: FeaturedMatchSelector.homeRadiusMiles,
-          latitude: origin.latitude,
-          longitude: origin.longitude,
-          showOpenOnly: true,
-          dateFilter: MatchDateFilter.any,
-          sortOption: MatchSortOption.date,
-        );
-        radiusMatches = await repository.list(filters: bannerFilters);
-      } catch (_) {
-        // If the dedicated local request fails, the global list remains
-        // available to the banner as a fallback.
-      }
+      final bannerFilters = MatchFilters.defaults().copyWith(
+        radiusMiles: FeaturedMatchSelector.homeRadiusMiles,
+        latitude: origin.latitude,
+        longitude: origin.longitude,
+        showOpenOnly: true,
+        dateFilter: MatchDateFilter.any,
+        sortOption: MatchSortOption.date,
+      );
+      localRequests.add(repository.list(filters: bannerFilters));
     }
+
+    final cityQuery = city.split(',').first.trim();
+    if (cityQuery.length >= 2) {
+      localRequests.add(repository.list(query: cityQuery));
+    }
+
+    final localResponses = await Future.wait(
+      localRequests.map((request) async {
+        try {
+          return await request;
+        } catch (_) {
+          // A failed local query must not stop the worldwide open fallback.
+          return const <HomeMatch>[];
+        }
+      }),
+    );
 
     if (!mounted || version != _bannerRequestVersion) return;
     setState(() {
-      _bannerRadiusMatches = radiusMatches;
+      _bannerLocalMatches = localResponses
+          .expand((matches) => matches)
+          .toList(growable: false);
       _bannerLatitude = origin?.latitude;
       _bannerLongitude = origin?.longitude;
       _bannerCity = city;
