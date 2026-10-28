@@ -288,18 +288,22 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     final filters = _discoveryStore.filters;
-    // Featured Matches are chosen automatically from the user's verified
-    // local discovery results, never from the global all-cities match list.
-    // Admin-featured matches are preferred only when they qualify locally.
-    final featured = FeaturedMatchSelector.select(
+    // Prefer eligible nearby games and local admin priorities. If there
+    // aren't any, show the soonest upcoming open games beyond the user's
+    // area from the already-loaded global match list.
+    final selection = FeaturedMatchSelector.selectWithFallback(
       _discoveryMatches,
+      _liveMatches,
       now: DateTime.now(),
       radiusMiles: filters.radiusMiles,
       hasCoordinates: filters.hasCoordinates,
       city: filters.usesCurrentLocation
           ? _profileData.city
           : filters.selectedLocation,
+      latitude: filters.latitude,
+      longitude: filters.longitude,
     );
+    final featured = selection.matches;
     final nearby = _discoveryMatches;
 
     return HomeData(
@@ -315,6 +319,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       unreadMessageCount: _profileData.unreadMessageCount,
       upcomingMatches: featured,
       nearbyMatches: nearby,
+      isShowingOtherCities: selection.isOtherCitiesFallback,
     );
   }
 
