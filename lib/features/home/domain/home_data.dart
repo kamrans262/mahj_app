@@ -10,6 +10,7 @@ class HomeData {
     required this.unreadMessageCount,
     required this.upcomingMatches,
     required this.nearbyMatches,
+    this.isShowingOtherCities = false,
   });
 
   final String greeting;
@@ -20,4 +21,6 @@ class HomeData {
   final int unreadMessageCount;
   final List<HomeMatch> upcomingMatches;
   final List<HomeMatch> nearbyMatches;
+  /// True only when the featured carousel is filled from other cities.
+  final bool isShowingOtherCities;
 }
