@@ -243,6 +243,7 @@ class _MapScreenState extends State<MapScreen> {
       markers: visibleMarkers,
       selectedMatchId: _selectedMarker?.match.id,
       onMarkerTap: _selectMarker,
+      radiusMiles: _filters.radiusMiles,
       centerLatitude: _filters.latitude,
       centerLongitude: _filters.longitude,
       currentLocationLatitude: _filters.usesCurrentLocation
