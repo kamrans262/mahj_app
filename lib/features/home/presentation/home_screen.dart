@@ -265,9 +265,18 @@ class _HomeScreenState extends State<HomeScreen>
                 const SectionHeader(
                   title: 'Upcoming Matches',
                 ),
+                if (data.isShowingOtherCities) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  const Text(
+                    'Explore open matches in other cities',
+                    key: ValueKey('featured-other-cities-subtitle'),
+                    style: AppTypography.homeMeta14,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.lg),
                 _UpcomingSection(
                   matches: data.upcomingMatches,
+                  showOtherCityLocation: data.isShowingOtherCities,
                   controller: _pageController,
                   currentPage: _pageIndex,
                   joiningMatchId: _joiningMatchId,
@@ -415,6 +424,7 @@ class _HomeScreenState extends State<HomeScreen>
 class _UpcomingSection extends StatelessWidget {
   const _UpcomingSection({
     required this.matches,
+    required this.showOtherCityLocation,
     required this.controller,
     required this.currentPage,
     required this.joiningMatchId,
@@ -424,6 +434,7 @@ class _UpcomingSection extends StatelessWidget {
   });
 
   final List<HomeMatch> matches;
+  final bool showOtherCityLocation;
   final PageController controller;
   final int currentPage;
   final String? joiningMatchId;
@@ -450,6 +461,7 @@ class _UpcomingSection extends StatelessWidget {
 
               return FeaturedMatchCard(
                 match: match,
+                showOtherCityLocation: showOtherCityLocation,
                 isJoining: joiningMatchId == match.id,
                 onTap: onMatchTap == null ? null : () => onMatchTap!(match),
                 onJoin: () => onJoin(match),
