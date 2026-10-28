@@ -50,7 +50,9 @@ void main() {
         home: MapScreen(
           key: const ValueKey('first-map-visit'),
           radiusIntroStore: store,
-          onFiltersChanged: (_) async => filterUpdates++,
+          onFiltersChanged: (_) async {
+            filterUpdates++;
+          },
         ),
       ));
       await tester.pumpAndSettle();
@@ -97,7 +99,9 @@ void main() {
       home: MapScreen(
         key: const ValueKey('map-first-apply'),
         radiusIntroStore: store,
-        onFiltersChanged: (filters) async => applied = filters,
+        onFiltersChanged: (filters) async {
+          applied = filters;
+        },
         onRadiusChanged: radii.add,
       ),
     ));
@@ -106,14 +110,14 @@ void main() {
 
     tester.widget<Slider>(
       find.byKey(const ValueKey('mahj-radius-slider')),
-    ).onChanged!(10);
+    ).onChanged!(15);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('map-radius-apply')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('map-radius-sheet')), findsNothing);
-    expect(applied?.radiusMiles, 10);
-    expect(radii, [10]);
+    expect(applied?.radiusMiles, 15);
+    expect(radii, [15]);
     expect(store.shown, isTrue);
 
     await tester.pumpWidget(MaterialApp(
