@@ -48,7 +48,13 @@ void main() {
         matching: find.byType(Text),
       ).first,
     );
-    expect(greetingText.textSpan?.toPlainText(), 'Hello, Jerry.');
+    expect(greetingText.textSpan?.toPlainText(), 'Hello, Jerry. 👋');
+    final spans = greetingText.textSpan!.children!.cast<TextSpan>();
+    expect(spans.length, 3);
+    for (final span in spans) {
+      expect(span.style?.fontSize, 28);
+      expect(span.style?.fontWeight, FontWeight.w700);
+    }
     expect(tester.takeException(), isNull);
   });
 
