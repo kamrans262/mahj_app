@@ -89,6 +89,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   MyMatchesTab _myMatchesTab = MyMatchesTab.upcoming;
   List<HomeMatch> _liveMatches = const [];
   List<HomeMatch> _discoveryMatches = const [];
+  // The Home Upcoming Matches banner uses independent GPS-based 50-mile
+  // results. Never share its origin or radius with Map/Nearby filters.
+  List<HomeMatch> _bannerRadiusMatches = const [];
+  double? _bannerLatitude;
+  double? _bannerLongitude;
+  String _bannerCity = '';
+  bool _bannerRequestedLocationPermission = false;
+  int _bannerRequestVersion = 0;
   late final MatchDiscoveryStore _discoveryStore;
   late final bool _ownsDiscoveryStore;
   bool _matchesLoading = false;
@@ -133,7 +141,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
 
     if (widget.matchRepository != null && preloaded == null) {
-      _initializeMatches();
+      unawaited(_initializeMatches());
+    } else if (widget.matchRepository != null) {
+      // Preloading provides discovery/global matches; the banner's dedicated
+      // current-location search still needs to run independently.
+      unawaited(_refreshFeaturedBanner());
     }
     if (_currentIndex == 1) {
       unawaited(_ensureCurrentMapLocation());
@@ -258,6 +270,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     if (index == 1) {
       unawaited(_ensureCurrentMapLocation());
+    } else if (index == 0 && widget.matchRepository != null) {
+      // Refresh the user's actual location when returning Home. This only
+      // affects the banner, not the selected discovery location.
+      unawaited(_refreshFeaturedBanner());
     }
 
     if ((index == 2 || index == 3) && widget.matchRepository != null) {
@@ -287,21 +303,16 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       return HomePreviewData.create();
     }
 
-    final filters = _discoveryStore.filters;
-    // Prefer eligible nearby games and local admin priorities. If there
-    // aren't any, show the soonest upcoming open games beyond the user's
-    // area from the already-loaded global match list.
-    final selection = FeaturedMatchSelector.selectWithFallback(
-      _discoveryMatches,
+    // Home banner selection is independent of Map/Nearby search filters:
+    // admin-featured in the user's city/50 miles, other local matches, then
+    // upcoming open matches from any location.
+    final selection = FeaturedMatchSelector.selectHomeBanner(
+      _bannerRadiusMatches,
       _liveMatches,
       now: DateTime.now(),
-      radiusMiles: filters.radiusMiles,
-      hasCoordinates: filters.hasCoordinates,
-      city: filters.usesCurrentLocation
-          ? _profileData.city
-          : filters.selectedLocation,
-      latitude: filters.latitude,
-      longitude: filters.longitude,
+      city: _bannerCity.isNotEmpty ? _bannerCity : _profileData.city,
+      latitude: _bannerLatitude,
+      longitude: _bannerLongitude,
     );
     final featured = selection.matches;
     final nearby = _discoveryMatches;
@@ -477,9 +488,88 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     });
   }
 
+  Future<void> _refreshFeaturedBanner() async {
+    final repository = widget.matchRepository;
+    if (repository == null) return;
+
+    final version = ++_bannerRequestVersion;
+    final locations = widget.locationRepository;
+    DiscoveryLocation? origin;
+
+    if (locations != null) {
+      try {
+        // Avoid a permission popup when location has already been granted.
+        origin = await locations.currentLocationIfGranted();
+      } catch (_) {
+        // Fall back to the user's saved city/global matches.
+      }
+
+      if (origin == null && !_bannerRequestedLocationPermission) {
+        _bannerRequestedLocationPermission = true;
+        try {
+          origin = await locations.currentLocation();
+        } catch (_) {
+          // Location may be denied or unavailable. The banner still falls
+          // back to matches elsewhere without changing Home/Map filters.
+        }
+      }
+    }
+
+    if (!mounted || version != _bannerRequestVersion) return;
+
+    var city = _profileData.city.trim();
+    if (origin != null && locations != null) {
+      try {
+        final place = await locations.resolveMapTap(
+          latitude: origin.latitude,
+          longitude: origin.longitude,
+        );
+        if (place != null && place.city.trim().isNotEmpty) {
+          city = place.city.trim();
+        }
+      } catch (_) {
+        // Use the saved profile city when reverse geocoding is unavailable.
+      }
+    }
+
+    if (!mounted || version != _bannerRequestVersion) return;
+
+    List<HomeMatch> radiusMatches = const [];
+    if (origin != null) {
+      try {
+        // This 50-mile request is banner-only. It never changes the user's
+        // Map radius, date filters, or Nearby Matches data.
+        final bannerFilters = MatchFilters.defaults().copyWith(
+          radiusMiles: FeaturedMatchSelector.homeRadiusMiles,
+          latitude: origin.latitude,
+          longitude: origin.longitude,
+          showOpenOnly: true,
+          dateFilter: MatchDateFilter.any,
+          sortOption: MatchSortOption.date,
+        );
+        radiusMatches = await repository.list(filters: bannerFilters);
+      } catch (_) {
+        // If the dedicated local request fails, the global list remains
+        // available to the banner as a fallback.
+      }
+    }
+
+    if (!mounted || version != _bannerRequestVersion) return;
+    setState(() {
+      _bannerRadiusMatches = radiusMatches;
+      _bannerLatitude = origin?.latitude;
+      _bannerLongitude = origin?.longitude;
+      _bannerCity = city;
+    });
+  }
+
   Future<void> _refreshMatches() async {
     final repository = widget.matchRepository;
     if (repository == null) return;
+
+    // Refresh Home's independent location-based banner alongside the existing
+    // global/discovery requests; failures here cannot block Map/Nearby data.
+    unawaited(_refreshFeaturedBanner());
 
     if (mounted) setState(() => _matchesLoading = true);
     try {
