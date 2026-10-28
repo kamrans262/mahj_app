@@ -28,6 +28,11 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final greetingStyle = AppTypography.homeGreeting.copyWith(
+      fontSize: 28,
+      fontWeight: FontWeight.w700,
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -44,16 +49,21 @@ class HomeHeader extends StatelessWidget {
                         text: displayName.trim().isEmpty
                             ? greeting
                             : '$greeting, ',
-                        style: AppTypography.homeGreeting,
+                        style: greetingStyle,
                       ),
                       TextSpan(
                         text: displayName.trim().isEmpty
                             ? ''
                             : '${displayName.trim()}.',
-                        style: AppTypography.homeGreeting.copyWith(
+                        style: greetingStyle.copyWith(
                           color: AppColors.primary,
                         ),
                       ),
+                      if (displayName.trim().isNotEmpty)
+                        TextSpan(
+                          text: ' 👋',
+                          style: greetingStyle,
+                        ),
                     ],
                   ),
                   maxLines: 2,
