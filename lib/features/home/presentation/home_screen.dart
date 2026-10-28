@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/app_typography.dart';
 import '../../../core/widgets/app_confirmation_dialog.dart';
 import '../data/home_preview_data.dart';
 import '../domain/discovery_location.dart';
