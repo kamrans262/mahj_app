@@ -548,12 +548,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         dateFilter: MatchDateFilter.any,
         sortOption: MatchSortOption.date,
       );
-      localRequests.add(repository.list(filters: bannerFilters));
+      localRequests.add(repository.list(filters: bannerFilters, discoverOnly: true));
     }
 
     final cityQuery = city.split(',').first.trim();
     if (cityQuery.length >= 2) {
-      localRequests.add(repository.list(query: cityQuery));
+      localRequests.add(repository.list(query: cityQuery, discoverOnly: true));
     }
 
     final localResponses = await Future.wait(
