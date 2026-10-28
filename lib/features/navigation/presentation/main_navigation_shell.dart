@@ -10,6 +10,7 @@ import '../../home/data/home_preload_store.dart';
 import '../../home/data/home_preview_data.dart';
 import '../../home/data/location_repository.dart';
 import '../../home/data/match_discovery_store.dart';
+import '../../home/domain/discovery_location.dart';
 import '../../home/domain/home_data.dart';
 import '../../home/domain/home_match.dart';
 import '../../home/domain/featured_match_selector.dart';
