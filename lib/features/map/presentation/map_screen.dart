@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -13,6 +15,7 @@ import '../../home/presentation/widgets/match_card.dart';
 import '../../home/presentation/widgets/player_avatar_stack.dart';
 import '../../home/presentation/widgets/sport_icon.dart';
 import '../data/map_preview_data.dart';
+import '../data/map_radius_intro_store.dart';
 import '../domain/map_match_marker.dart';
 import 'widgets/demo_match_map.dart';
 import 'widgets/live_match_map.dart';
@@ -31,6 +34,7 @@ class MapScreen extends StatefulWidget {
     this.onDateFilterChanged,
     this.onRadiusChanged,
     this.onFiltersChanged,
+    this.radiusIntroStore,
     this.isLoading = false,
     this.useLiveMap = false,
   });
@@ -42,6 +46,7 @@ class MapScreen extends StatefulWidget {
   final ValueChanged<MapDateFilter>? onDateFilterChanged;
   final ValueChanged<int>? onRadiusChanged;
   final Future<void> Function(MatchFilters filters)? onFiltersChanged;
+  final MapRadiusIntroStore? radiusIntroStore;
   final bool isLoading;
   final bool useLiveMap;
 
@@ -60,7 +65,11 @@ class _MapScreenState extends State<MapScreen> {
 
   late MatchFilters _filters;
   String? _selectedMatchId;
+  bool _radiusSheetOpen = false;
   late final List<MapMatchMarker> _previewMarkers;
+
+  MapRadiusIntroStore get _radiusIntroStore =>
+      widget.radiusIntroStore ?? SecureMapRadiusIntroStore.shared;
 
   List<MapMatchMarker> get _sourceMarkers => widget.markers ?? _previewMarkers;
 
@@ -136,6 +145,14 @@ class _MapScreenState extends State<MapScreen> {
         );
     final markers = _visibleMarkers;
     _selectedMatchId = markers.isEmpty ? null : markers.first.match.id;
+
+    // Real Map gets one automatic radius introduction per installation.
+    // Preview mode stays nonintrusive unless a store is explicitly injected.
+    if (widget.useLiveMap || widget.radiusIntroStore != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_showRadiusIntroIfNeeded());
+      });
+    }
   }
 
   @override
@@ -195,24 +212,60 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _showRadiusSelector() async {
-    final selectedRadius = await showModalBottomSheet<double>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: AppColors.confirmationBackdrop,
-      builder: (_) => MapRadiusSheet(initialRadius: _filters.radiusMiles),
-    );
+  Future<void> _showRadiusIntroIfNeeded() async {
+    if (_radiusSheetOpen) return;
 
-    // Tapping the chip only opens the selector. A dismissed sheet must never
-    // change map filters or trigger a server request.
-    if (!mounted || selectedRadius == null ||
-        selectedRadius == _filters.radiusMiles) {
+    bool hasBeenShown;
+    try {
+      hasBeenShown = await _radiusIntroStore.hasBeenShown();
+    } catch (_) {
+      // If storage is inaccessible, do not block normal map interactions.
       return;
     }
 
-    await _applyFilters(_filters.copyWith(radiusMiles: selectedRadius));
-    widget.onRadiusChanged?.call(selectedRadius.round());
+    if (!mounted || hasBeenShown || _radiusSheetOpen) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    await _showRadiusSelector();
+  }
+
+  Future<void> _rememberRadiusIntro() async {
+    try {
+      await _radiusIntroStore.markShown();
+    } catch (_) {
+      // A preference-storage error must never prevent radius selection.
+    }
+  }
+
+  Future<void> _showRadiusSelector() async {
+    if (_radiusSheetOpen) return;
+    _radiusSheetOpen = true;
+
+    // Manual opens also count as seeing the introduction. Save as soon as
+    // the sheet opens, even if the user dismisses it without applying.
+    unawaited(_rememberRadiusIntro());
+
+    try {
+      final selectedRadius = await showModalBottomSheet<double>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: AppColors.confirmationBackdrop,
+        builder: (_) => MapRadiusSheet(initialRadius: _filters.radiusMiles),
+      );
+
+      // Tapping the chip only opens the selector. A dismissed sheet must
+      // never change map filters or trigger a server request.
+      if (!mounted ||
+          selectedRadius == null ||
+          selectedRadius == _filters.radiusMiles) {
+        return;
+      }
+
+      await _applyFilters(_filters.copyWith(radiusMiles: selectedRadius));
+      widget.onRadiusChanged?.call(selectedRadius.round());
+    } finally {
+      _radiusSheetOpen = false;
+    }
   }
 
   void _selectMarker(MapMatchMarker marker) {
