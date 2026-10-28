@@ -69,7 +69,7 @@ class _MapScreenState extends State<MapScreen> {
   late final List<MapMatchMarker> _previewMarkers;
 
   MapRadiusIntroStore get _radiusIntroStore =>
-      widget.radiusIntroStore ?? SecureMapRadiusIntroStore.shared;
+      widget.radiusIntroStore ?? SessionMapRadiusIntroStore.shared;
 
   List<MapMatchMarker> get _sourceMarkers => widget.markers ?? _previewMarkers;
 
@@ -146,7 +146,7 @@ class _MapScreenState extends State<MapScreen> {
     final markers = _visibleMarkers;
     _selectedMatchId = markers.isEmpty ? null : markers.first.match.id;
 
-    // Real Map gets one automatic radius introduction per installation.
+    // Real Map opens its radius selector once during each app launch.
     // Preview mode stays nonintrusive unless a store is explicitly injected.
     if (widget.useLiveMap || widget.radiusIntroStore != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -219,7 +219,7 @@ class _MapScreenState extends State<MapScreen> {
     try {
       hasBeenShown = await _radiusIntroStore.hasBeenShown();
     } catch (_) {
-      // If storage is inaccessible, do not block normal map interactions.
+      // If the session store fails, keep Map usable.
       return;
     }
 
@@ -232,7 +232,7 @@ class _MapScreenState extends State<MapScreen> {
     try {
       await _radiusIntroStore.markShown();
     } catch (_) {
-      // A preference-storage error must never prevent radius selection.
+      // A session-state error must never prevent radius selection.
     }
   }
 
@@ -240,7 +240,7 @@ class _MapScreenState extends State<MapScreen> {
     if (_radiusSheetOpen) return;
     _radiusSheetOpen = true;
 
-    // Manual opens also count as seeing the introduction. Save as soon as
+    // Manual opens also count as seeing the introduction. Record as soon as
     // the sheet opens, even if the user dismisses it without applying.
     unawaited(_rememberRadiusIntro());
 
