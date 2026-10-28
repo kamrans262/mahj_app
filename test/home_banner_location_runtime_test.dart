@@ -105,6 +105,18 @@ void main() {
             );
           }
 
+          if (request.url.queryParameters['q'] == 'Austin') {
+            return http.Response(
+              jsonEncode({'data': [
+                // This same-city match is beyond 50 miles and therefore can
+                // only come from the independent city search.
+                record(15, city: 'Austin', latitude: 31.6,
+                    longitude: -97.7431, featured: true),
+              ]}),
+              200,
+            );
+          }
+
           if (request.url.queryParameters.isEmpty) {
             return http.Response(
               jsonEncode({'data': [
@@ -141,12 +153,10 @@ void main() {
         ),
       ),
     ));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final home = tester.widget<HomeScreen>(find.byType(HomeScreen));
-    expect(home.data!.upcomingMatches.map((m) => m.id), ['20', '21']);
+    expect(home.data!.upcomingMatches.map((m) => m.id), ['20', '15', '21']);
     expect(home.data!.isShowingOtherCities, isFalse);
     expect(home.data!.nearbyMatches, isEmpty);
     expect(locations.locationReads, greaterThan(0));
@@ -159,6 +169,9 @@ void main() {
     expect(requests.any((url) =>
       url.queryParameters['radius_miles'] == '1' &&
       url.queryParameters['latitude'] == '42.3601000'), isTrue);
+    expect(requests.any((url) =>
+      url.queryParameters['q'] == 'Austin' &&
+      !url.queryParameters.containsKey('radius_miles')), isTrue);
 
     // The pinned GPS/50-mile banner request does not change Map/Nearby filters.
     expect(discoveryStore.filters.radiusMiles, 1);
