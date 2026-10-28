@@ -1,54 +1,28 @@
-import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-/// Tracks whether the first-visit Map radius picker has already been shown.
-/// This is an app-install preference, not a per-login or per-screen flag.
+/// Tracks whether the Map radius picker has been shown during this app run.
+///
+/// This is intentionally kept in memory rather than secure storage: a full
+/// app restart should show the picker again on the first Map visit.
 abstract interface class MapRadiusIntroStore {
   Future<bool> hasBeenShown();
   Future<void> markShown();
 }
 
-class SecureMapRadiusIntroStore implements MapRadiusIntroStore {
-  SecureMapRadiusIntroStore({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+/// Shared for the lifetime of this Dart app process, including tab changes
+/// and widget rebuilds. A fresh app launch starts with a fresh instance.
+class SessionMapRadiusIntroStore implements MapRadiusIntroStore {
+  SessionMapRadiusIntroStore();
 
-  /// Reuse a single instance across Map tab rebuilds and navigation so that
-  /// a pending storage write never causes the picker to open a second time.
-  static final SecureMapRadiusIntroStore shared = SecureMapRadiusIntroStore();
+  static final SessionMapRadiusIntroStore shared =
+      SessionMapRadiusIntroStore();
 
-  static const _shownKey = 'mahj_map_radius_intro_shown_v1';
-
-  final FlutterSecureStorage _storage;
-  bool _shownInSession = false;
+  bool _shownThisLaunch = false;
 
   @override
-  Future<bool> hasBeenShown() async {
-    if (_shownInSession) return true;
-
-    try {
-      final stored = await _storage.read(key: _shownKey) == 'true';
-      // A manual tap may have marked the sheet shown while the read was in
-      // flight. Never turn that in-memory decision back to false.
-      _shownInSession = _shownInSession || stored;
-    } on MissingPluginException {
-      // Widget tests/unsupported platforms still retain the session state.
-    } on PlatformException {
-      // Do not prevent the map from working when secure storage is unavailable.
-    }
-    return _shownInSession;
-  }
+  Future<bool> hasBeenShown() async => _shownThisLaunch;
 
   @override
   Future<void> markShown() async {
-    // Mark it before awaiting platform storage, so navigating away and back
-    // cannot open the sheet twice during an in-flight write.
-    _shownInSession = true;
-    try {
-      await _storage.write(key: _shownKey, value: 'true');
-    } on MissingPluginException {
-      // Keep the session value if the plugin is unavailable.
-    } on PlatformException {
-      // Keep the session value if the device rejects storage temporarily.
-    }
+    // Mark immediately so repeated Map navigation cannot open two sheets.
+    _shownThisLaunch = true;
   }
 }
