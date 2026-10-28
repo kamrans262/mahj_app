@@ -2,12 +2,9 @@ import 'dart:math' as math;
 
 import 'home_match.dart';
 
-/// Chooses Home's featured carousel automatically from location-scoped
-/// discovery results. Admin flags are optional local priorities, not a
-/// requirement to maintain a featured item for every city.
-///
-/// Never promote a private, full, cancelled, past or non-joinable match.
-/// A broader search is used only if no eligible local match is available.
+/// Selects joinable Home banners automatically from current-city/50-mile
+/// results, with worldwide open matches as a fallback. Admin flags apply
+/// only within the current user's city or fixed 50-mile radius.
 class FeaturedMatchSelection {
   const FeaturedMatchSelection({
     required this.matches,
@@ -30,11 +27,10 @@ abstract final class FeaturedMatchSelector {
   /// 50 miles, other eligible city/50-mile matches, then the next upcoming
   /// eligible matches anywhere. Only real available games can be displayed.
   ///
-  /// [radiusMatches] comes from a dedicated 50-mile API request. [allMatches]
-  /// comes from the existing global API request so the banner remains useful
-  /// without location permission or when no local games exist.
+  /// [localMatches] combines dedicated GPS/50-mile and city API searches.
+  /// [allMatches] is the existing global API response for fallback.
   static FeaturedMatchSelection selectHomeBanner(
-    Iterable<HomeMatch> radiusMatches,
+    Iterable<HomeMatch> localMatches,
     Iterable<HomeMatch> allMatches, {
     required DateTime now,
     String city = '',
@@ -61,7 +57,7 @@ abstract final class FeaturedMatchSelector {
     // refreshed "joined", "full", or cancelled state supersedes stale
     // radius-search data when both responses contain the same ID.
     final byId = <String, HomeMatch>{};
-    for (final match in radiusMatches) {
+    for (final match in localMatches) {
       byId[match.id] = match;
     }
     for (final match in allMatches) {
