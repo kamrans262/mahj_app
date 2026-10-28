@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../core/maps/mahj_google_map_style.dart';
 import '../../../../core/maps/mahj_google_marker.dart';
 import '../../../home/presentation/home_date_time_formatter.dart';
@@ -238,19 +237,6 @@ class _LiveMatchMapState extends State<LiveMatchMap> {
           );
         }
 
-        final searchCircles = _hasSearchOrigin
-            ? <gm.Circle>{
-                gm.Circle(
-                  circleId: const gm.CircleId('mahj-search-radius'),
-                  center: center,
-                  radius: widget.radiusMiles * MapRadiusCamera.metersPerMile,
-                  fillColor: AppColors.primary.withValues(alpha: 0.07),
-                  strokeColor: AppColors.primary.withValues(alpha: 0.5),
-                  strokeWidth: 2,
-                ),
-              }
-            : <gm.Circle>{};
-
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: gm.GoogleMap(
@@ -268,7 +254,6 @@ class _LiveMatchMapState extends State<LiveMatchMap> {
               zoom: _hasSearchOrigin ? _radiusZoom(center) : 13,
             ),
             markers: googleMarkers,
-            circles: searchCircles,
             mapType: gm.MapType.normal,
             style: MahjGoogleMapStyle.json,
             minMaxZoomPreference: const gm.MinMaxZoomPreference(3, 18),
