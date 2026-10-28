@@ -78,8 +78,8 @@ abstract final class FeaturedMatchSelector {
       // Global responses may have a distance computed for a different
       // discovery location. Always calculate from the viewer's GPS point.
       final distance = _distanceMiles(
-        latitude,
-        longitude,
+        latitude!,
+        longitude!,
         match.latitude!,
         match.longitude!,
       );
