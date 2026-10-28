@@ -143,9 +143,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     if (widget.matchRepository != null && preloaded == null) {
       unawaited(_initializeMatches());
-    } else if (widget.matchRepository != null) {
-      // Preloading provides discovery/global matches; the banner's dedicated
-      // current-location search still needs to run independently.
+    } else if (widget.matchRepository != null && _currentIndex == 0) {
+      // Preloading provides discovery/global matches. Resolve the banner
+      // location only while Home is being shown, not in the Map tab.
       unawaited(_refreshFeaturedBanner());
     }
     if (_currentIndex == 1) {
@@ -582,9 +582,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     final repository = widget.matchRepository;
     if (repository == null) return;
 
-    // Refresh Home's independent location-based banner alongside the existing
-    // global/discovery requests; failures here cannot block Map/Nearby data.
-    unawaited(_refreshFeaturedBanner());
+    // Refresh the independent Home banner only while Home is active. Map and
+    // Nearby filter changes never initiate its GPS/50-mile searches.
+    if (_currentIndex == 0) {
+      unawaited(_refreshFeaturedBanner());
+    }
 
     if (mounted) setState(() => _matchesLoading = true);
     try {
