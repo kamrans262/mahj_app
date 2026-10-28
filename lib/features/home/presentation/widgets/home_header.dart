@@ -47,7 +47,9 @@ class HomeHeader extends StatelessWidget {
                         style: AppTypography.homeGreeting,
                       ),
                       TextSpan(
-                        text: displayName,
+                        text: displayName.trim().isEmpty
+                            ? ''
+                            : '${displayName.trim()}.',
                         style: AppTypography.homeGreeting.copyWith(
                           color: AppColors.primary,
                         ),
