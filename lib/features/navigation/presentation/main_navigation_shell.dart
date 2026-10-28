@@ -97,6 +97,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   double? _bannerLongitude;
   String _bannerCity = '';
   bool _bannerRequestedLocationPermission = false;
+  Future<DiscoveryLocation?>? _bannerPendingLocationRequest;
   int _bannerRequestVersion = 0;
   late final MatchDiscoveryStore _discoveryStore;
   late final bool _ownsDiscoveryStore;
@@ -505,13 +506,32 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         // Fall back to the user's saved city/global matches.
       }
 
-      if (origin == null && !_bannerRequestedLocationPermission) {
-        _bannerRequestedLocationPermission = true;
-        try {
-          origin = await locations.currentLocation();
-        } catch (_) {
-          // Location may be denied or unavailable. The banner still falls
-          // back to matches elsewhere without changing Home/Map filters.
+      if (origin == null) {
+        final pending = _bannerPendingLocationRequest;
+        if (pending != null) {
+          // If a second Home refresh starts while the permission request is
+          // still open, share the same GPS result instead of losing it.
+          try {
+            origin = await pending;
+          } catch (_) {
+            // The fallback will use the saved city/global matches.
+          }
+        } else if (!_bannerRequestedLocationPermission) {
+          _bannerRequestedLocationPermission = true;
+          final request = locations.currentLocation().then<DiscoveryLocation?>(
+            (result) => result,
+          );
+          _bannerPendingLocationRequest = request;
+          try {
+            origin = await request;
+          } catch (_) {
+            // Location may be denied or unavailable. The banner still falls
+            // back to matches elsewhere without changing Home/Map filters.
+          } finally {
+            if (identical(_bannerPendingLocationRequest, request)) {
+              _bannerPendingLocationRequest = null;
+            }
+          }
         }
       }
     }
