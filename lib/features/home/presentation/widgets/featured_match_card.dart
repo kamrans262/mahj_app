@@ -14,12 +14,34 @@ class FeaturedMatchCard extends StatelessWidget {
     this.onTap,
     this.onJoin,
     this.isJoining = false,
+    this.showOtherCityLocation = false,
   });
 
   final HomeMatch match;
   final VoidCallback? onTap;
   final VoidCallback? onJoin;
   final bool isJoining;
+  final bool showOtherCityLocation;
+
+  String get _locationLabel {
+    if (!showOtherCityLocation) return match.location;
+    final parts = match.location
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList(growable: false);
+
+    // Lead with the city so street names cannot hide the fallback location.
+    final locality = parts.length >= 3
+        ? parts.sublist(parts.length - 2).join(', ')
+        : parts.length == 2
+        ? parts.last
+        : match.location;
+    final distance = match.distanceMiles;
+    return distance == null
+        ? locality
+        : '$locality · ${distance.toStringAsFixed(1)} miles away';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +116,7 @@ class FeaturedMatchCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              match.location,
+                              _locationLabel,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.homeMeta14,
