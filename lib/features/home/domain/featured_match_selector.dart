@@ -21,6 +21,123 @@ class FeaturedMatchSelection {
 abstract final class FeaturedMatchSelector {
   static const double _earthRadiusMiles = 3958.7613;
 
+  /// Home's fixed radius, intentionally unrelated to Home/Map filter state.
+  static const double homeRadiusMiles = 50;
+
+  /// Selects Home banner matches using the viewer's actual location.
+  ///
+  /// Priority: eligible admin-featured matches in the user's city or within
+  /// 50 miles, other eligible city/50-mile matches, then the next upcoming
+  /// eligible matches anywhere. Only real available games can be displayed.
+  ///
+  /// [radiusMatches] comes from a dedicated 50-mile API request. [allMatches]
+  /// comes from the existing global API request so the banner remains useful
+  /// without location permission or when no local games exist.
+  static FeaturedMatchSelection selectHomeBanner(
+    Iterable<HomeMatch> radiusMatches,
+    Iterable<HomeMatch> allMatches, {
+    required DateTime now,
+    String city = '',
+    double? latitude,
+    double? longitude,
+    int limit = 5,
+  }) {
+    if (limit <= 0) {
+      return const FeaturedMatchSelection(
+        matches: <HomeMatch>[],
+        isOtherCitiesFallback: false,
+      );
+    }
+
+    final cityName = _normalizedCity(city);
+    final hasOrigin = latitude != null &&
+        longitude != null &&
+        latitude.isFinite &&
+        longitude.isFinite &&
+        latitude.abs() <= 90 &&
+        longitude.abs() <= 180;
+
+    // One copy of each match. The global API response is placed last so a
+    // refreshed "joined", "full", or cancelled state supersedes stale
+    // radius-search data when both responses contain the same ID.
+    final byId = <String, HomeMatch>{};
+    for (final match in radiusMatches) {
+      byId[match.id] = match;
+    }
+    for (final match in allMatches) {
+      byId[match.id] = match;
+    }
+
+    final eligible = byId.values.where((match) => _eligible(match, now)).map((
+      match,
+    ) {
+      if (!hasOrigin || match.latitude == null || match.longitude == null) {
+        return match;
+      }
+
+      // Global responses may have a distance computed for a different
+      // discovery location. Always calculate from the viewer's GPS point.
+      final distance = _distanceMiles(
+        latitude,
+        longitude,
+        match.latitude!,
+        match.longitude!,
+      );
+      return match.copyWith(distanceMiles: distance);
+    }).toList(growable: false);
+
+    final local = eligible.where((match) {
+      final sameCity = cityName.isNotEmpty && _matchesCity(match, cityName);
+      final within50Miles = hasOrigin &&
+          match.latitude != null &&
+          match.longitude != null &&
+          match.distanceMiles != null &&
+          match.distanceMiles!.isFinite &&
+          match.distanceMiles! <= homeRadiusMiles;
+      return sameCity || within50Miles;
+    }).toList();
+
+    if (local.isNotEmpty) {
+      local.sort((a, b) {
+        if (a.isFeatured != b.isFeatured) return a.isFeatured ? -1 : 1;
+        if (a.isFeatured && b.isFeatured) {
+          final order = a.featuredOrder.compareTo(b.featuredOrder);
+          if (order != 0) return order;
+        }
+
+        final aDistance = a.distanceMiles;
+        final bDistance = b.distanceMiles;
+        if (hasOrigin &&
+            aDistance != null &&
+            bDistance != null &&
+            aDistance.isFinite &&
+            bDistance.isFinite) {
+          final nearbyFirst = aDistance.compareTo(bDistance);
+          if (nearbyFirst != 0) return nearbyFirst;
+        }
+
+        final schedule = a.startsAt.compareTo(b.startsAt);
+        return schedule != 0 ? schedule : a.id.compareTo(b.id);
+      });
+      return FeaturedMatchSelection(
+        matches: List<HomeMatch>.unmodifiable(local.take(limit)),
+        isOtherCitiesFallback: false,
+      );
+    }
+
+    // No admin priority outside the local area. Show the soonest future open
+    // matches regardless of city, including when GPS/city is unavailable.
+    eligible.sort((a, b) {
+      final schedule = a.startsAt.compareTo(b.startsAt);
+      return schedule != 0 ? schedule : a.id.compareTo(b.id);
+    });
+
+    return FeaturedMatchSelection(
+      matches: List<HomeMatch>.unmodifiable(eligible.take(limit)),
+      isOtherCitiesFallback: eligible.isNotEmpty,
+    );
+  }
+
   /// Keep local matches (including admin-prioritized ones) first. Only when
   /// there are none, show the next upcoming open matches outside the user's
   /// area, ignoring admin priority flags from unrelated cities.
