@@ -99,6 +99,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   bool _bannerRequestedLocationPermission = false;
   Future<DiscoveryLocation?>? _bannerPendingLocationRequest;
   int _bannerRequestVersion = 0;
+  // Do not show other-city fallback until BOTH the local GPS/city search
+  // and the global match refresh are complete.
+  bool _bannerLocalReady = false;
+  bool _bannerGlobalReady = false;
   late final MatchDiscoveryStore _discoveryStore;
   late final bool _ownsDiscoveryStore;
   bool _matchesLoading = false;
@@ -123,6 +127,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (preloaded != null) {
       _liveMatches = preloaded.liveMatches;
       _discoveryMatches = preloaded.discoveryMatches;
+      _bannerGlobalReady = true;
       _discoveryStore.update(preloaded.filters, notify: false);
     }
 
@@ -308,15 +313,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     // Home banner selection is independent of Map/Nearby search filters:
     // admin-featured in the user's city/50 miles, other local matches, then
     // upcoming open matches from any location.
-    final selection = FeaturedMatchSelector.selectHomeBanner(
-      _bannerLocalMatches,
-      _liveMatches,
-      now: DateTime.now(),
-      city: _bannerCity.isNotEmpty ? _bannerCity : _profileData.city,
-      latitude: _bannerLatitude,
-      longitude: _bannerLongitude,
-    );
-    final featured = selection.matches;
+    final bannerLoading = !_bannerLocalReady || !_bannerGlobalReady;
+    final selection = bannerLoading
+        ? null
+        : FeaturedMatchSelector.selectHomeBanner(
+            _bannerLocalMatches,
+            _liveMatches,
+            now: DateTime.now(),
+            city: _bannerCity.isNotEmpty ? _bannerCity : _profileData.city,
+            latitude: _bannerLatitude,
+            longitude: _bannerLongitude,
+          );
+    final featured = selection?.matches ?? const <HomeMatch>[];
     final nearby = _discoveryMatches;
 
     return HomeData(
@@ -332,7 +340,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       unreadMessageCount: _profileData.unreadMessageCount,
       upcomingMatches: featured,
       nearbyMatches: nearby,
-      isShowingOtherCities: selection.isOtherCitiesFallback,
+      isShowingOtherCities: selection?.isOtherCitiesFallback ?? false,
+      isUpcomingMatchesLoading: bannerLoading,
     );
   }
 
@@ -495,6 +504,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     if (repository == null) return;
 
     final version = ++_bannerRequestVersion;
+    if (mounted) {
+      setState(() => _bannerLocalReady = false);
+    }
     final locations = widget.locationRepository;
     DiscoveryLocation? origin;
 
@@ -595,6 +607,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       _bannerLatitude = origin?.latitude;
       _bannerLongitude = origin?.longitude;
       _bannerCity = city;
+      _bannerLocalReady = true;
     });
   }
 
@@ -605,6 +618,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     // Refresh the independent Home banner only while Home is active. Map and
     // Nearby filter changes never initiate its GPS/50-mile searches.
     if (_currentIndex == 0) {
+      if (mounted) setState(() => _bannerGlobalReady = false);
       unawaited(_refreshFeaturedBanner());
     }
 
@@ -627,7 +641,14 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     } catch (_) {
       // Keep the current list visible. Pull-to-refresh or filter changes retry.
     } finally {
-      if (mounted) setState(() => _matchesLoading = false);
+      // Even if the request fails, finish the banner's loading decision with
+      // the last available global data instead of spinning forever.
+      if (mounted) {
+        setState(() {
+          _matchesLoading = false;
+          _bannerGlobalReady = true;
+        });
+      }
     }
   }
 
