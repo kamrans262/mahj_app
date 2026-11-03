@@ -48,7 +48,7 @@ void main() {
         matching: find.byType(Text),
       ).first,
     );
-    expect(greetingText.textSpan?.toPlainText(), 'Hello, Jerry.');
+    expect(greetingText.textSpan?.toPlainText(includePlaceholders: false), 'Hello, Jerry.');
     final spans = greetingText.textSpan!.children!;
     expect(spans.length, 3);
     for (final span in spans.take(2).cast<TextSpan>()) {
