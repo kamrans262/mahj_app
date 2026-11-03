@@ -105,18 +105,18 @@ class _NotificationSwipeDeleteState extends State<NotificationSwipeDelete> {
               ),
             ),
           ),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onHorizontalDragStart: _startDrag,
-            onHorizontalDragUpdate: _updateDrag,
-            onHorizontalDragEnd: _endDrag,
-            onHorizontalDragCancel: _cancelDrag,
-            child: AnimatedContainer(
-              duration: _dragging
-                  ? Duration.zero
-                  : const Duration(milliseconds: 170),
-              curve: Curves.easeOut,
-              transform: Matrix4.translationValues(_offset, 0, 0),
+          AnimatedContainer(
+            duration: _dragging
+                ? Duration.zero
+                : const Duration(milliseconds: 170),
+            curve: Curves.easeOut,
+            transform: Matrix4.translationValues(_offset, 0, 0),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragStart: _startDrag,
+              onHorizontalDragUpdate: _updateDrag,
+              onHorizontalDragEnd: _endDrag,
+              onHorizontalDragCancel: _cancelDrag,
               child: ColoredBox(
                 color: AppColors.background,
                 child: widget.child,
