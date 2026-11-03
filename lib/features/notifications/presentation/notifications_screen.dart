@@ -26,6 +26,7 @@ class NotificationsScreen extends StatefulWidget {
     this.onNotificationTap,
     this.onMarkRead,
     this.onDelete,
+    this.onClearAll,
     this.onReadStateChanged,
     this.onRetry,
     this.onRefresh,
@@ -41,6 +42,7 @@ class NotificationsScreen extends StatefulWidget {
   final Future<void> Function(MahjNotification notification)? onNotificationTap;
   final NotificationMarkReadCallback? onMarkRead;
   final Future<void> Function(MahjNotification notification)? onDelete;
+  final Future<void> Function()? onClearAll;
   final ValueChanged<List<MahjNotification>>? onReadStateChanged;
   final VoidCallback? onRetry;
   final Future<void> Function()? onRefresh;
@@ -55,6 +57,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   late List<MahjNotification> _notifications;
   bool _requestingMore = false;
+  bool _isClearingAll = false;
   final Set<String> _deletingNotificationIds = <String>{};
 
   @override
@@ -146,7 +149,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _deleteNotification(MahjNotification notification) async {
-    if (_deletingNotificationIds.contains(notification.id)) return;
+    if (_isClearingAll || _deletingNotificationIds.contains(notification.id)) return;
 
     setState(() => _deletingNotificationIds.add(notification.id));
     try {
@@ -164,6 +167,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (mounted) {
         setState(() => _deletingNotificationIds.remove(notification.id));
       }
+    }
+  }
+
+  Future<void> _clearAll() async {
+    if (_isClearingAll || _notifications.isEmpty) return;
+
+    setState(() => _isClearingAll = true);
+    try {
+      final clear = widget.onClearAll;
+      if (clear != null) await clear();
+      if (!mounted) return;
+      setState(() {
+        _notifications = const <MahjNotification>[];
+        _deletingNotificationIds.clear();
+      });
+      widget.onReadStateChanged?.call(const <MahjNotification>[]);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not clear notifications. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isClearingAll = false);
     }
   }
 
@@ -238,6 +266,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               AppCenteredPageHeader(
                 title: 'Notifications',
                 onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+                trailing: _notifications.isNotEmpty
+                    ? TextButton(
+                        key: const ValueKey('notifications-clear-all'),
+                        onPressed: _isClearingAll ? null : _clearAll,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          minimumSize: const Size(0, 40),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          _isClearingAll ? 'Clearing...' : 'Clear All',
+                          style: AppTypography.homeAction12,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(height: AppSpacing.lg),
               Expanded(child: _buildStateBody()),
