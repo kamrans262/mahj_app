@@ -60,9 +60,17 @@ class HomeHeader extends StatelessWidget {
                         ),
                       ),
                       if (displayName.trim().isNotEmpty)
-                        TextSpan(
-                          text: ' 👋',
-                          style: greetingStyle,
+                        const WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 8),
+                            child: Icon(
+                              Icons.waving_hand_rounded,
+                              key: ValueKey('home-greeting-wave-icon'),
+                              size: 27,
+                              color: Color(0xFFFFC247),
+                            ),
+                          ),
                         ),
                     ],
                   ),
