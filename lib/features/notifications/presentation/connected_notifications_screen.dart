@@ -47,6 +47,7 @@ class _ConnectedNotificationsScreenState
           errorMessage: widget.store.errorMessage,
           onBack: widget.onBack,
           onMarkRead: widget.store.markRead,
+          onDelete: widget.store.deleteNotification,
           onNotificationTap: widget.onNotificationTap,
           onRetry: () {
             unawaited(widget.store.refresh());
