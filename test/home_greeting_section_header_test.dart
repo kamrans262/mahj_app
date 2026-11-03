@@ -48,13 +48,19 @@ void main() {
         matching: find.byType(Text),
       ).first,
     );
-    expect(greetingText.textSpan?.toPlainText(), 'Hello, Jerry. 👋');
-    final spans = greetingText.textSpan!.children!.cast<TextSpan>();
+    expect(greetingText.textSpan?.toPlainText(), 'Hello, Jerry.');
+    final spans = greetingText.textSpan!.children!;
     expect(spans.length, 3);
-    for (final span in spans) {
+    for (final span in spans.take(2).cast<TextSpan>()) {
       expect(span.style?.fontSize, 28);
       expect(span.style?.fontWeight, FontWeight.w700);
     }
+    expect(spans.last, isA<WidgetSpan>());
+    final wave = tester.widget<Icon>(
+      find.byKey(const ValueKey('home-greeting-wave-icon')),
+    );
+    expect(wave.icon, Icons.waving_hand_rounded);
+    expect(wave.size, 27);
     expect(tester.takeException(), isNull);
   });
 
