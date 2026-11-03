@@ -467,7 +467,12 @@ class _UpcomingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const _EmptyState(message: 'Finding upcoming matches...');
+      // Match the carousel height so loading does not shift the Nearby
+      // section down when a local or fallback match finally arrives.
+      return const SizedBox(
+        height: 169,
+        child: _EmptyState(message: 'Finding upcoming matches...'),
+      );
     }
     if (matches.isEmpty) {
       return const _EmptyState(message: 'No upcoming matches right now.');
