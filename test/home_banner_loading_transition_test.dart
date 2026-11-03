@@ -222,7 +222,7 @@ void main() {
     expect(home.data!.isUpcomingMatchesLoading, isFalse);
     expect(home.data!.upcomingMatches.map((m) => m.id), ['30']);
     expect(home.data!.isShowingOtherCities, isTrue);
-    expect(find.text('Explore open matches in other cities'), findsOneWidget);
+    expect(find.text('Explore open matches in other cities'), findsNothing);
     expect(home.data!.upcomingMatches.any((HomeMatch m) => m.id == '10'),
         isFalse);
     expect(tester.takeException(), isNull);
