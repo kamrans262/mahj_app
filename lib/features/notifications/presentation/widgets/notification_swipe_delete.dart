@@ -36,7 +36,9 @@ class _NotificationSwipeDeleteState extends State<NotificationSwipeDelete> {
   void _updateDrag(DragUpdateDetails details) {
     if (widget.isDeleting) return;
     setState(() {
-      _offset = (_offset + details.delta.dx).clamp(-_revealWidth, 0.0);
+      _offset = (_offset + details.delta.dx)
+          .clamp(-_revealWidth, 0.0)
+          .toDouble();
     });
   }
 
