@@ -6,7 +6,7 @@ import 'package:mahj_app/features/home/domain/home_match.dart';
 import 'package:mahj_app/features/home/presentation/home_screen.dart';
 
 void main() {
-  testWidgets('Home labels cross-city featured fallback and exposes the city', (
+  testWidgets('Home hides fallback label but exposes other-city match location', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 900);
@@ -46,9 +46,9 @@ void main() {
     expect(find.text('Upcoming Matches'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('featured-other-cities-subtitle')),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(find.text('Explore open matches in other cities'), findsOneWidget);
+    expect(find.text('Explore open matches in other cities'), findsNothing);
     expect(find.text('Dallas, TX · 32.0 miles away'), findsOneWidget);
     expect(find.text('Nearby Matches'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -122,7 +122,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(firstController.page, closeTo(0, 0.01));
-    expect(find.text('Explore open matches in other cities'), findsOneWidget);
+    expect(find.text('Explore open matches in other cities'), findsNothing);
     expect(find.text('Dallas, TX'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
