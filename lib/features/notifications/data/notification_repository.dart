@@ -102,6 +102,10 @@ class NotificationRepository {
     );
   }
 
+  Future<void> clearAllNotifications() async {
+    await _apiClient.delete('/notifications');
+  }
+
   Future<void> registerDeviceToken({
     required String token,
     required String platform,
