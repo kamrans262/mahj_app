@@ -17,6 +17,8 @@ class NotificationStore extends ChangeNotifier {
   bool _hasMore = false;
   bool _isLoading = false;
   bool _isLoadingMore = false;
+  bool _isClearingAll = false;
+  int _historyVersion = 0;
   String? _errorMessage;
 
   List<MahjNotification> get notifications => _notifications;
@@ -24,6 +26,7 @@ class NotificationStore extends ChangeNotifier {
   bool get hasMore => _hasMore;
   bool get isLoading => _isLoading;
   bool get isLoadingMore => _isLoadingMore;
+  bool get isClearingAll => _isClearingAll;
   String? get errorMessage => _errorMessage;
   bool get hasLoaded => _page > 0;
 
@@ -33,13 +36,15 @@ class NotificationStore extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    if (_isLoading) return;
+    if (_isLoading || _isClearingAll) return;
+    final version = _historyVersion;
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       final page = await _repository.list();
+      if (version != _historyVersion) return;
       _notifications = page.notifications;
       _page = page.page;
       _hasMore = page.hasMore;
@@ -55,9 +60,11 @@ class NotificationStore extends ChangeNotifier {
   }
 
   Future<void> refreshUnreadCount() async {
+    if (_isClearingAll) return;
+    final version = _historyVersion;
     try {
       final count = await _repository.unreadCount();
-      if (count == _unreadCount) return;
+      if (version != _historyVersion || count == _unreadCount) return;
       _unreadCount = count;
       notifyListeners();
     } catch (_) {
@@ -66,12 +73,14 @@ class NotificationStore extends ChangeNotifier {
   }
 
   Future<void> loadMore() async {
-    if (_isLoadingMore || _isLoading || !_hasMore) return;
+    if (_isLoadingMore || _isLoading || _isClearingAll || !_hasMore) return;
+    final version = _historyVersion;
     _isLoadingMore = true;
     notifyListeners();
 
     try {
       final next = await _repository.list(page: _page + 1);
+      if (version != _historyVersion) return;
       final byId = <String, MahjNotification>{
         for (final item in _notifications) item.id: item,
         for (final item in next.notifications) item.id: item,
@@ -90,9 +99,10 @@ class NotificationStore extends ChangeNotifier {
   }
 
   Future<MahjNotification> markRead(MahjNotification notification) async {
-    if (notification.isRead) return notification;
-
+    if (notification.isRead || _isClearingAll) return notification;
+    final version = _historyVersion;
     final result = await _repository.markRead(notification.id);
+    if (version != _historyVersion) return notification;
     final index = _notifications.indexWhere(
       (item) => item.id == notification.id,
     );
@@ -108,8 +118,11 @@ class NotificationStore extends ChangeNotifier {
   }
 
   Future<void> deleteNotification(MahjNotification notification) async {
+    if (_isClearingAll) return;
+    final version = _historyVersion;
     // Only remove the row after the backend confirms deletion.
     final result = await _repository.deleteNotification(notification.id);
+    if (version != _historyVersion) return;
     _notifications = List<MahjNotification>.unmodifiable(
       _notifications.where((item) => item.id != notification.id),
     );
@@ -117,7 +130,33 @@ class NotificationStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> clearAllNotifications() async {
+    if (_isClearingAll) return;
+    _isClearingAll = true;
+    // In-flight pagination/count requests cannot repopulate cleared history.
+    _historyVersion++;
+    notifyListeners();
+
+    try {
+      await _repository.clearAllNotifications();
+      _notifications = const [];
+      _page = 1;
+      _hasMore = false;
+      _unreadCount = 0;
+      _errorMessage = null;
+      notifyListeners();
+    } catch (_) {
+      // Keep existing notifications on a network/server failure.
+      rethrow;
+    } finally {
+      _isClearingAll = false;
+      notifyListeners();
+    }
+  }
+
   void clear() {
+    _historyVersion++;
+    _isClearingAll = false;
     _notifications = const [];
     _page = 0;
     _unreadCount = 0;
