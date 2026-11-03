@@ -11,6 +11,7 @@ class HomeData {
     required this.upcomingMatches,
     required this.nearbyMatches,
     this.isShowingOtherCities = false,
+    this.isUpcomingMatchesLoading = false,
   });
 
   final String greeting;
@@ -23,4 +24,6 @@ class HomeData {
   final List<HomeMatch> nearbyMatches;
   /// True only when the featured carousel is filled from other cities.
   final bool isShowingOtherCities;
+  /// Wait until the current-location, city/50-mile and global searches settle.
+  final bool isUpcomingMatchesLoading;
 }
