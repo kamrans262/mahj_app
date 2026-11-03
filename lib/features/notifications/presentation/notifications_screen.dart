@@ -8,6 +8,7 @@ import '../../../core/widgets/app_loader.dart';
 import '../data/notifications_preview_data.dart';
 import '../domain/mahj_notification.dart';
 import 'widgets/notification_list_item.dart';
+import 'widgets/notification_swipe_delete.dart';
 
 typedef NotificationMarkReadCallback = Future<MahjNotification> Function(
   MahjNotification notification,
@@ -24,6 +25,7 @@ class NotificationsScreen extends StatefulWidget {
     this.onBack,
     this.onNotificationTap,
     this.onMarkRead,
+    this.onDelete,
     this.onReadStateChanged,
     this.onRetry,
     this.onRefresh,
@@ -38,6 +40,7 @@ class NotificationsScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final Future<void> Function(MahjNotification notification)? onNotificationTap;
   final NotificationMarkReadCallback? onMarkRead;
+  final Future<void> Function(MahjNotification notification)? onDelete;
   final ValueChanged<List<MahjNotification>>? onReadStateChanged;
   final VoidCallback? onRetry;
   final Future<void> Function()? onRefresh;
@@ -52,6 +55,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   late List<MahjNotification> _notifications;
   bool _requestingMore = false;
+  final Set<String> _deletingNotificationIds = <String>{};
 
   @override
   void initState() {
@@ -109,8 +113,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  Future<void> _openNotification(int index) async {
-    final current = _notifications[index];
+  Future<void> _openNotification(MahjNotification current) async {
     var opened = current;
 
     if (!current.isRead) {
@@ -126,16 +129,41 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
 
       if (opened.isRead && mounted) {
-        setState(() => _notifications[index] = opened);
-        widget.onReadStateChanged?.call(
-          List<MahjNotification>.unmodifiable(_notifications),
-        );
+        final index = _notifications.indexWhere((item) => item.id == current.id);
+        if (index >= 0) {
+          setState(() => _notifications[index] = opened);
+          widget.onReadStateChanged?.call(
+            List<MahjNotification>.unmodifiable(_notifications),
+          );
+        }
       }
     }
 
     final callback = widget.onNotificationTap;
     if (callback != null) {
       await callback(opened);
+    }
+  }
+
+  Future<void> _deleteNotification(MahjNotification notification) async {
+    if (_deletingNotificationIds.contains(notification.id)) return;
+
+    setState(() => _deletingNotificationIds.add(notification.id));
+    try {
+      await widget.onDelete?.call(notification);
+      if (!mounted) return;
+      setState(() => _notifications.removeWhere(
+        (item) => item.id == notification.id,
+      ));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete notification. Please try again.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _deletingNotificationIds.remove(notification.id));
+      }
     }
   }
 
@@ -174,10 +202,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         }
 
         final notification = _notifications[index];
-        return NotificationListItem(
-          key: ValueKey('notification-item-${notification.id}'),
-          notification: notification,
-          onTap: () => _openNotification(index),
+        return NotificationSwipeDelete(
+          key: ValueKey('notification-swipe-${notification.id}'),
+          isDeleting: _deletingNotificationIds.contains(notification.id),
+          onDelete: () => _deleteNotification(notification),
+          child: NotificationListItem(
+            key: ValueKey('notification-item-${notification.id}'),
+            notification: notification,
+            onTap: () => _openNotification(notification),
+          ),
         );
       },
     );
