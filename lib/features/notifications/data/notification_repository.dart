@@ -26,6 +26,12 @@ class NotificationReadResult {
   final int unreadCount;
 }
 
+class NotificationDeleteResult {
+  const NotificationDeleteResult({required this.unreadCount});
+
+  final int unreadCount;
+}
+
 class NotificationRepository {
   const NotificationRepository({required ApiClient apiClient})
     : this._(apiClient);
@@ -83,6 +89,15 @@ class NotificationRepository {
 
     return NotificationReadResult(
       notification: _notificationFromJson(_normalize(raw)),
+      unreadCount: _readInt(payload['unread_count'], 0),
+    );
+  }
+
+  Future<NotificationDeleteResult> deleteNotification(
+    String notificationId,
+  ) async {
+    final payload = await _apiClient.delete('/notifications/$notificationId');
+    return NotificationDeleteResult(
       unreadCount: _readInt(payload['unread_count'], 0),
     );
   }
