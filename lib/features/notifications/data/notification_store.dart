@@ -107,6 +107,16 @@ class NotificationStore extends ChangeNotifier {
     return result.notification;
   }
 
+  Future<void> deleteNotification(MahjNotification notification) async {
+    // Only remove the row after the backend confirms deletion.
+    final result = await _repository.deleteNotification(notification.id);
+    _notifications = List<MahjNotification>.unmodifiable(
+      _notifications.where((item) => item.id != notification.id),
+    );
+    _unreadCount = result.unreadCount;
+    notifyListeners();
+  }
+
   void clear() {
     _notifications = const [];
     _page = 0;
