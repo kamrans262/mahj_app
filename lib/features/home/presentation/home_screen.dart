@@ -283,15 +283,6 @@ class _HomeScreenState extends State<HomeScreen>
                 const SectionHeader(
                   title: 'Upcoming Matches',
                 ),
-                if (!data.isUpcomingMatchesLoading &&
-                    data.isShowingOtherCities) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  const Text(
-                    'Explore open matches in other cities',
-                    key: ValueKey('featured-other-cities-subtitle'),
-                    style: AppTypography.homeMeta14,
-                  ),
-                ],
                 const SizedBox(height: AppSpacing.lg),
                 _UpcomingSection(
                   matches: data.upcomingMatches,
