@@ -283,7 +283,8 @@ class _HomeScreenState extends State<HomeScreen>
                 const SectionHeader(
                   title: 'Upcoming Matches',
                 ),
-                if (data.isShowingOtherCities) ...[
+                if (!data.isUpcomingMatchesLoading &&
+                    data.isShowingOtherCities) ...[
                   const SizedBox(height: AppSpacing.xs),
                   const Text(
                     'Explore open matches in other cities',
@@ -294,6 +295,7 @@ class _HomeScreenState extends State<HomeScreen>
                 const SizedBox(height: AppSpacing.lg),
                 _UpcomingSection(
                   matches: data.upcomingMatches,
+                  isLoading: data.isUpcomingMatchesLoading,
                   showOtherCityLocation: data.isShowingOtherCities,
                   controller: _pageController,
                   currentPage: _pageIndex,
@@ -442,6 +444,7 @@ class _HomeScreenState extends State<HomeScreen>
 class _UpcomingSection extends StatelessWidget {
   const _UpcomingSection({
     required this.matches,
+    required this.isLoading,
     required this.showOtherCityLocation,
     required this.controller,
     required this.currentPage,
@@ -452,6 +455,7 @@ class _UpcomingSection extends StatelessWidget {
   });
 
   final List<HomeMatch> matches;
+  final bool isLoading;
   final bool showOtherCityLocation;
   final PageController controller;
   final int currentPage;
@@ -462,6 +466,9 @@ class _UpcomingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const _EmptyState(message: 'Finding upcoming matches...');
+    }
     if (matches.isEmpty) {
       return const _EmptyState(message: 'No upcoming matches right now.');
     }
