@@ -49,6 +49,55 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('expired trial shows Free Trial Expired and Pay Now without trial promises', (
+    tester,
+  ) async {
+    var paid = false;
+
+    await pumpPremium(
+      tester,
+      screen: PremiumPlanScreen(
+        requiresPayment: true,
+        isTrialExpired: true,
+        planDescription: 'Monthly billing resumes with payment',
+        onPayNow: () async => paid = true,
+      ),
+    );
+
+    expect(find.text('Free Trial Expired'), findsOneWidget);
+    expect(find.text('Pay Now'), findsOneWidget);
+    expect(find.text('Start your 30 day free trial'), findsNothing);
+    expect(find.text('Start Free Trial'), findsNothing);
+    expect(find.text('No charges for 30 days'), findsNothing);
+    expect(find.text('You won’t be charged until the trial ends'), findsNothing);
+    expect(find.text('Secure payment through Stripe'), findsOneWidget);
+    expect(find.byKey(const ValueKey('monthly-plan-card')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('pay-now-button')));
+    await tester.tap(find.byKey(const ValueKey('pay-now-button')));
+    await tester.pumpAndSettle();
+
+    expect(paid, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('expired paid subscription shows renewal action in same UI', (
+    tester,
+  ) async {
+    await pumpPremium(
+      tester,
+      screen: const PremiumPlanScreen(
+        requiresPayment: true,
+        planDescription: 'Monthly billing resumes with payment',
+      ),
+    );
+
+    expect(find.text('Subscription Expired'), findsOneWidget);
+    expect(find.text('Pay Now'), findsOneWidget);
+    expect(find.text('Start Free Trial'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('page-level horizontal padding is exactly 20 logical pixels', (
     tester,
   ) async {
