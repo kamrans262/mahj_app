@@ -20,6 +20,7 @@ class SubscriptionEntryScreen extends StatefulWidget {
     required this.repository,
     super.key,
     this.checkoutReturnStore,
+    this.checkoutLauncher,
     this.onBack,
     this.onActivated,
     this.onTermsTap,
@@ -28,6 +29,8 @@ class SubscriptionEntryScreen extends StatefulWidget {
 
   final SubscriptionRepository repository;
   final CheckoutReturnStore? checkoutReturnStore;
+  /// Optional override for testing the Stripe handoff without launching a browser.
+  final Future<bool> Function(Uri url)? checkoutLauncher;
   final VoidCallback? onBack;
   final Future<void> Function()? onActivated;
   final VoidCallback? onTermsTap;
@@ -150,10 +153,11 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
           throw const FormatException('Invalid Stripe checkout URL.');
         }
 
-        final opened = await launchUrl(
-          checkoutUrl,
-          mode: LaunchMode.externalApplication,
-        );
+        final opened = await (widget.checkoutLauncher?.call(checkoutUrl) ??
+            launchUrl(
+              checkoutUrl,
+              mode: LaunchMode.externalApplication,
+            ));
 
         if (!opened) {
           throw StateError('Could not open Stripe checkout.');
