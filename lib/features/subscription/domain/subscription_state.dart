@@ -77,7 +77,7 @@ class SubscriptionState {
           : subscription == null,
       trialExpired: json['trial_expired'] == true ||
           (!hasAccess &&
-              status == 'trialing' &&
+              const {'trialing', 'past_due', 'canceled'}.contains(status) &&
               trialEnd != null &&
               !trialEnd.isAfter(DateTime.now())),
     );
