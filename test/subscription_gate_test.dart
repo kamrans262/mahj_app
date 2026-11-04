@@ -26,4 +26,35 @@ void main() {
     });
     expect(verified.hasAccess, true);
   });
+  test('expired trial and past-due Stripe state require paid checkout', () {
+    for (final status in const ['trialing', 'past_due', 'canceled']) {
+      final state = SubscriptionState.fromJson({
+        'subscription': {
+          'status': status,
+          'provider': 'stripe',
+          'trial_ends_at': '2026-10-01T00:00:00Z',
+        },
+        'has_access': false,
+        'can_start_trial': false,
+        'trial_expired': true,
+      });
+
+      expect(state.canStartTrial, isFalse);
+      expect(state.trialExpired, isTrue);
+      expect(state.hasAccess, isFalse);
+    }
+  });
+
+  test('first-time account remains eligible for 30-day trial', () {
+    final state = SubscriptionState.fromJson({
+      'subscription': null,
+      'has_access': false,
+      'can_start_trial': true,
+      'trial_expired': false,
+    });
+
+    expect(state.canStartTrial, isTrue);
+    expect(state.trialExpired, isFalse);
+  });
+
 }
