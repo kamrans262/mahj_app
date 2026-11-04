@@ -123,12 +123,25 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
     }
   }
 
-  Future<void> _startTrial(SubscriptionPlan plan) async {
+  Future<void> _startCheckout(SubscriptionPlan plan) async {
     if (_submitting) return;
     setState(() => _submitting = true);
 
     try {
-      final result = await widget.repository.startTrial(plan.id);
+      // Refresh entitlement before charging: an expired local trial may
+      // already have transitioned into a paid Stripe subscription.
+      final latest = await widget.repository.fetch();
+      if (!mounted) return;
+      setState(() => _state = latest);
+
+      if (latest.hasAccess) {
+        await widget.onActivated?.call();
+        return;
+      }
+
+      final result = latest.canStartTrial
+          ? await widget.repository.startTrial(plan.id)
+          : await widget.repository.startPayment(plan.id);
       if (!mounted) return;
 
       if (result.requiresCheckout) {
@@ -270,14 +283,21 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
       );
     }
 
+    final paymentRequired = state != null && !state.canStartTrial;
+
     return PremiumPlanScreen(
       isLoading: _submitting || _refreshingCheckout,
+      requiresPayment: paymentRequired,
+      isTrialExpired: state?.trialExpired == true,
       trialDays: plan.trialDays,
       planName: plan.name,
-      planDescription: plan.description,
+      planDescription: paymentRequired
+          ? 'Monthly billing resumes with payment'
+          : plan.description,
       priceLabel: '${plan.priceLabel}/month',
       onBack: widget.onBack,
-      onStartFreeTrial: () => _startTrial(plan),
+      onStartFreeTrial: () => _startCheckout(plan),
+      onPayNow: () => _startCheckout(plan),
       onTermsOfService: widget.onTermsTap,
       onPrivacyPolicy: widget.onPrivacyPolicyTap,
     );
