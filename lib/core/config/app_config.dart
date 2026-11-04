@@ -1,7 +1,7 @@
 abstract final class AppConfig {
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://app.aroundtown.fun/api',
+    defaultValue: 'https://palegreen-crane-342913.hostingersite.com/api',
   );
 
   static const String googleSignInServerClientId = String.fromEnvironment(
