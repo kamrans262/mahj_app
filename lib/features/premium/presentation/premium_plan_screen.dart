@@ -17,23 +17,29 @@ class PremiumPlanScreen extends StatefulWidget {
   const PremiumPlanScreen({
     super.key,
     this.isLoading = false,
+    this.requiresPayment = false,
+    this.isTrialExpired = false,
     this.trialDays = 30,
     this.planName = 'Monthly Plan',
     this.planDescription = 'No charges for 30 days',
     this.priceLabel = r'$19.99/month',
     this.onBack,
     this.onStartFreeTrial,
+    this.onPayNow,
     this.onTermsOfService,
     this.onPrivacyPolicy,
   });
 
   final bool isLoading;
+  final bool requiresPayment;
+  final bool isTrialExpired;
   final int trialDays;
   final String planName;
   final String planDescription;
   final String priceLabel;
   final VoidCallback? onBack;
   final Future<void> Function()? onStartFreeTrial;
+  final Future<void> Function()? onPayNow;
   final VoidCallback? onTermsOfService;
   final VoidCallback? onPrivacyPolicy;
 
@@ -51,7 +57,9 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
       return;
     }
 
-    final callback = widget.onStartFreeTrial;
+    final callback = widget.requiresPayment
+        ? widget.onPayNow
+        : widget.onStartFreeTrial;
     if (callback == null) {
       return;
     }
@@ -108,7 +116,11 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                             const Center(child: _PremiumCrownBadge()),
                             const SizedBox(height: AppSpacing.lg),
                             Text(
-                              'Start your ${widget.trialDays} day free trial',
+                              widget.requiresPayment
+                                  ? (widget.isTrialExpired
+                                      ? 'Free Trial Expired'
+                                      : 'Subscription Expired')
+                                  : 'Start your ${widget.trialDays} day free trial',
                               key: const ValueKey('premium-heading'),
                               textAlign: TextAlign.center,
                               style: AppTypography.authHeading,
@@ -143,16 +155,22 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                             ),
                             SizedBox(height: flexibleActionGap),
                             AppButton.primary(
-                              key: const ValueKey('start-free-trial-button'),
-                              label: 'Start Free Trial',
+                              key: widget.requiresPayment
+                                  ? const ValueKey('pay-now-button')
+                                  : const ValueKey('start-free-trial-button'),
+                              label: widget.requiresPayment
+                                  ? 'Pay Now'
+                                  : 'Start Free Trial',
                               onPressed: _startFreeTrial,
                               isLoading: _isBusy,
                               isEnabled: !_isBusy,
                             ),
                             const SizedBox(height: AppSpacing.sm),
-                            const Text(
-                              'You won’t be charged until the trial ends',
-                              key: ValueKey('premium-trial-notice'),
+                            Text(
+                              widget.requiresPayment
+                                  ? 'Secure payment through Stripe'
+                                  : 'You won’t be charged until the trial ends',
+                              key: const ValueKey('premium-trial-notice'),
                               textAlign: TextAlign.center,
                               style: AppTypography.action14,
                             ),
