@@ -19,16 +19,16 @@ class GoogleAuthService {
   bool _initialized = false;
 
   Future<String?> authenticate() async {
-    await _ensureInitialized();
-
-    final signIn = GoogleSignIn.instance;
-    if (!signIn.supportsAuthenticate()) {
-      throw const GoogleAuthException(
-        'Google Sign-In is not available on this device.',
-      );
-    }
-
     try {
+      await _ensureInitialized();
+
+      final signIn = GoogleSignIn.instance;
+      if (!signIn.supportsAuthenticate()) {
+        throw const GoogleAuthException(
+          'Google Sign-In is not available on this device.',
+        );
+      }
+
       final account = await signIn.authenticate();
       final idToken = account.authentication.idToken;
 
@@ -46,6 +46,11 @@ class GoogleAuthService {
 
       if (error.code == GoogleSignInExceptionCode.clientConfigurationError ||
           error.code == GoogleSignInExceptionCode.providerConfigurationError) {
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+          throw const GoogleAuthException(
+            'Google Sign-In is not configured for this iPhone. Check the iOS OAuth client ID, reversed URL scheme, and Web server client ID.',
+          );
+        }
         throw const GoogleAuthException(
           'Google Sign-In is not configured correctly. Check the app OAuth client, SHA fingerprint, and Google services configuration.',
         );
