@@ -215,7 +215,7 @@ class _SubscriptionEntryScreenState extends State<SubscriptionEntryScreen>
 
       // Keep the pending session so the next app resume or callback can retry.
       _showMessage(
-        'Stripe checkout is not complete yet. Complete checkout to activate your trial.',
+        'Stripe checkout is not complete yet. Complete checkout to activate your subscription.',
       );
     } catch (error) {
       if (!mounted) return;
