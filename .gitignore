@@ -48,3 +48,6 @@ app.*.map.json
 .widget_preview/
 
 _mahj_backups/
+
+# Per-developer iOS Google OAuth configuration (never commit real values).
+/ios/Flutter/GoogleSignIn.xcconfig
