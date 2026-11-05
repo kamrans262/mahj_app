@@ -50,19 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC4XR2-rurqx0AP0qZQHTFgZLIEs6hlHXE',
-    appId: '1:335502441041:android:a6e7b2e36b0cee29249670',
-    messagingSenderId: '335502441041',
-    projectId: 'mahj-development',
-    storageBucket: 'mahj-development.firebasestorage.app',
+    apiKey: 'AIzaSyDJ7d2kwTT-cBbDlidZLmc5OWLbbxzACUk',
+    appId: '1:93837877939:android:36b80dc428b19d100886c6',
+    messagingSenderId: '93837877939',
+    projectId: 'mahj-around-town',
+    storageBucket: 'mahj-around-town.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBcmm8l96Wl-J5LQ5NXguBiKfwSImxfMnY',
-    appId: '1:335502441041:ios:6b04ce43d1372a8c249670',
-    messagingSenderId: '335502441041',
-    projectId: 'mahj-development',
-    storageBucket: 'mahj-development.firebasestorage.app',
+    apiKey: 'AIzaSyBhiUQ7-iPbtsz7iYsYxXzWiTxA229qVKQ',
+    appId: '1:93837877939:ios:f04df2eb63725d360886c6',
+    messagingSenderId: '93837877939',
+    projectId: 'mahj-around-town',
+    storageBucket: 'mahj-around-town.firebasestorage.app',
+    iosClientId: '93837877939-rfvm9e8v90s2tidqkcvgm5bm0da81epr.apps.googleusercontent.com',
     iosBundleId: 'com.example.mahjApp',
   );
 }

@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "335502441041",
-    "project_id": "mahj-development",
-    "storage_bucket": "mahj-development.firebasestorage.app"
+    "project_number": "93837877939",
+    "project_id": "mahj-around-town",
+    "storage_bucket": "mahj-around-town.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:335502441041:android:a6e7b2e36b0cee29249670",
+        "mobilesdk_app_id": "1:93837877939:android:36b80dc428b19d100886c6",
         "android_client_info": {
           "package_name": "com.example.mahj_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "93837877939-u7c09rsp1cjht85uh1bakm0mcq22b1bs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mahj_app",
+            "certificate_hash": "42e9115d2b00ccd75b6363f555602839062fa962"
+          }
+        },
+        {
+          "client_id": "93837877939-7e6tnnkhuq7kp79o33g1sch78tfi5o5d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyC4XR2-rurqx0AP0qZQHTFgZLIEs6hlHXE"
+          "current_key": "AIzaSyDJ7d2kwTT-cBbDlidZLmc5OWLbbxzACUk"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "93837877939-7e6tnnkhuq7kp79o33g1sch78tfi5o5d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "93837877939-rfvm9e8v90s2tidqkcvgm5bm0da81epr.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mahjApp"
+              }
+            }
+          ]
         }
       }
     }

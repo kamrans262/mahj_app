@@ -1,7 +1,3 @@
-// Copy to ios/Flutter/GoogleSignIn.xcconfig (gitignored) and supply your actual OAuth IDs.
-// Create an iOS OAuth client in Google Cloud with bundle ID com.example.mahjApp
-// GOOGLE_SIGN_IN_SERVER_CLIENT_ID must be the same Web client ID as
-// Laravel GOOGLE_SIGN_IN_CLIENT_ID, not the iOS client ID.
-GOOGLE_SIGN_IN_IOS_CLIENT_ID = YOUR_IOS_CLIENT_ID.apps.googleusercontent.com
-GOOGLE_SIGN_IN_IOS_REVERSED_CLIENT_ID = com.googleusercontent.apps.YOUR_IOS_CLIENT_ID
-GOOGLE_SIGN_IN_SERVER_CLIENT_ID = YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
+GOOGLE_SIGN_IN_IOS_CLIENT_ID = 93837877939-rfvm9e8v90s2tidqkcvgm5bm0da81epr.apps.googleusercontent.com
+GOOGLE_SIGN_IN_IOS_REVERSED_CLIENT_ID = com.googleusercontent.apps.93837877939-rfvm9e8v90s2tidqkcvgm5bm0da81epr
+GOOGLE_SIGN_IN_SERVER_CLIENT_ID = 93837877939-7e6tnnkhuq7kp79o33g1sch78tfi5o5d.apps.googleusercontent.com
