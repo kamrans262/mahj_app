@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../../core/network/api_exception.dart';
 import '../app_assets.dart';
 import '../app_services.dart';
+import '../../features/auth/data/apple_auth_service.dart';
 import '../../features/auth/data/google_auth_service.dart';
 import '../../features/auth/domain/auth_flow_args.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
@@ -155,6 +157,7 @@ abstract final class AppRouter {
           if (context.mounted) _showApiError(context, error);
         }
       },
+      onAppleLogin: () => _continueWithApple(context),
       onSignUp: () {
         Navigator.of(context).pushNamed(AppRoutes.signUp);
       },
@@ -190,6 +193,7 @@ abstract final class AppRouter {
           navigator.pushReplacementNamed(AppRoutes.login);
         }
       },
+      onAppleSignUp: () => _continueWithApple(context),
     ),
     AppRoutes.forgotPassword: (context) => ForgotPasswordScreen(
       onBack: () {
@@ -401,8 +405,7 @@ abstract final class AppRouter {
             repository: AppServices.notificationRepository,
             onBack: () => Navigator.of(context).maybePop(),
           ),
-    AppRoutes.support: (context) =>
-        _authRepository.currentUser == null
+    AppRoutes.support: (context) => _authRepository.currentUser == null
         ? SupportScreen(
             faqs: SupportPreviewData.faqs,
             topics: SupportPreviewData.topics,
@@ -413,8 +416,7 @@ abstract final class AppRouter {
             repository: _supportContentRepository,
             onBack: () => Navigator.of(context).maybePop(),
           ),
-    AppRoutes.privacySafety: (context) =>
-        _authRepository.currentUser == null
+    AppRoutes.privacySafety: (context) => _authRepository.currentUser == null
         ? PrivacySafetyScreen(
             blockedUsers: PrivacySafetyPreviewData.blockedUsers,
             rules: PrivacySafetyPreviewData.rules,
@@ -630,107 +632,111 @@ abstract final class AppRouter {
         builder: (context) => FutureBuilder<PlayerProfileData>(
           future: profileFuture,
           builder: (context, snapshot) => PlayerProfileScreen(
-          player: snapshot.data ?? player,
-          isLoading: profileFuture != null &&
-              snapshot.connectionState != ConnectionState.done,
-          errorMessage: snapshot.hasError
-              ? 'Could not load player details. Please try again.'
-              : null,
-          onBack: () => Navigator.of(context).maybePop(),
-          notificationCount: _authRepository.currentUser == null
-              ? currentProfile.unreadNotificationCount
-              : _notificationStore.unreadCount,
-          messageCount: currentProfile.unreadMessageCount,
-          onNotificationTap: () {
-            Navigator.of(context).pushNamed(AppRoutes.notifications);
-          },
-          onMessageTap: () => _openDirectChatWithPlayer(context, player),
-          onMutualGameTap: (mutualMatch) {
-            _openMatchDetails(context, mutualMatch);
-          },
-          onViewAllMutualGames: !isBackendPlayer ? null : () {
-            Navigator.of(context).push<void>(
-              MaterialPageRoute<void>(
-                builder: (mutualContext) => MutualGamesScreen(
-                  playerId: player.id,
-                  repository: _playerRepository,
-                  onBack: () => Navigator.of(mutualContext).maybePop(),
-                  onMatchTap: (match) => _openMatchDetails(mutualContext, match),
-                ),
-              ),
-            );
-          },
-          onSendInvite: () async {
-            var resolvedMatch = inviteMatch;
-            if (resolvedMatch == null) {
-              try {
-                final data = await _matchRepository.listMyMatches();
-                for (final item in data.createdByMe) {
-                  final candidate = item.match;
-                  if (candidate.status == MatchStatus.open) {
-                    resolvedMatch = candidate;
-                    break;
+            player: snapshot.data ?? player,
+            isLoading:
+                profileFuture != null &&
+                snapshot.connectionState != ConnectionState.done,
+            errorMessage: snapshot.hasError
+                ? 'Could not load player details. Please try again.'
+                : null,
+            onBack: () => Navigator.of(context).maybePop(),
+            notificationCount: _authRepository.currentUser == null
+                ? currentProfile.unreadNotificationCount
+                : _notificationStore.unreadCount,
+            messageCount: currentProfile.unreadMessageCount,
+            onNotificationTap: () {
+              Navigator.of(context).pushNamed(AppRoutes.notifications);
+            },
+            onMessageTap: () => _openDirectChatWithPlayer(context, player),
+            onMutualGameTap: (mutualMatch) {
+              _openMatchDetails(context, mutualMatch);
+            },
+            onViewAllMutualGames: !isBackendPlayer
+                ? null
+                : () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (mutualContext) => MutualGamesScreen(
+                          playerId: player.id,
+                          repository: _playerRepository,
+                          onBack: () => Navigator.of(mutualContext).maybePop(),
+                          onMatchTap: (match) =>
+                              _openMatchDetails(mutualContext, match),
+                        ),
+                      ),
+                    );
+                  },
+            onSendInvite: () async {
+              var resolvedMatch = inviteMatch;
+              if (resolvedMatch == null) {
+                try {
+                  final data = await _matchRepository.listMyMatches();
+                  for (final item in data.createdByMe) {
+                    final candidate = item.match;
+                    if (candidate.status == MatchStatus.open) {
+                      resolvedMatch = candidate;
+                      break;
+                    }
                   }
+                } catch (_) {
+                  // The normal invite screen will surface backend errors later.
                 }
-              } catch (_) {
-                // The normal invite screen will surface backend errors later.
               }
-            }
 
-            if (!context.mounted) return;
-            if (resolvedMatch == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Create an open match before inviting this player.',
+              if (!context.mounted) return;
+              if (resolvedMatch == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Create an open match before inviting this player.',
+                    ),
                   ),
-                ),
-              );
-              return;
-            }
+                );
+                return;
+              }
 
-            await _openInvitePlayers(context, resolvedMatch);
-          },
-          onSubmitReport: int.tryParse(player.id) == null
-              ? null
-              : (request) async {
-                  try {
-                    await _privacySafetyRepository.reportPlayer(
-                      playerId: request.playerId,
-                      reasonId: request.reasonId,
-                      notes: request.notes,
-                    );
-                    return true;
-                  } catch (error) {
-                    if (context.mounted) {
-                      _showApiError(context, error);
+              await _openInvitePlayers(context, resolvedMatch);
+            },
+            onSubmitReport: int.tryParse(player.id) == null
+                ? null
+                : (request) async {
+                    try {
+                      await _privacySafetyRepository.reportPlayer(
+                        playerId: request.playerId,
+                        reasonId: request.reasonId,
+                        notes: request.notes,
+                      );
+                      return true;
+                    } catch (error) {
+                      if (context.mounted) {
+                        _showApiError(context, error);
+                      }
+                      return false;
                     }
-                    return false;
-                  }
-                },
-          onSubmitBlock: int.tryParse(player.id) == null
-              ? null
-              : (request) async {
-                  try {
-                    await _privacySafetyRepository.blockPlayer(
-                      playerId: request.playerId,
-                      reasonId: request.reasonId,
-                    );
-                    return true;
-                  } catch (error) {
-                    if (context.mounted) {
-                      _showApiError(context, error);
+                  },
+            onSubmitBlock: int.tryParse(player.id) == null
+                ? null
+                : (request) async {
+                    try {
+                      await _privacySafetyRepository.blockPlayer(
+                        playerId: request.playerId,
+                        reasonId: request.reasonId,
+                      );
+                      return true;
+                    } catch (error) {
+                      if (context.mounted) {
+                        _showApiError(context, error);
+                      }
+                      return false;
                     }
-                    return false;
-                  }
-                },
-          onLoadFavorite: int.tryParse(player.id) == null
-              ? null
-              : _playerRepository.isFavorite,
-          onSetFavorite: int.tryParse(player.id) == null
-              ? null
-              : _playerRepository.setFavorite,
-        ),
+                  },
+            onLoadFavorite: int.tryParse(player.id) == null
+                ? null
+                : _playerRepository.isFavorite,
+            onSetFavorite: int.tryParse(player.id) == null
+                ? null
+                : _playerRepository.setFavorite,
+          ),
         ),
       );
     }
@@ -945,10 +951,30 @@ abstract final class AppRouter {
     Navigator.of(context).pushNamed(AppRoutes.legal, arguments: document);
   }
 
+  static Future<void> _continueWithApple(BuildContext context) async {
+    try {
+      final credential = await AppServices.appleAuthService.authenticate();
+      if (credential == null) return;
+
+      await _authRepository.loginWithApple(
+        idToken: credential.idToken,
+        authorizationCode: credential.authorizationCode,
+        nonce: credential.nonce,
+        name: credential.name,
+      );
+      if (!context.mounted) return;
+      await _openAuthenticatedDestination(context);
+    } catch (error) {
+      if (context.mounted) _showApiError(context, error);
+    }
+  }
+
   static void _showApiError(BuildContext context, Object error) {
     final message = error is ApiException
         ? error.message
         : error is GoogleAuthException
+        ? error.message
+        : error is AppleAuthException
         ? error.message
         : error is String
         ? error
@@ -966,7 +992,9 @@ abstract final class AppRouter {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  static Future<void> _openAuthenticatedDestination(BuildContext context) async {
+  static Future<void> _openAuthenticatedDestination(
+    BuildContext context,
+  ) async {
     // A valid auth token alone never grants access to matches.
     // Failed billing checks also fail closed to the existing trial screen.
     var canEnter = false;
@@ -1472,18 +1500,14 @@ abstract final class AppRouter {
           chatRepository: _chatRepository,
           onBack: () => Navigator.of(chatListContext).maybePop(),
           onFindMatches: () {
-            Navigator.of(chatListContext).pushReplacementNamed(
-              AppRoutes.nearbyMatches,
-            );
+            Navigator.of(chatListContext)
+                .pushReplacementNamed(AppRoutes.nearbyMatches);
           },
           onStartMatchChat: (match) async {
-            await Navigator.of(chatListContext).pushNamed(
-              AppRoutes.matchChat,
-              arguments: match,
-            );
+            await Navigator.of(chatListContext)
+                .pushNamed(AppRoutes.matchChat, arguments: match);
           },
-          onOpenDirectChat: (chat) =>
-              _openDirectChat(chatListContext, chat),
+          onOpenDirectChat: (chat) => _openDirectChat(chatListContext, chat),
           onStartPlayerChat: (player) =>
               _startDirectChatWithParticipant(chatListContext, player),
         ),
@@ -1530,7 +1554,10 @@ abstract final class AppRouter {
     PlayerProfileData player,
   ) async {
     if (int.tryParse(player.id) == null) {
-      _showApiError(context, 'Individual chat is not available for this player.');
+      _showApiError(
+        context,
+        'Individual chat is not available for this player.',
+      );
       return;
     }
 
@@ -1687,8 +1714,7 @@ abstract final class AppRouter {
     BuildContext context,
     HomeMatch match,
   ) async {
-    await Navigator.of(
-      context,
-    ).pushNamed<void>(AppRoutes.matchDetails, arguments: match);
+    await Navigator.of(context)
+        .pushNamed<void>(AppRoutes.matchDetails, arguments: match);
   }
 }

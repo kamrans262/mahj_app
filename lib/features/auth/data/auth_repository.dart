@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/storage/token_store.dart';
@@ -64,13 +65,31 @@ class AuthRepository {
     return _storeSession(payload);
   }
 
-  Future<AuthUser> loginWithGoogle({
-    required String idToken,
-  }) async {
+  Future<AuthUser> loginWithGoogle({required String idToken}) async {
     final payload = await _apiClient.post(
       '/auth/google',
       authenticated: false,
       body: {'id_token': idToken},
+    );
+
+    return _storeSession(payload);
+  }
+
+  Future<AuthUser> loginWithApple({
+    required String idToken,
+    required String authorizationCode,
+    required String nonce,
+    String? name,
+  }) async {
+    final payload = await _apiClient.post(
+      '/auth/apple',
+      authenticated: false,
+      body: {
+        'id_token': idToken,
+        'authorization_code': authorizationCode,
+        'nonce': nonce,
+        if (name != null && name.isNotEmpty) 'name': name,
+      },
     );
 
     return _storeSession(payload);

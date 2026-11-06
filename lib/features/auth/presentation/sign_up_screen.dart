@@ -9,6 +9,7 @@ import '../../../core/widgets/app_asset_icon.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../data/apple_auth_service.dart';
 import '../domain/auth_validators.dart';
 import 'widgets/auth_background.dart';
 import 'widgets/auth_divider.dart';
@@ -23,15 +24,19 @@ class SignUpScreen extends StatefulWidget {
     this.onAppleSignUp,
     this.onBack,
     this.onLogin,
+    this.showAppleSignIn,
   });
 
   final bool isLoading;
   final Future<void> Function(String fullName, String email, String password)?
   onSignUp;
   final VoidCallback? onGoogleSignUp;
-  final VoidCallback? onAppleSignUp;
+  final Future<void> Function()? onAppleSignUp;
   final VoidCallback? onBack;
   final VoidCallback? onLogin;
+
+  /// Overrides the iOS-only Apple button. Production leaves this null.
+  final bool? showAppleSignIn;
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -50,8 +55,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordFocusNode = FocusNode();
 
   bool _isSubmitting = false;
+  bool _appleLoading = false;
 
-  bool get _isBusy => widget.isLoading || _isSubmitting;
+  bool get _isBusy => widget.isLoading || _isSubmitting || _appleLoading;
 
   @override
   void dispose() {
@@ -95,8 +101,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  Future<void> _submitApple() async {
+    if (_isBusy) return;
+    final callback = widget.onAppleSignUp;
+    if (callback == null) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _appleLoading = true);
+    try {
+      await callback();
+    } finally {
+      if (mounted) setState(() => _appleLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final showAppleSignIn =
+        widget.showAppleSignIn ?? AppleAuthService.isSupported;
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Scaffold(
@@ -239,25 +261,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     size: 24,
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.md),
-                                AppButton.outlined(
-                                  key: const ValueKey('apple-signup-button'),
-                                  label: 'Continue with Apple',
-                                  onPressed: _isBusy
-                                      ? null
-                                      : () => widget.onAppleSignUp?.call(),
-                                  leading: const AppAssetIcon(
-                                    key: ValueKey('apple-signup-icon'),
-                                    assetPath: AppAssets.appleLoginIcon,
-                                    size: 24,
+                                if (showAppleSignIn) ...[
+                                  const SizedBox(height: AppSpacing.md),
+                                  AppButton.outlined(
+                                    key: const ValueKey('apple-signup-button'),
+                                    label: 'Continue with Apple',
+                                    onPressed: _isBusy ? null : _submitApple,
+                                    isLoading: _appleLoading,
+                                    leading: const AppAssetIcon(
+                                      key: ValueKey('apple-signup-icon'),
+                                      assetPath: AppAssets.appleLoginIcon,
+                                      size: 24,
+                                    ),
                                   ),
-                                ),
+                                ],
                                 SizedBox(height: flexibleActionGap),
                                 AppButton.primary(
                                   key: const ValueKey('signup-button'),
                                   label: 'Sign Up',
                                   onPressed: _submit,
-                                  isLoading: _isBusy,
+                                  isLoading: widget.isLoading || _isSubmitting,
                                   isEnabled: !_isBusy,
                                 ),
                                 const SizedBox(height: AppSpacing.sm),

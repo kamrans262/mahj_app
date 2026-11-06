@@ -8,7 +8,8 @@ void main() {
     WidgetTester tester, {
     Size size = const Size(390, 844),
     double textScale = 1,
-    SignUpScreen screen = const SignUpScreen(),
+    bool showAppleSignIn = true,
+    SignUpScreen? screen,
   }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
@@ -23,7 +24,7 @@ void main() {
             size: size,
             textScaler: TextScaler.linear(textScale),
           ),
-          child: screen,
+          child: screen ?? SignUpScreen(showAppleSignIn: showAppleSignIn),
         ),
       ),
     );
@@ -46,6 +47,16 @@ void main() {
     expect(find.byKey(const ValueKey('apple-signup-button')), findsOneWidget);
     expect(find.byKey(const ValueKey('signup-button')), findsOneWidget);
     expect(find.byKey(const ValueKey('login-link')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('apple sign up stays hidden on Android', (tester) async {
+    await pumpSignUp(tester, showAppleSignIn: false);
+
+    expect(find.byKey(const ValueKey('google-signup-button')), findsOneWidget);
+    expect(find.byKey(const ValueKey('apple-signup-button')), findsNothing);
+    expect(find.text('Continue with Apple'), findsNothing);
+    expect(find.byKey(const ValueKey('signup-button')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

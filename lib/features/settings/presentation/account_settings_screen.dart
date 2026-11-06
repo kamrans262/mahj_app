@@ -10,6 +10,7 @@ import '../../../core/widgets/app_centered_page_header.dart';
 import '../../../core/widgets/app_confirmation_dialog.dart';
 import '../../../core/widgets/app_surface_container.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../../auth/data/apple_auth_service.dart';
 
 typedef AccountEmailChangeCallback = Future<bool> Function(String email);
 typedef AccountPasswordChangeCallback = Future<bool> Function(
@@ -306,16 +307,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             label: 'Google',
                             isConnected: widget.isGoogleConnected,
                           ),
-                          const Divider(height: 1, color: AppColors.divider),
-                          _ConnectedAccountRow(
-                            iconAsset: AppAssets.appleLoginIcon,
-                            label: 'Apple',
-                            isConnected: widget.isAppleConnected,
-                          ),
+                          if (AppleAuthService.isSupported) ...[
+                            const Divider(height: 1, color: AppColors.divider),
+                            _ConnectedAccountRow(
+                              iconAsset: AppAssets.appleLoginIcon,
+                              label: 'Apple',
+                              isConnected: widget.isAppleConnected,
+                            ),
+                          ],
                         ],
                       ),
                     ),
-
                   ],
                 ),
               ),

@@ -3,9 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>93837877939-rfvm9e8v90s2tidqkcvgm5bm0da81epr.apps.googleusercontent.com</string>
+	<string>93837877939-eb06m9b3rka5ubf0v212ijus5uu2tqqh.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.93837877939-rfvm9e8v90s2tidqkcvgm5bm0da81epr</string>
+	<string>com.googleusercontent.apps.93837877939-eb06m9b3rka5ubf0v212ijus5uu2tqqh</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>93837877939-u7c09rsp1cjht85uh1bakm0mcq22b1bs.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyBhiUQ7-iPbtsz7iYsYxXzWiTxA229qVKQ</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.mahjApp</string>
+	<string>fun.aroundtown.mahjaroundtown</string>
 	<key>PROJECT_ID</key>
 	<string>mahj-around-town</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:93837877939:ios:f04df2eb63725d360886c6</string>
+	<string>1:93837877939:ios:e86e57405a5ba7550886c6</string>
 </dict>
 </plist>

@@ -39,10 +39,46 @@
               "client_type": 3
             },
             {
-              "client_id": "93837877939-rfvm9e8v90s2tidqkcvgm5bm0da81epr.apps.googleusercontent.com",
+              "client_id": "93837877939-758s4mjd59cr097ie7guukt5v36f36lq.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.mahjApp"
+                "bundle_id": "com.ddev.mahjAroundTown"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:93837877939:android:f5fc524fed465b1b0886c6",
+        "android_client_info": {
+          "package_name": "fun.aroundtown.mahjaroundtown"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "93837877939-7e6tnnkhuq7kp79o33g1sch78tfi5o5d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJ7d2kwTT-cBbDlidZLmc5OWLbbxzACUk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "93837877939-7e6tnnkhuq7kp79o33g1sch78tfi5o5d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "93837877939-758s4mjd59cr097ie7guukt5v36f36lq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ddev.mahjAroundTown"
               }
             }
           ]

@@ -1,4 +1,4 @@
-package com.example.mahj_app
+package `fun`.aroundtown.mahjaroundtown
 
 import android.location.Geocoder
 import android.location.Location

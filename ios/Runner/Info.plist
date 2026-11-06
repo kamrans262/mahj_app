@@ -11,14 +11,14 @@
 		<key>FlutterDeepLinkingEnabled</key>
 		<false/>
 		<key>GIDClientID</key>
-		<string>$(GOOGLE_SIGN_IN_IOS_CLIENT_ID)</string>
+		<string>93837877939-eb06m9b3rka5ubf0v212ijus5uu2tqqh.apps.googleusercontent.com</string>
 		<key>GIDServerClientID</key>
 		<string>$(GOOGLE_SIGN_IN_SERVER_CLIENT_ID)</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
 				<key>CFBundleURLName</key>
-				<string>com.example.mahj_app.billing</string>
+				<string>fun.aroundtown.mahjaroundtown.billing</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>mahjaroundtown</string>
@@ -29,7 +29,7 @@
 				<string>com.google.oauth</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>$(GOOGLE_SIGN_IN_IOS_REVERSED_CLIENT_ID)</string>
+					<string>com.googleusercontent.apps.93837877939-eb06m9b3rka5ubf0v212ijus5uu2tqqh</string>
 				</array>
 			</dict>
 		</array>
@@ -56,7 +56,7 @@
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Mahj Around Town uses your location to find and map nearby matches.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Mahj Around Town lets you attach an optional screenshot when contacting support.</string>
+		<string>Mahj Around Town uses your photo library so you can set a profile photo and attach an optional screenshot when contacting support.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

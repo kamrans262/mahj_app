@@ -1,6 +1,7 @@
 import '../core/config/app_config.dart';
 import '../core/network/api_client.dart';
 import '../core/storage/token_store.dart';
+import '../features/auth/data/apple_auth_service.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/auth/data/google_auth_service.dart';
 import '../features/chat/data/chat_repository.dart';
@@ -32,6 +33,7 @@ abstract final class AppServices {
 
   static final GoogleAuthService googleAuthService = GoogleAuthService();
 
+  static const AppleAuthService appleAuthService = AppleAuthService();
 
   static final SubscriptionRepository subscriptionRepository =
       SubscriptionRepository(apiClient: apiClient);

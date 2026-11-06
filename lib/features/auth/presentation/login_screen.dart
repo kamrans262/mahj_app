@@ -11,6 +11,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../../../core/widgets/app_modal_card.dart';
 import '../../../core/widgets/app_text_field.dart';
+import '../data/apple_auth_service.dart';
 import '../domain/auth_validators.dart';
 import 'widgets/auth_background.dart';
 import 'widgets/auth_divider.dart';
@@ -25,14 +26,18 @@ class LoginScreen extends StatefulWidget {
     this.onGoogleLogin,
     this.onAppleLogin,
     this.onSignUp,
+    this.showAppleSignIn,
   });
 
   final bool isLoading;
   final Future<void> Function(String email, String password)? onLogin;
   final VoidCallback? onForgotPassword;
   final Future<void> Function()? onGoogleLogin;
-  final VoidCallback? onAppleLogin;
+  final Future<void> Function()? onAppleLogin;
   final VoidCallback? onSignUp;
+
+  /// Overrides the iOS-only Apple button. Production leaves this null.
+  final bool? showAppleSignIn;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -46,8 +51,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordFocusNode = FocusNode();
   bool _loginLoading = false;
   bool _googleLoading = false;
+  bool _appleLoading = false;
 
-  bool get _busy => widget.isLoading || _loginLoading || _googleLoading;
+  bool get _busy =>
+      widget.isLoading || _loginLoading || _googleLoading || _appleLoading;
 
   @override
   void dispose() {
@@ -92,8 +99,25 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _submitApple() async {
+    if (_busy) return;
+    final callback = widget.onAppleLogin;
+    if (callback == null) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _appleLoading = true);
+
+    try {
+      await callback();
+    } finally {
+      if (mounted) setState(() => _appleLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final showAppleSignIn =
+        widget.showAppleSignIn ?? AppleAuthService.isSupported;
     final mediaQuery = MediaQuery.of(context);
     final keyboardInset = mediaQuery.viewInsets.bottom;
 
@@ -102,188 +126,204 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Scaffold(
           resizeToAvoidBottomInset: true,
-      body: AuthBackground(
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final availableHeight = math.max(
-                0.0,
-                constraints.maxHeight - keyboardInset,
-              );
-              final flexibleLoginGap = (availableHeight - 650)
-                  .clamp(
-                    AppSpacing.loginFlexibleGapMin,
-                    AppSpacing.loginFlexibleGapMax,
-                  )
-                  .toDouble();
+          body: AuthBackground(
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableHeight = math.max(
+                    0.0,
+                    constraints.maxHeight - keyboardInset,
+                  );
+                  final flexibleLoginGap = (availableHeight - 650)
+                      .clamp(
+                        AppSpacing.loginFlexibleGapMin,
+                        AppSpacing.loginFlexibleGapMax,
+                      )
+                      .toDouble();
 
-              return SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.only(bottom: keyboardInset + AppSpacing.lg),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: availableHeight),
-                  child: Align(
-                    alignment: Alignment.topCenter,
+                  return SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.only(
+                      bottom: keyboardInset + AppSpacing.lg,
+                    ),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 480),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.pageHorizontal,
-                        ),
-                        child: Form(
-                          key: _formKey,
-                          child: AutofillGroup(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const SizedBox(height: AppSpacing.loginTop),
-                                const Text(
-                                  'Welcome Back',
-                                  key: ValueKey('login-heading'),
-                                  textAlign: TextAlign.center,
-                                  style: AppTypography.loginHeading,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                const Text(
-                                  'Login to Continue',
-                                  textAlign: TextAlign.center,
-                                  style: AppTypography.loginSubtitle,
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                Center(
-                                  child: LayoutBuilder(
-                                    builder: (context, imageConstraints) {
-                                      final width = math.min(
-                                        175.0,
-                                        imageConstraints.maxWidth,
-                                      );
-                                      return SizedBox(
-                                        width: width,
-                                        child: AspectRatio(
-                                          aspectRatio: 1,
-                                          child: Image.asset(
-                                            AppAssets.loginImage,
-                                            key: const ValueKey('login-image'),
-                                            fit: BoxFit.contain,
-                                            filterQuality: FilterQuality.high,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                AppTextField(
-                                  key: const ValueKey('email-field'),
-                                  controller: _emailController,
-                                  focusNode: _emailFocusNode,
-                                  hintText: 'E-mail',
-                                  leadingIcon: Icons.mail_outline_rounded,
-                                  keyboardType: TextInputType.emailAddress,
-                                  textInputAction: TextInputAction.next,
-                                  enabled: !_busy,
-                                  autofillHints: const [AutofillHints.email],
-                                  validator: AuthValidators.email,
-                                  onFieldSubmitted: (_) {
-                                    _passwordFocusNode.requestFocus();
-                                  },
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                AppTextField(
-                                  key: const ValueKey('password-field'),
-                                  controller: _passwordController,
-                                  focusNode: _passwordFocusNode,
-                                  hintText: 'Password',
-                                  leadingIcon: Icons.lock_outline_rounded,
-                                  textInputAction: TextInputAction.done,
-                                  obscureText: true,
-                                  enabled: !_busy,
-                                  autofillHints: const [AutofillHints.password],
-                                  validator: AuthValidators.password,
-                                  onFieldSubmitted: (_) => _submit(),
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    key: const ValueKey('forgot-password'),
-                                    onPressed: _busy
-                                        ? null
-                                        : () => widget.onForgotPassword?.call(),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: AppColors.primary,
-                                      minimumSize: const Size(48, 44),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 2,
-                                        vertical: 8,
+                      constraints: BoxConstraints(minHeight: availableHeight),
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 480),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.pageHorizontal,
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              child: AutofillGroup(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    const SizedBox(height: AppSpacing.loginTop),
+                                    const Text(
+                                      'Welcome Back',
+                                      key: ValueKey('login-heading'),
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.loginHeading,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    const Text(
+                                      'Login to Continue',
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.loginSubtitle,
+                                    ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    Center(
+                                      child: LayoutBuilder(
+                                        builder: (context, imageConstraints) {
+                                          final width = math.min(
+                                            175.0,
+                                            imageConstraints.maxWidth,
+                                          );
+                                          return SizedBox(
+                                            width: width,
+                                            child: AspectRatio(
+                                              aspectRatio: 1,
+                                              child: Image.asset(
+                                                AppAssets.loginImage,
+                                                key: const ValueKey(
+                                                  'login-image',
+                                                ),
+                                                fit: BoxFit.contain,
+                                                filterQuality:
+                                                    FilterQuality.high,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
                                     ),
-                                    child: const Text(
-                                      'Forgot Password?',
-                                      style: AppTypography.action14,
+                                    const SizedBox(height: AppSpacing.lg),
+                                    AppTextField(
+                                      key: const ValueKey('email-field'),
+                                      controller: _emailController,
+                                      focusNode: _emailFocusNode,
+                                      hintText: 'E-mail',
+                                      leadingIcon: Icons.mail_outline_rounded,
+                                      keyboardType: TextInputType.emailAddress,
+                                      textInputAction: TextInputAction.next,
+                                      enabled: !_busy,
+                                      autofillHints: const [
+                                        AutofillHints.email,
+                                      ],
+                                      validator: AuthValidators.email,
+                                      onFieldSubmitted: (_) {
+                                        _passwordFocusNode.requestFocus();
+                                      },
                                     ),
-                                  ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    AppTextField(
+                                      key: const ValueKey('password-field'),
+                                      controller: _passwordController,
+                                      focusNode: _passwordFocusNode,
+                                      hintText: 'Password',
+                                      leadingIcon: Icons.lock_outline_rounded,
+                                      textInputAction: TextInputAction.done,
+                                      obscureText: true,
+                                      enabled: !_busy,
+                                      autofillHints: const [
+                                        AutofillHints.password,
+                                      ],
+                                      validator: AuthValidators.password,
+                                      onFieldSubmitted: (_) => _submit(),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton(
+                                        key: const ValueKey('forgot-password'),
+                                        onPressed: _busy
+                                            ? null
+                                            : () => widget.onForgotPassword
+                                                  ?.call(),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: AppColors.primary,
+                                          minimumSize: const Size(48, 44),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 2,
+                                            vertical: 8,
+                                          ),
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        child: const Text(
+                                          'Forgot Password?',
+                                          style: AppTypography.action14,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    const AuthDivider(),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    AppButton.outlined(
+                                      key: const ValueKey(
+                                        'google-login-button',
+                                      ),
+                                      label: 'Continue with Google',
+                                      onPressed: _busy ? null : _submitGoogle,
+                                      isLoading: _googleLoading,
+                                      leading: const AppAssetIcon(
+                                        key: ValueKey('google-login-icon'),
+                                        assetPath: AppAssets.googleLoginIcon,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    if (showAppleSignIn) ...[
+                                      const SizedBox(height: AppSpacing.md),
+                                      AppButton.outlined(
+                                        key: const ValueKey(
+                                          'apple-login-button',
+                                        ),
+                                        label: 'Continue with Apple',
+                                        onPressed: _busy ? null : _submitApple,
+                                        isLoading: _appleLoading,
+                                        leading: const AppAssetIcon(
+                                          key: ValueKey('apple-login-icon'),
+                                          assetPath: AppAssets.appleLoginIcon,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ],
+                                    SizedBox(height: flexibleLoginGap),
+                                    AppButton.primary(
+                                      key: const ValueKey('login-button'),
+                                      label: 'Log In',
+                                      onPressed: _submit,
+                                      isLoading: widget.isLoading,
+                                      isEnabled: !_busy,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    AuthInlineActionPrompt(
+                                      message: "Don't have an account? ",
+                                      actionLabel: 'Sign Up',
+                                      enabled: !_busy,
+                                      actionKey: const ValueKey('sign-up-link'),
+                                      onAction: widget.onSignUp,
+                                    ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                  ],
                                 ),
-                                const SizedBox(height: AppSpacing.lg),
-                                const AuthDivider(),
-                                const SizedBox(height: AppSpacing.lg),
-                                AppButton.outlined(
-                                  key: const ValueKey('google-login-button'),
-                                  label: 'Continue with Google',
-                                  onPressed: _busy ? null : _submitGoogle,
-                                  isLoading: _googleLoading,
-                                  leading: const AppAssetIcon(
-                                    key: ValueKey('google-login-icon'),
-                                    assetPath: AppAssets.googleLoginIcon,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                AppButton.outlined(
-                                  key: const ValueKey('apple-login-button'),
-                                  label: 'Continue with Apple',
-                                  onPressed: _busy
-                                      ? null
-                                      : () => widget.onAppleLogin?.call(),
-                                  leading: const AppAssetIcon(
-                                    key: ValueKey('apple-login-icon'),
-                                    assetPath: AppAssets.appleLoginIcon,
-                                    size: 24,
-                                  ),
-                                ),
-                                SizedBox(height: flexibleLoginGap),
-                                AppButton.primary(
-                                  key: const ValueKey('login-button'),
-                                  label: 'Log In',
-                                  onPressed: _submit,
-                                  isLoading: widget.isLoading,
-                                  isEnabled: !_busy,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                AuthInlineActionPrompt(
-                                  message: "Don't have an account? ",
-                                  actionLabel: 'Sign Up',
-                                  enabled: !_busy,
-                                  actionKey: const ValueKey('sign-up-link'),
-                                  onAction: widget.onSignUp,
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                              ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            },
+                  );
+                },
+              ),
+            ),
           ),
-        ),
-      ),
         ),
         if (_busy)
           Positioned.fill(

@@ -8,6 +8,8 @@ void main() {
     WidgetTester tester, {
     Size size = const Size(390, 844),
     double textScale = 1,
+    bool showAppleSignIn = true,
+    LoginScreen? screen,
   }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
@@ -22,7 +24,7 @@ void main() {
             size: size,
             textScaler: TextScaler.linear(textScale),
           ),
-          child: const LoginScreen(),
+          child: screen ?? LoginScreen(showAppleSignIn: showAppleSignIn),
         ),
       ),
     );
@@ -39,6 +41,36 @@ void main() {
     expect(find.byKey(const ValueKey('google-login-button')), findsOneWidget);
     expect(find.byKey(const ValueKey('apple-login-button')), findsOneWidget);
     expect(find.byKey(const ValueKey('login-button')), findsOneWidget);
+  });
+
+  testWidgets('apple login stays hidden on Android', (tester) async {
+    await pumpLogin(tester, showAppleSignIn: false);
+
+    expect(find.byKey(const ValueKey('google-login-button')), findsOneWidget);
+    expect(find.byKey(const ValueKey('apple-login-button')), findsNothing);
+    expect(find.text('Continue with Apple'), findsNothing);
+  });
+
+  testWidgets('apple login button calls its callback on iOS', (tester) async {
+    var tapped = false;
+    await pumpLogin(
+      tester,
+      screen: LoginScreen(
+        showAppleSignIn: true,
+        onAppleLogin: () async {
+          tapped = true;
+        },
+      ),
+    );
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('apple-login-button')),
+    );
+    await tester.tap(find.byKey(const ValueKey('apple-login-button')));
+    await tester.pump();
+
+    expect(tapped, isTrue);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('social icons stay exactly 24 by 24 logical pixels', (
